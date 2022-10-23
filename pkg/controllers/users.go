@@ -139,15 +139,17 @@ func CreatNewUser(c *gin.Context) {
 	password, err := auth.HashAndSalt(user.Password)
 	config.CheckErr(err)
 	filter := bson.M{
-		"fullname":  user.Fullname,
-		"username":  user.Username,
-		"avatar":    user.Avatar,
-		"email":     user.Email,
-		"password":  password,
-		"social":    user.Social,
-		"role":      user.Role,
-		"createdAt": user.CreatedAt,
-		"updatedAt": user.UpdatedAt,
+		"fullname":      user.Fullname,
+		"username":      user.Username,
+		"avatar":        user.Avatar,
+		"email":         user.Email,
+		"password":      password,
+		"social":        user.Social,
+		"role":          user.Role,
+		"refreshtoken":  user.RefreshToken,
+		"emailverified": user.EmailVerified,
+		"createdAt":     user.CreatedAt,
+		"updatedAt":     user.UpdatedAt,
 	}
 	insertResult, err := usersCollection.InsertOne(ctx, filter)
 	if err != nil {

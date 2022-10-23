@@ -19,7 +19,7 @@ type MongoJsonResponse struct {
 var usersCollection = database.OpenCollection(database.ConnectMongoDB(), config.DB, config.USERS)
 
 func CheckIfEmailExists(email string) (bool, error) {
-	var user User
+	var user UserStruct
 	filter := bson.M{"email": email}
 	err := usersCollection.FindOne(context.TODO(), filter).Decode(&user)
 	if err != nil {
@@ -29,7 +29,7 @@ func CheckIfEmailExists(email string) (bool, error) {
 }
 
 func CheckIfUsernameExists(username string) (bool, error) {
-	var user User
+	var user UserStruct
 	err := usersCollection.FindOne(context.TODO(), bson.M{"username": username}).Decode(&user)
 	if err != nil {
 		return false, err

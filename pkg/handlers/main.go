@@ -11,21 +11,21 @@ func GinRouter() *gin.Engine {
 	auth := router.Group("/auth")
 	{
 		auth.POST("/signup", views.Signup)
-		auth.GET("/signin", views.GetUserByID)
-		auth.POST("/signout", views.UpdateAvatar)
-		auth.POST("/refreshToken", views.SignIn)
-		auth.POST("/forgotPassword", views.SignIn)
-		auth.POST("/changePassword", views.SignIn)
+		auth.GET("/signin", views.SignIn)
+		auth.POST("/signout", views.Signout)
+		// auth.POST("/refreshToken", views.RefreshToken)
+		// auth.POST("/forgotPassword", views.ForgotPassword)
+		// auth.POST("/changePassword", views.ChangePassword)
 	}
 
 	user := router.Group("/user")
 	{
-		user.POST("/createUser", views.GetUserByID)
+		user.POST("/createUser", views.CreatNewUser)
 		user.PUT("/updateUser", views.UpdateAvatar)
 		user.DELETE("/deleteUser", views.DeleteUser)
 		user.GET("/getUserById", views.GetUserByID)
 		user.GET("/getUserByEmail", views.GetUserByID)
-		user.GET("/getAllUsers", views.GetUserByID)
+		// user.GET("/getAllUsers", views.GetAllUsers)
 	}
 
 	return router

@@ -87,8 +87,25 @@ func Signup(c *gin.Context) {
 		return
 	}
 	log.Println("insertResult: ", insertResult)
+
+	t, rt, err := auth.GenerateJWT(user.Email, user.Username, insertResult.InsertedID.(primitive.ObjectID))
+
+	if err != nil {
+		config.Logs("error", err.Error())
+		response.Type = "error"
+		response.Message = err.Error()
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
 	response.Type = "success"
 	response.Message = "User created"
+	response.Data = gin.H{
+		"token":     t,
+		"refresh":   rt,
+		"user":      user.Username,
+		"expiresAt": time.Now().Add(time.Hour * 24).Unix(),
+	}
 	c.JSON(http.StatusOK, response)
 }
 
@@ -98,7 +115,7 @@ func SignIn(c *gin.Context) {
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var request = hp.SignIn{}
-	var user = hp.User{}
+	var user = hp.UserStruct{}
 	var response = hp.MongoJsonResponse{}
 
 	if err := c.BindJSON(&request); err != nil {
@@ -143,4 +160,48 @@ func SignIn(c *gin.Context) {
 		response.Message = "Invalid Credentials"
 		c.JSON(http.StatusBadRequest, response)
 	}
+}
+
+func Signout(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	request := hp.GetUserById{}
+
+	if err := c.BindJSON(&request); err != nil {
+		config.Logs("error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	log.Print("Request ID sent by client:", request.ID)
+
+	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
+	if err != nil {
+		config.Logs("error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	filter := bson.M{"_id": id}
+
+	update := bson.M{
+		"$set": bson.M{
+			"refreshToken": "",
+			"updatedAt":    primitive.NewDateTimeFromTime(time.Now()),
+		},
+	}
+
+	updateResult, err := usersCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		config.Logs("error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	log.Println("updateResult: ", updateResult)
+
+	var response = hp.MongoJsonResponse{}
+	response.Type = "success"
+	response.Message = "User signed out"
+	c.JSON(http.StatusOK, response)
 }
