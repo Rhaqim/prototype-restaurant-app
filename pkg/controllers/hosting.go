@@ -47,7 +47,7 @@ func CreateHostedEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func UpdateHostedEventMembers(c *gin.Context) {
+func UpdateHosting(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())

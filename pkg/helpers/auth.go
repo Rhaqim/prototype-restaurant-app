@@ -14,6 +14,23 @@ type SignIn struct {
 	Password string `json:"password"`
 }
 
+type RefreshToken struct {
+	ID           primitive.ObjectID `json:"id"`
+	RefreshToken string             `json:"refresh_token"`
+}
+
+type ForgotPassword struct {
+	Email string `json:"email"`
+}
+
+type ResetPassword struct {
+	ID           primitive.ObjectID `json:"id"`
+	Email        string             `json:"email"`
+	RefreshToken string             `json:"refresh_token"`
+	OldPassword  string             `json:"old_password"`
+	NewPassword  string             `json:"new_password"`
+}
+
 func UpdateRefreshToken(ctx context.Context, id primitive.ObjectID, refreshToken string) error {
 	filter := bson.M{"_id": id}
 	update := bson.M{

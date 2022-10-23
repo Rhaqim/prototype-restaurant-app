@@ -5,10 +5,18 @@ import (
 )
 
 type UserStruct struct {
-	ID       primitive.ObjectID `bson:"_id,omitempty"`
-	Username string             `bson:"username"`
-	Email    string             `bson:"email"`
-	Password string             `bson:"password"`
+	ID            primitive.ObjectID `bson:"_id" json:"_id,omitempty"`
+	Fullname      string             `bson:"fullname" json:"fullname"`
+	Username      string             `bson:"username" json:"username"`
+	Avatar        interface{}        `bson:"avatar" json:"avatar"`
+	Email         string             `bson:"email" json:"email"`
+	Password      string             `bson:"password" json:"password"`
+	Social        interface{}        `bson:"social" json:"social"`
+	Role          Roles              `bson:"role" json:"role"`
+	RefreshToken  string             `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
+	EmailVerified bool               `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty"`
+	CreatedAt     primitive.DateTime `bson:"createdAt" json:"createdAt"`
+	UpdatedAt     primitive.DateTime `bson:"updatedAt" json:"updatedAt"`
 }
 
 type Roles string

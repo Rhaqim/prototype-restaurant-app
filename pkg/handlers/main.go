@@ -13,7 +13,7 @@ func GinRouter() *gin.Engine {
 		auth.POST("/signup", views.Signup)
 		auth.GET("/signin", views.SignIn)
 		auth.POST("/signout", views.Signout)
-		// auth.POST("/refreshToken", views.RefreshToken)
+		auth.POST("/refreshToken", views.RefreshToken)
 		// auth.POST("/forgotPassword", views.ForgotPassword)
 		// auth.POST("/changePassword", views.ChangePassword)
 	}
@@ -26,6 +26,12 @@ func GinRouter() *gin.Engine {
 		user.GET("/getUserById", views.GetUserByID)
 		user.GET("/getUserByEmail", views.GetUserByID)
 		// user.GET("/getAllUsers", views.GetAllUsers)
+	}
+
+	hosting := router.Group("/hosting")
+	{
+		hosting.POST("/createHosting", views.CreateHostedEvent)
+		hosting.PUT("/updateHosting", views.UpdateHosting)
 	}
 
 	return router
