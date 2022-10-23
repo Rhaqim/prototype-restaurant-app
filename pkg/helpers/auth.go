@@ -7,11 +7,18 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+var PasswordOpts = options.FindOne().SetProjection(bson.M{"password": 0})
 
 type SignIn struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type SignOut struct {
+	Username string `json:"username"`
 }
 
 type RefreshToken struct {

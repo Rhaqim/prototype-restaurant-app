@@ -29,6 +29,8 @@ var SECRET_KEY string = config.JWTSecret
 
 func GenerateJWT(email string, username string, userid primitive.ObjectID) (token string, refreshToken string, err error) {
 	expirationTime := time.Now().Add(1 * time.Hour)
+	refreshExpirationTime := time.Now().Add(24 * 7 * time.Hour)
+
 	claims := &JWTClaim{
 		Email:    email,
 		Username: username,
@@ -40,7 +42,7 @@ func GenerateJWT(email string, username string, userid primitive.ObjectID) (toke
 
 	refreshClaims := &JWTClaim{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
+			ExpiresAt: refreshExpirationTime.Unix(),
 		},
 	}
 

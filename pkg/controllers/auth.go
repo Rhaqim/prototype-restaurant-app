@@ -101,12 +101,23 @@ func Signup(c *gin.Context) {
 		return
 	}
 
+	userResponse := hp.UserResponse{
+		ID:        insertResult.InsertedID.(primitive.ObjectID),
+		Fullname:  user.Fullname,
+		Username:  user.Username,
+		Avatar:    user.Avatar,
+		Email:     user.Email,
+		Role:      user.Role,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
 	response.Type = "success"
 	response.Message = "User created"
 	response.Data = gin.H{
 		"token":     t,
 		"refresh":   rt,
-		"user":      user.Username,
+		"user":      userResponse,
 		"expiresAt": time.Now().Add(time.Hour * 24).Unix(),
 	}
 	c.JSON(http.StatusOK, response)
@@ -153,12 +164,23 @@ func SignIn(c *gin.Context) {
 			return
 		}
 
+		userResponse := hp.UserResponse{
+			ID:        user.ID,
+			Fullname:  user.Fullname,
+			Username:  user.Username,
+			Email:     user.Email,
+			Avatar:    user.Avatar,
+			Role:      user.Role,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+		}
+
 		response.Type = "success"
 		response.Message = "User signed in"
 		response.Data = gin.H{
 			"token":     t,
 			"refresh":   rt,
-			"user":      user.Username,
+			"user":      userResponse,
 			"expiresAt": time.Now().Add(time.Hour * 24).Unix(),
 		}
 		c.JSON(http.StatusOK, response)
@@ -174,32 +196,36 @@ func Signout(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
-	request := hp.GetUserById{}
+	request := hp.SignOut{}
+	response := hp.MongoJsonResponse{
+		Date: time.Now(),
+	}
+
+	user := hp.UserResponse{}
 
 	if err := c.BindJSON(&request); err != nil {
 		config.Logs("error", err.Error())
+		response.Type = "error"
+		response.Message = "Username is required"
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	filter := bson.M{"username": request.Username}
+
+	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
+		config.Logs("error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	log.Print("Request ID sent by client:", request.ID)
 
-	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
+	err := hp.UpdateRefreshToken(ctx, user.ID, "")
 	if err != nil {
 		config.Logs("error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = hp.UpdateRefreshToken(ctx, id, "")
-	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	var response = hp.MongoJsonResponse{
-		Date: time.Now(),
-	}
 	response.Type = "success"
 	response.Message = "User signed out"
 	c.JSON(http.StatusOK, response)
@@ -226,7 +252,7 @@ func RefreshToken(c *gin.Context) {
 		return
 	}
 
-	var user = hp.UserStruct{}
+	var user = hp.UserResponse{}
 	filter := bson.M{"_id": id}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
 		config.Logs("error", err.Error())
@@ -282,7 +308,7 @@ func ForgotPassword(c *gin.Context) {
 	}
 	log.Print("Request ID sent by client:", request.Email)
 
-	var user = hp.UserStruct{}
+	var user = hp.UserResponse{}
 	filter := bson.M{"email": request.Email}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
 		config.Logs("error", err.Error())
