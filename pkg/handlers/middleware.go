@@ -24,7 +24,7 @@ func TokenGuardMiddleware() gin.HandlerFunc {
 
 		token := c.Request.Header.Get("Authorization")
 		if token == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing token"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing Token required!"})
 			c.Abort()
 			return
 		}
@@ -59,9 +59,16 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 		defer cancel()
 		defer database.ConnectMongoDB().Disconnect(context.TODO())
 
+		response := hp.MongoJsonResponse{
+			Type: "error",
+			Data: nil,
+			Date: time.Now(),
+		}
+
 		token := c.Request.Header.Get("Authorization")
 		if token == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing token"})
+			response.Message = "Missing Token required!"
+			c.JSON(http.StatusBadRequest, response)
 			c.Abort()
 			return
 		}
@@ -71,7 +78,8 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 		claims, err := auth.VerifyRefreshToken(token)
 		if err != nil {
 			config.Logs("error", err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Message = err.Error()
+			c.JSON(http.StatusBadRequest, response)
 			c.Abort()
 			return
 		}
@@ -80,7 +88,8 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 		filter := bson.M{"email": claims.Email}
 		if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
 			config.Logs("error", err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.Message = err.Error()
+			c.JSON(http.StatusBadRequest, response)
 			c.Abort()
 			return
 		}

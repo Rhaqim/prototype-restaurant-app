@@ -29,8 +29,18 @@ func CreateHostedEvent(c *gin.Context) {
 		return
 	}
 
+	check, ok := c.Get("user") //check if user is logged in
+	if !ok {
+		response.Type = "error"
+		response.Message = "User not logged in"
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user := check.(hp.UserResponse)
+
 	insert := bson.M{
-		"host_id":    request.HostID,
+		"host_id":    user.ID,
 		"hosted_ids": request.HostedIDs,
 		"bill":       request.Bill,
 	}
@@ -42,8 +52,16 @@ func CreateHostedEvent(c *gin.Context) {
 		return
 	}
 	log.Println("insertResult: ", insertResult)
+
+	hostingResponse := hp.Hosting{
+		ID:        insertResult.InsertedID.(primitive.ObjectID),
+		HostedIDs: request.HostedIDs,
+		Bill:      request.Bill,
+	}
+
 	response.Type = "success"
-	response.Message = "User created"
+	response.Message = "Host Event created"
+	response.Data = hostingResponse
 	c.JSON(http.StatusOK, response)
 }
 
@@ -52,7 +70,7 @@ func UpdateHosting(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
-	var request hp.HostingUpdate
+	var request hp.Hosting
 	response := hp.MongoJsonResponse{}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
