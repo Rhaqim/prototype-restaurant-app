@@ -98,7 +98,14 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	err = UpdateRefreshToken(ctx, insertResult.InsertedID.(primitive.ObjectID), rt)
+	err = hp.UpdateRefreshToken(ctx, insertResult.InsertedID.(primitive.ObjectID), rt)
+	if err != nil {
+		config.Logs("error", err.Error())
+		response.Type = "error"
+		response.Message = err.Error()
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
 
 	response.Type = "success"
 	response.Message = "User created"
@@ -185,7 +192,7 @@ func Signout(c *gin.Context) {
 		return
 	}
 
-	err = UpdateRefreshToken(ctx, id, "")
+	err = hp.UpdateRefreshToken(ctx, id, "")
 	if err != nil {
 		config.Logs("error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -196,20 +203,4 @@ func Signout(c *gin.Context) {
 	response.Type = "success"
 	response.Message = "User signed out"
 	c.JSON(http.StatusOK, response)
-}
-
-func UpdateRefreshToken(ctx context.Context, id primitive.ObjectID, refreshToken string) error {
-	filter := bson.M{"_id": id}
-	update := bson.M{
-		"$set": bson.M{
-			"refreshToken": refreshToken,
-			"updatedAt":    primitive.NewDateTimeFromTime(time.Now()),
-		},
-	}
-	updateResult, err := usersCollection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-	log.Println("updateResult: ", updateResult)
-	return nil
 }
