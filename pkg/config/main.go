@@ -13,12 +13,14 @@ const (
 	USERS       = "users"
 	SESSION     = "sessions"
 	RESTAURAUNT = "restauraunts"
+	HOSTING     = "hosting"
 )
 
 var (
 	UserCollection       = database.OpenCollection(database.ConnectMongoDB(), DB, USERS)
 	SessionCollection    = database.OpenCollection(database.ConnectMongoDB(), DB, SESSION)
 	RestaurantCollection = database.OpenCollection(database.ConnectMongoDB(), DB, RESTAURAUNT)
+	HostCollection       = database.OpenCollection(database.ConnectMongoDB(), DB, HOSTING)
 )
 
 var (
