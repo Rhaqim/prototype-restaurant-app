@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+option go_package = "github.com/Rhaqim/thedutchapp";
+
+import "google/protobuf/any.proto";
+
+service DutchService {
+    rpc SignUp (SignUpRequest) returns (SignUpResponse) {}
+    rpc SignIn (SignInRequest) returns (SignInResponse) {}
+    rpc SignOut (SignOutRequest) returns (SignOutResponse) {}
+    rpc GetUsers (GetUsersRequest) returns (GetUsersResponse) {}
+    rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse) {}
+    rpc AddUserToGroup (AddUserToGroupRequest) returns (AddUserToGroupResponse) {}
+}
+
+message SignUpRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message SignUpResponse {
+    string message = 1;
+}
+
+message SignInRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message SignInResponse {
+    string message = 1;
+}
+
+message SignOutRequest {
+    string username = 1;
+}
+
+message SignOutResponse {
+    string message = 1;
+}
+
+message GetUsersRequest {
+    string username = 1;
+}
+
+message GetUsersResponse {
+    repeated User users = 1;
+}
+
+message DeleteUserRequest {
+    string username = 1;
+}
+
+message DeleteUserResponse {
+    string message = 1;
+}
+
+message AddUserToGroupRequest {
+    string username = 1;
+    string group = 2;
+}
+
+message AddUserToGroupResponse {
+    string message = 1;
+}
+
+message User {
+    string username = 1;
+    string password = 2;
+    repeated string groups = 3;
+}
+
+message CreateUserRequest {
+    string Fullname = 1;
+	string Username = 2; 
+	message Avatar = 3; 
+	string Email = 4;   
+	string Password = 5;    
+	message Social = 6; 
+	Roles Role = 7;   
+	string RefreshToken = 8; 
+	bool EmailVerified = 9;
+	Timestamp CreatedAt = 10;
+	Timestamp UpdatedAt = 11;
+}
+
+enum Roles {
+    ADMIN = 0;
+    USER = 1;
+}
+
+The server code is pretty simple. It just implements the DutchService interface and uses the in-memory storage to store the users.

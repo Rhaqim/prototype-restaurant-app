@@ -9,14 +9,20 @@ import (
 )
 
 const (
-	DB      = "thedutchapp"
-	USERS   = "users"
-	SESSION = "sessions"
+	DB          = "thedutchapp"
+	USERS       = "users"
+	SESSION     = "sessions"
+	RESTAURAUNT = "restauraunts"
 )
 
 var (
-	AuthCollection = database.OpenCollection(database.ConnectMongoDB(), DB, USERS)
-	JWTSecret      = os.Getenv("SECRET")
+	UserCollection       = database.OpenCollection(database.ConnectMongoDB(), DB, USERS)
+	SessionCollection    = database.OpenCollection(database.ConnectMongoDB(), DB, SESSION)
+	RestaurantCollection = database.OpenCollection(database.ConnectMongoDB(), DB, RESTAURAUNT)
+)
+
+var (
+	JWTSecret = os.Getenv("SECRET")
 )
 
 // Log Messages

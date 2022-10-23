@@ -19,74 +19,7 @@ import (
 /*
 Get User by ID
 */
-var usersCollection = config.AuthCollection
-
-func GetUserByID(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
-	var user bson.M
-	request := hp.GetUserById{}
-	var response = hp.MongoJsonResponse{}
-
-	if err := c.BindJSON(&request); err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	log.Print("Request ID sent by client:", request.ID)
-
-	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
-	config.CheckErr(err)
-
-	config.Logs("info", "ID: "+id.Hex())
-
-	filter := bson.M{"_id": id}
-	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	response.Type = "success"
-	response.Data = user
-	response.Message = "User found"
-
-	c.JSON(http.StatusOK, response)
-}
-
-func GetUserByEmail(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
-	var user bson.M
-	request := hp.GetUserByEmail{}
-	var response = hp.MongoJsonResponse{}
-
-	if err := c.BindJSON(&request); err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	log.Print("Request ID sent by client:", request.Email)
-
-	config.Logs("info", "Email: "+request.Email)
-
-	filter := bson.M{"email": request.Email}
-	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	response.Type = "success"
-	response.Data = user
-	response.Message = "User found"
-
-	c.JSON(http.StatusOK, response)
-}
+var usersCollection = config.UserCollection
 
 func CreatNewUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -160,6 +93,73 @@ func CreatNewUser(c *gin.Context) {
 	log.Println("insertResult: ", insertResult)
 	response.Type = "success"
 	response.Message = "User created"
+	c.JSON(http.StatusOK, response)
+}
+
+func GetUserByID(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var user bson.M
+	request := hp.GetUserById{}
+	var response = hp.MongoJsonResponse{}
+
+	if err := c.BindJSON(&request); err != nil {
+		config.Logs("error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	log.Print("Request ID sent by client:", request.ID)
+
+	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
+	config.CheckErr(err)
+
+	config.Logs("info", "ID: "+id.Hex())
+
+	filter := bson.M{"_id": id}
+	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
+		config.Logs("error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	response.Type = "success"
+	response.Data = user
+	response.Message = "User found"
+
+	c.JSON(http.StatusOK, response)
+}
+
+func GetUserByEmail(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var user bson.M
+	request := hp.GetUserByEmail{}
+	var response = hp.MongoJsonResponse{}
+
+	if err := c.BindJSON(&request); err != nil {
+		config.Logs("error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	log.Print("Request ID sent by client:", request.Email)
+
+	config.Logs("info", "Email: "+request.Email)
+
+	filter := bson.M{"email": request.Email}
+	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
+		config.Logs("error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	response.Type = "success"
+	response.Data = user
+	response.Message = "User found"
+
 	c.JSON(http.StatusOK, response)
 }
 

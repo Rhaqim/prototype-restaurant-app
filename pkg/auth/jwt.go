@@ -16,7 +16,7 @@ import (
 
 // var jwtKey = []byte("supersecretkey")
 
-var collection *mongo.Collection = config.AuthCollection
+var collection *mongo.Collection = config.UserCollection
 
 type JWTClaim struct {
 	Username string             `json:"username"`
