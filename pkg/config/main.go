@@ -27,8 +27,6 @@ var (
 	JWTSecret = os.Getenv("SECRET")
 )
 
-var ()
-
 // Log Messages
 func Logs(level string, message interface{}) {
 	switch level {

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/Rhaqim/thedutchapp";
+option go_package = "github.com/Rhaqim/thedutchapp/grpc";
 
 service DutchService {
     rpc SignUp (SignUpRequest) returns (SignUpResponse) {}
