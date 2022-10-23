@@ -25,11 +25,13 @@ func Signup(c *gin.Context) {
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var user = hp.CreatUser{}
-	var response = hp.MongoJsonResponse{}
+	var response = hp.MongoJsonResponse{
+		Date: time.Now(),
+	}
 	if err := c.BindJSON(&user); err != nil {
 		config.Logs("error", err.Error())
 		response.Type = "error"
-		response.Message = "fullname, username, email, password are required"
+		response.Message = "fullname, username, email, password are required "
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -38,10 +40,6 @@ func Signup(c *gin.Context) {
 	checkEmail, err := hp.CheckIfEmailExists(user.Email) // check if email exists
 	if err != nil {
 		config.Logs("error", err.Error())
-		response.Type = "error"
-		response.Message = err.Error()
-		c.JSON(http.StatusBadRequest, response)
-		return
 	}
 	if checkEmail {
 		response.Type = "error"
@@ -53,10 +51,6 @@ func Signup(c *gin.Context) {
 	checkUsername, err := hp.CheckIfUsernameExists(user.Username) // check if username exists
 	if err != nil {
 		config.Logs("error", err.Error())
-		response.Type = "error"
-		response.Message = err.Error()
-		c.JSON(http.StatusBadRequest, response)
-		return
 	}
 	if checkUsername {
 		response.Type = "error"
@@ -125,7 +119,9 @@ func SignIn(c *gin.Context) {
 
 	var request = hp.SignIn{}
 	var user = hp.UserStruct{}
-	var response = hp.MongoJsonResponse{}
+	var response = hp.MongoJsonResponse{
+		Date: time.Now(),
+	}
 
 	if err := c.BindJSON(&request); err != nil {
 		config.Logs("error", err.Error())
@@ -199,7 +195,9 @@ func Signout(c *gin.Context) {
 		return
 	}
 
-	var response = hp.MongoJsonResponse{}
+	var response = hp.MongoJsonResponse{
+		Date: time.Now(),
+	}
 	response.Type = "success"
 	response.Message = "User signed out"
 	c.JSON(http.StatusOK, response)
