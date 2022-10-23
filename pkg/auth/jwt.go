@@ -26,6 +26,7 @@ type JWTClaim struct {
 }
 
 var SECRET_KEY string = config.JWTSecret
+var REFRESH_SECECT_KEY string = config.JWTRefreshSecret
 
 func GenerateJWT(email string, username string, userid primitive.ObjectID) (token string, refreshToken string, err error) {
 	expirationTime := time.Now().Add(1 * time.Hour)
@@ -51,7 +52,7 @@ func GenerateJWT(email string, username string, userid primitive.ObjectID) (toke
 		log.Panic(err)
 		return
 	}
-	refreshToken, err = jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(SECRET_KEY))
+	refreshToken, err = jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(REFRESH_SECECT_KEY))
 	if err != nil {
 		log.Panic(err)
 		return
@@ -59,27 +60,70 @@ func GenerateJWT(email string, username string, userid primitive.ObjectID) (toke
 
 	return
 }
-func ValidateToken(signedToken string) (err error) {
-	token, err := jwt.ParseWithClaims(
-		signedToken,
-		&JWTClaim{},
-		func(token *jwt.Token) (interface{}, error) {
-			return []byte([]byte(SECRET_KEY)), nil
-		},
-	)
+
+// func ValidateToken(signedToken string) (err error) {
+// 	token, err := jwt.ParseWithClaims(
+// 		signedToken,
+// 		&JWTClaim{},
+// 		func(token *jwt.Token) (interface{}, error) {
+// 			return []byte([]byte(SECRET_KEY)), nil
+// 		},
+// 	)
+// 	if err != nil {
+// 		return
+// 	}
+// 	claims, ok := token.Claims.(*JWTClaim)
+// 	if !ok {
+// 		err = errors.New("couldn't parse claims")
+// 		return
+// 	}
+// 	if claims.ExpiresAt < time.Now().Local().Unix() {
+// 		err = errors.New("token expired")
+// 		return
+// 	}
+// 	return
+// }
+
+func VerifyToken(token string) (claim *JWTClaim, err error) {
+	claim = &JWTClaim{}
+	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
+		return []byte(SECRET_KEY), nil
+	})
 	if err != nil {
-		return
+		if err == jwt.ErrSignatureInvalid {
+			return nil, errors.New("invalid signature")
+		}
+		return nil, err
 	}
-	claims, ok := token.Claims.(*JWTClaim)
-	if !ok {
-		err = errors.New("couldn't parse claims")
-		return
+	if !tkn.Valid {
+		return nil, errors.New("invalid token")
 	}
-	if claims.ExpiresAt < time.Now().Local().Unix() {
+	if claim.ExpiresAt < time.Now().Local().Unix() {
 		err = errors.New("token expired")
-		return
+		return nil, err
 	}
-	return
+	return claim, nil
+}
+
+func VerifyRefreshToken(token string) (claim *JWTClaim, err error) {
+	claim = &JWTClaim{}
+	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
+		return []byte(REFRESH_SECECT_KEY), nil
+	})
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			return nil, errors.New("invalid signature")
+		}
+		return nil, err
+	}
+	if !tkn.Valid {
+		return nil, errors.New("invalid token")
+	}
+	if claim.ExpiresAt < time.Now().Local().Unix() {
+		err = errors.New("token expired")
+		return nil, err
+	}
+	return claim, nil
 }
 
 func UpdateToken(signedToken string, signedRefreshToken string, email string, username string, userid primitive.ObjectID) (token string, refreshToken string, err error) {

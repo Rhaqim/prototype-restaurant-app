@@ -115,10 +115,10 @@ func Signup(c *gin.Context) {
 	response.Type = "success"
 	response.Message = "User created"
 	response.Data = gin.H{
-		"token":     t,
-		"refresh":   rt,
-		"user":      userResponse,
-		"expiresAt": time.Now().Add(time.Hour * 24).Unix(),
+		"accessToken":  t,
+		"refreshToken": rt,
+		"user":         userResponse,
+		"expiresAt":    time.Now().Add(time.Hour * 24).Unix(),
 	}
 	c.JSON(http.StatusOK, response)
 }
@@ -178,10 +178,10 @@ func SignIn(c *gin.Context) {
 		response.Type = "success"
 		response.Message = "User signed in"
 		response.Data = gin.H{
-			"token":     t,
-			"refresh":   rt,
-			"user":      userResponse,
-			"expiresAt": time.Now().Add(time.Hour * 24).Unix(),
+			"accessToken":  t,
+			"refreshToken": rt,
+			"user":         userResponse,
+			"expiresAt":    time.Now().Add(time.Hour * 24).Unix(),
 		}
 		c.JSON(http.StatusOK, response)
 	} else {
@@ -196,21 +196,21 @@ func Signout(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
-	request := hp.SignOut{}
 	response := hp.MongoJsonResponse{
 		Date: time.Now(),
 	}
 
 	user := hp.UserResponse{}
 
-	if err := c.BindJSON(&request); err != nil {
-		config.Logs("error", err.Error())
+	check, ok := c.Get("user") //check if user is logged in
+	if !ok {
 		response.Type = "error"
-		response.Message = "Username is required"
+		response.Message = "User not logged in"
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
+	request := check.(hp.UserResponse)
 	filter := bson.M{"username": request.Username}
 
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {

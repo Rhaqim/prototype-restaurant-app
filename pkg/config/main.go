@@ -24,7 +24,8 @@ var (
 )
 
 var (
-	JWTSecret = os.Getenv("SECRET")
+	JWTSecret        = os.Getenv("SECRET")
+	JWTRefreshSecret = os.Getenv("REFRESH_SECRET")
 )
 
 // Log Messages
