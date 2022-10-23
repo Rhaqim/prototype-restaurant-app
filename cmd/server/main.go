@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"os"
 
-func main*{
-	fmt.Println("Welcome to the Dutch Application!")
+	"github.com/Rhaqim/thedutchapp/pkg/handlers"
+)
+
+func main() {
+	run := handlers.GinRouter()
+	port := os.Getenv("PORT")
+
+	run.Run(port)
 }
