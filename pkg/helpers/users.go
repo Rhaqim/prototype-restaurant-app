@@ -4,6 +4,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type Roles string
+
+const (
+	Admin Roles = "admin"
+	User  Roles = "user"
+)
+
 type UserStruct struct {
 	ID            primitive.ObjectID `bson:"_id" json:"_id,omitempty"`
 	Fullname      string             `bson:"fullname" json:"fullname"`
@@ -30,13 +37,6 @@ type UserResponse struct {
 	CreatedAt    primitive.DateTime `bson:"createdAt" json:"createdAt"`
 	UpdatedAt    primitive.DateTime `bson:"updatedAt" json:"updatedAt"`
 }
-
-type Roles string
-
-const (
-	Admin Roles = "admin"
-	User  Roles = "user"
-)
 
 type CreatUser struct {
 	Fullname      string             `json:"fullname"`

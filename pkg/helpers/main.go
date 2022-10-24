@@ -57,3 +57,28 @@ func UpdateRefreshToken(ctx context.Context, id primitive.ObjectID, refreshToken
 	log.Println("updateResult: ", updateResult)
 	return nil
 }
+
+// Validate Role, TxnType, TxnStatus enums
+func RoleIsValid(role Roles) bool {
+	switch role {
+	case Admin, User:
+		return true
+	}
+	return false
+}
+
+func TxnTypeIsValid(TT TxnType) bool {
+	switch TT {
+	case Debit, Credit:
+		return true
+	}
+	return false
+}
+
+func TxnStatusIsValid(TS TxnStatus) bool {
+	switch TS {
+	case Success, Pending, Fail:
+		return true
+	}
+	return false
+}

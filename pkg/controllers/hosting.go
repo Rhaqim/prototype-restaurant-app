@@ -107,3 +107,41 @@ func UpdateHosting(c *gin.Context) {
 	response.Message = "User created"
 	c.JSON(http.StatusOK, response)
 }
+
+func GetUserHostedEvents(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	response := hp.MongoJsonResponse{}
+
+	check, ok := c.Get("user") //check if user is logged in
+	if !ok {
+		response.Type = "error"
+		response.Message = "User not logged in"
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user := check.(hp.UserResponse)
+
+	filter := bson.M{"host_id": user.ID}
+	cursor, err := hostCollection.Find(ctx, filter)
+	if err != nil {
+		config.Logs("error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var hosting []hp.Hosting
+	if err = cursor.All(ctx, &hosting); err != nil {
+		config.Logs("error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	response.Type = "success"
+	response.Message = "Hosted Events"
+	response.Data = hosting
+	c.JSON(http.StatusOK, response)
+}

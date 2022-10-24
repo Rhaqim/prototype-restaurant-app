@@ -63,6 +63,13 @@ func Signup(c *gin.Context) {
 	user.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
 	password, err := auth.HashAndSalt(user.Password)
 	config.CheckErr(err)
+
+	ok := hp.RoleIsValid(user.Role)
+
+	if !ok {
+		user.Role = "user"
+	}
+
 	filter := bson.M{
 		"fullname":  user.Fullname,
 		"username":  user.Username,
