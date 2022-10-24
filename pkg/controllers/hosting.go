@@ -78,6 +78,16 @@ func UpdateHosting(c *gin.Context) {
 		return
 	}
 
+	check, ok := c.Get("user") //check if user is logged in
+	if !ok {
+		response.Type = "error"
+		response.Message = "User not logged in"
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user := check.(hp.UserResponse)
+
 	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
 	if err != nil {
 		config.Logs("error", err.Error())
@@ -85,7 +95,7 @@ func UpdateHosting(c *gin.Context) {
 		return
 	}
 
-	filter := bson.M{"_id": id}
+	filter := bson.M{"_id": id, "host_id": user.ID}
 
 	update := bson.M{
 		"$set": bson.M{
