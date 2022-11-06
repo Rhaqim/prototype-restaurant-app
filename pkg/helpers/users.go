@@ -19,6 +19,7 @@ type UserStruct struct {
 	Email         string             `bson:"email" json:"email"`
 	Password      string             `bson:"password" json:"password"`
 	Social        interface{}        `bson:"social" json:"social"`
+	Location      primitive.ObjectID `bson:"location" json:"location"`
 	Role          Roles              `bson:"role" json:"role"`
 	RefreshToken  string             `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
 	EmailVerified bool               `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty"`
@@ -32,6 +33,8 @@ type UserResponse struct {
 	Username     string             `bson:"username" json:"username"`
 	Avatar       interface{}        `bson:"avatar" json:"avatar"`
 	Email        string             `bson:"email" json:"email"`
+	Social       interface{}        `bson:"social" json:"social"`
+	Location     primitive.ObjectID `bson:"location" json:"location"`
 	Role         Roles              `bson:"role" json:"role"`
 	RefreshToken string             `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
 	CreatedAt    primitive.DateTime `bson:"createdAt" json:"createdAt"`

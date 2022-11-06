@@ -39,13 +39,15 @@ func CreateTransaction(c *gin.Context) {
 
 	user := check.(hp.UserResponse)
 
+	request.Status = "pending"
+
 	insert := bson.M{
 		"txn_uuid": request.Txn_uuid,
 		"from_id":  user.ID,
 		"to_id":    request.ToID,
 		"amount":   request.Amount,
 		"type":     request.Type,
-		"status":   "pending",
+		"status":   request.Status,
 	}
 
 	insertResult, err := config.TransactionsCollection.InsertOne(ctx, insert)
@@ -72,7 +74,7 @@ func CreateTransaction(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func UpdateTransaction(c *gin.Context) {
+func UpdateTransactionStatus(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())

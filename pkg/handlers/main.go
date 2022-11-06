@@ -37,13 +37,22 @@ func GinRouter() *gin.Engine {
 		user.GET("/getUserById", views.GetUserByID)
 		user.GET("/getUserByEmail", views.GetUserByID)
 		// user.GET("/getAllUsers", views.GetAllUsers)
+
+		transactions := user.Group("/transactions")
+		{
+			transactions.POST("/createTransaction", views.CreateTransaction)
+			transactions.PUT("/updateTransaction", views.UpdateTransactionStatus)
+		}
 	}
 
 	hosting := router.Group("/hosting")
+	// hosting.GET("/getAllHostedEvents", views.GetHostingByID)
 	hosting.Use(TokenGuardMiddleware())
 	{
 		hosting.POST("/createHosting", views.CreateHostedEvent)
-		hosting.PUT("/updateHosting", views.UpdateHosting)
+		hosting.PUT("/updateHosting", views.UpdateHostedEvent)
+		hosting.DELETE("/deleteHosting/:id", views.DeleteHostedEvent)
+		hosting.GET("/getHostingByHost", views.GetUserHostedEventsByHost)
 	}
 
 	return router

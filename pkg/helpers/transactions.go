@@ -31,3 +31,8 @@ type Transactions struct {
 	Status   TxnStatus          `json:"status" bson:"status"`
 	Date     time.Time          `json:"date" bson:"date"`
 }
+
+type TransactionStatus struct {
+	ID     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Status TxnStatus          `json:"status" bson:"status"`
+}
