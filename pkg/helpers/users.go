@@ -12,33 +12,40 @@ const (
 )
 
 type UserStruct struct {
-	ID            primitive.ObjectID `bson:"_id" json:"_id,omitempty"`
-	Fullname      string             `bson:"fullname" json:"fullname"`
-	Username      string             `bson:"username" json:"username"`
-	Avatar        interface{}        `bson:"avatar" json:"avatar"`
-	Email         string             `bson:"email" json:"email"`
-	Password      string             `bson:"password" json:"password"`
-	Social        interface{}        `bson:"social" json:"social"`
-	Location      primitive.ObjectID `bson:"location" json:"location"`
-	Role          Roles              `bson:"role" json:"role"`
-	RefreshToken  string             `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
-	EmailVerified bool               `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty"`
-	CreatedAt     primitive.DateTime `bson:"createdAt" json:"createdAt"`
-	UpdatedAt     primitive.DateTime `bson:"updatedAt" json:"updatedAt"`
+	ID            primitive.ObjectID   `bson:"_id" json:"_id,omitempty"`
+	Fullname      string               `bson:"fullname" json:"fullname"`
+	Username      string               `bson:"username" json:"username"`
+	Avatar        interface{}          `bson:"avatar" json:"avatar"`
+	Email         string               `bson:"email" json:"email"`
+	Password      string               `bson:"password" json:"password"`
+	Social        interface{}          `bson:"social" json:"social"`
+	Friends       []primitive.ObjectID `bson:"friends" json:"friends"`
+	Location      primitive.ObjectID   `bson:"location" json:"location"`
+	Wallet        float32              `bson:"wallet" json:"wallet"`
+	Transactions  []primitive.ObjectID `bson:"transactions" json:"transactions"`
+	RefreshToken  string               `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
+	EmailVerified bool                 `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty" default:"false"`
+	Role          Roles                `bson:"role" json:"role"`
+	CreatedAt     primitive.DateTime   `bson:"createdAt" json:"createdAt"`
+	UpdatedAt     primitive.DateTime   `bson:"updatedAt" json:"updatedAt"`
 }
 
 type UserResponse struct {
-	ID           primitive.ObjectID `bson:"_id" json:"_id,omitempty"`
-	Fullname     string             `bson:"fullname" json:"fullname"`
-	Username     string             `bson:"username" json:"username"`
-	Avatar       interface{}        `bson:"avatar" json:"avatar"`
-	Email        string             `bson:"email" json:"email"`
-	Social       interface{}        `bson:"social" json:"social"`
-	Location     primitive.ObjectID `bson:"location" json:"location"`
-	Role         Roles              `bson:"role" json:"role"`
-	RefreshToken string             `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
-	CreatedAt    primitive.DateTime `bson:"createdAt" json:"createdAt"`
-	UpdatedAt    primitive.DateTime `bson:"updatedAt" json:"updatedAt"`
+	ID            primitive.ObjectID   `bson:"_id" json:"_id,omitempty"`
+	Fullname      string               `bson:"fullname" json:"fullname"`
+	Username      string               `bson:"username" json:"username"`
+	Avatar        interface{}          `bson:"avatar" json:"avatar"`
+	Email         string               `bson:"email" json:"email"`
+	Social        interface{}          `bson:"social" json:"social"`
+	Friends       []primitive.ObjectID `bson:"friends" json:"friends"`
+	Location      primitive.ObjectID   `bson:"location" json:"location"`
+	Wallet        float32              `bson:"wallet" json:"wallet"`
+	Transactions  []primitive.ObjectID `bson:"transactions" json:"transactions"`
+	RefreshToken  string               `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
+	EmailVerified bool                 `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty" default:"false"`
+	Role          Roles                `bson:"role" json:"role"`
+	CreatedAt     primitive.DateTime   `bson:"createdAt" json:"createdAt"`
+	UpdatedAt     primitive.DateTime   `bson:"updatedAt" json:"updatedAt"`
 }
 
 type CreatUser struct {
