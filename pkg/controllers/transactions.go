@@ -37,6 +37,14 @@ func CreateTransaction(c *gin.Context) {
 
 	user := check.(hp.UserResponse)
 
+	friends := hp.VerifyFriends(user.ID, request.ToID)
+
+	if !friends {
+		response := hp.SetError(nil, "You are not friends with this user")
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
 	request.Status = hp.TxnPending
 	request.Txn_uuid = ut.GenerateUUID()
 
