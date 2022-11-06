@@ -25,13 +25,10 @@ func Signup(c *gin.Context) {
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var user = hp.CreatUser{}
-	var response = hp.MongoJsonResponse{
-		Date: time.Now(),
-	}
+
 	if err := c.BindJSON(&user); err != nil {
 		config.Logs("error", err.Error())
-		response.Type = "error"
-		response.Message = "fullname, username, email, password are required "
+		response := hp.SetError(err, "fullname, username, email, password are required ")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -42,8 +39,7 @@ func Signup(c *gin.Context) {
 		config.Logs("error", err.Error())
 	}
 	if checkEmail {
-		response.Type = "error"
-		response.Message = "Email already exists"
+		response := hp.SetError(nil, "Email already exists")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -53,8 +49,7 @@ func Signup(c *gin.Context) {
 		config.Logs("error", err.Error())
 	}
 	if checkUsername {
-		response.Type = "error"
-		response.Message = "Username already exists"
+		response := hp.SetError(nil, "Username already exists")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -71,20 +66,23 @@ func Signup(c *gin.Context) {
 	}
 
 	filter := bson.M{
-		"fullname":  user.Fullname,
-		"username":  user.Username,
-		"avatar":    user.Avatar,
-		"email":     user.Email,
-		"password":  password,
-		"social":    user.Social,
-		"role":      user.Role,
-		"createdAt": user.CreatedAt,
-		"updatedAt": user.UpdatedAt,
+		"fullname":      user.Fullname,
+		"username":      user.Username,
+		"avatar":        user.Avatar,
+		"email":         user.Email,
+		"password":      password,
+		"social":        user.Social,
+		"role":          user.Role,
+		"refreshtoken":  user.RefreshToken,
+		"emailverified": user.EmailVerified,
+		"createdAt":     user.CreatedAt,
+		"updatedAt":     user.UpdatedAt,
 	}
 	insertResult, err := authCollection.InsertOne(ctx, filter)
 	if err != nil {
 		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Error creating user")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 	log.Println("insertResult: ", insertResult)
@@ -92,18 +90,16 @@ func Signup(c *gin.Context) {
 	t, rt, err := auth.GenerateJWT(user.Email, user.Username, insertResult.InsertedID.(primitive.ObjectID))
 
 	if err != nil {
-		config.Logs("error", err.Error())
-		response.Type = "error"
-		response.Message = err.Error()
+		config.Logs("error", err.Error()+" Error generating token")
+		response := hp.SetError(err, "Error creating user")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	err = hp.UpdateRefreshToken(ctx, insertResult.InsertedID.(primitive.ObjectID), rt)
 	if err != nil {
-		config.Logs("error", err.Error())
-		response.Type = "error"
-		response.Message = err.Error()
+		config.Logs("error", err.Error()+" Error updating refresh token")
+		response := hp.SetError(err, "Error creating user")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -119,14 +115,14 @@ func Signup(c *gin.Context) {
 		UpdatedAt: user.UpdatedAt,
 	}
 
-	response.Type = "success"
-	response.Message = "User created"
-	response.Data = gin.H{
+	data := gin.H{
 		"accessToken":  t,
 		"refreshToken": rt,
 		"user":         userResponse,
 		"expiresAt":    time.Now().Add(time.Hour * 24).Unix(),
 	}
+
+	response := hp.SetSuccess("User created successfully", data)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -137,14 +133,10 @@ func SignIn(c *gin.Context) {
 
 	var request = hp.SignIn{}
 	var user = hp.UserStruct{}
-	var response = hp.MongoJsonResponse{
-		Date: time.Now(),
-	}
 
 	if err := c.BindJSON(&request); err != nil {
 		config.Logs("error", err.Error())
-		response.Type = "error"
-		response.Message = "email and password are required "
+		response := hp.SetError(err, "email and password are required ")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -153,8 +145,7 @@ func SignIn(c *gin.Context) {
 	filter := bson.M{"username": request.Username}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
 		config.Logs("error", err.Error())
-		response.Type = "error"
-		response.Message = "User not found"
+		response := hp.SetError(err, "User not found")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -164,9 +155,8 @@ func SignIn(c *gin.Context) {
 		t, rt, err := auth.GenerateJWT(user.Email, user.Username, user.ID)
 
 		if err != nil {
-			config.Logs("error", err.Error())
-			response.Type = "error"
-			response.Message = err.Error()
+			config.Logs("error", err.Error()+" Error generating token")
+			response := hp.SetError(err, "Error Signing in, please try again later")
 			c.JSON(http.StatusBadRequest, response)
 			return
 		}
@@ -182,18 +172,16 @@ func SignIn(c *gin.Context) {
 			UpdatedAt: user.UpdatedAt,
 		}
 
-		response.Type = "success"
-		response.Message = "User signed in"
-		response.Data = gin.H{
+		var data = gin.H{
 			"accessToken":  t,
 			"refreshToken": rt,
 			"user":         userResponse,
 			"expiresAt":    time.Now().Add(time.Hour * 24).Unix(),
 		}
+		response := hp.SetSuccess("User signed in successfully", data)
 		c.JSON(http.StatusOK, response)
 	} else {
-		response.Type = "error"
-		response.Message = "Invalid Credentials"
+		response := hp.SetError(nil, "Invalid password")
 		c.JSON(http.StatusBadRequest, response)
 	}
 }
@@ -203,16 +191,11 @@ func Signout(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
-	response := hp.MongoJsonResponse{
-		Date: time.Now(),
-	}
-
 	user := hp.UserResponse{}
 
 	check, ok := c.Get("user") //check if user is logged in
 	if !ok {
-		response.Type = "error"
-		response.Message = "User not logged in"
+		response := hp.SetError(nil, "User not logged in")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -222,19 +205,20 @@ func Signout(c *gin.Context) {
 
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
 		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "User not found")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	err := hp.UpdateRefreshToken(ctx, user.ID, "")
 	if err != nil {
 		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Error signing out")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	response.Type = "success"
-	response.Message = "User signed out"
+	response := hp.SetSuccess("User signed out successfully", nil)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -243,61 +227,62 @@ func RefreshToken(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
-	request := hp.RefreshToken{}
-
-	if err := c.BindJSON(&request); err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	check, ok := c.Get("user") //check if user is logged in
+	if !ok {
+		response := hp.SetError(nil, "User not logged in")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	log.Print("Request ID sent by client:", request.ID)
+
+	request := check.(hp.UserResponse)
+	var user = hp.UserResponse{}
 
 	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
 	if err != nil {
 		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Error refreshing token")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	var user = hp.UserResponse{}
 	filter := bson.M{"_id": id}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
 		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "User not found")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	if user.RefreshToken != request.RefreshToken {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid refresh token"})
+		response := hp.SetError(nil, "Invalid refresh token")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	t, rt, err := auth.GenerateJWT(user.Email, user.Username, user.ID)
 
 	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		config.Logs("error", err.Error()+" Error generating token")
+		response := hp.SetError(err, "Error refreshing token")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	err = hp.UpdateRefreshToken(ctx, id, rt)
 	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		config.Logs("error", err.Error()+" Error updating refresh token")
+		response := hp.SetError(err, "Error refreshing token")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	var response = hp.MongoJsonResponse{
-		Date: time.Now(),
-	}
-	response.Type = "success"
-	response.Message = "Token refreshed"
-	response.Data = gin.H{
+	var data = gin.H{
 		"token":     t,
 		"refresh":   rt,
 		"user":      user.Username,
 		"expiresAt": time.Now().Add(time.Hour * 24).Unix(),
 	}
+	response := hp.SetSuccess("Token refreshed successfully", data)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -310,7 +295,8 @@ func ForgotPassword(c *gin.Context) {
 
 	if err := c.BindJSON(&request); err != nil {
 		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Error binding request")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 	log.Print("Request ID sent by client:", request.Email)
@@ -318,33 +304,32 @@ func ForgotPassword(c *gin.Context) {
 	var user = hp.UserResponse{}
 	filter := bson.M{"email": request.Email}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		config.Logs("error", err.Error()+" User not found")
+		response := hp.SetError(err, "User not found")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	t, rt, err := auth.GenerateJWT(user.Email, user.Username, user.ID)
 	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		config.Logs("error", err.Error()+" Error generating token")
+		response := hp.SetError(err, "Error generating token")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	err = hp.UpdateRefreshToken(ctx, user.ID, rt)
 	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		config.Logs("error", err.Error()+" Error updating refresh token")
+		response := hp.SetError(err, "Error updating refresh token")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	var response = hp.MongoJsonResponse{
-		Date: time.Now(),
-	}
-	response.Type = "success"
-	response.Message = "Token generated"
-	response.Data = gin.H{
+	var data = gin.H{
 		"token": t,
 	}
+	response := hp.SetSuccess("Token generated successfully", data)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -356,36 +341,42 @@ func ResetPassword(c *gin.Context) {
 	request := hp.ResetPassword{}
 
 	if err := c.BindJSON(&request); err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		config.Logs("error", err.Error()+" Error binding request")
+		response := hp.SetError(err, "Error binding request")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 	log.Print("Request ID sent by client:", request.ID)
 
 	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
 	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		config.Logs("error", err.Error()+" Error converting id")
+		response := hp.SetError(err, "Error converting id")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	var user = hp.UserStruct{}
 	filter := bson.M{"_id": id}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		config.Logs("error", err.Error()+" User not found")
+		response := hp.SetError(err, "User not found")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	if user.RefreshToken != request.RefreshToken {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid refresh token"})
+		config.Logs("error", "Invalid refresh token")
+		response := hp.SetError(nil, "Invalid refresh token")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	hashedPassword, err := auth.HashPassword(request.NewPassword)
 	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		config.Logs("error", err.Error()+" Error hashing password")
+		response := hp.SetError(err, "Error hashing password")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
@@ -397,15 +388,12 @@ func ResetPassword(c *gin.Context) {
 
 	_, err = usersCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		config.Logs("error", err.Error()+" Error updating password")
+		response := hp.SetError(err, "Error updating password")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	var response = hp.MongoJsonResponse{
-		Date: time.Now(),
-	}
-	response.Type = "success"
-	response.Message = "Password updated"
+	var response = hp.SetSuccess("Password updated successfully", nil)
 	c.JSON(http.StatusOK, response)
 }

@@ -20,26 +20,23 @@ func CreateTransaction(c *gin.Context) {
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var request hp.Transactions
-	var response = hp.MongoJsonResponse{
-		Date: time.Now(),
-	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Error binding JSON")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	check, ok := c.Get("user") //check if user is logged in
 	if !ok {
-		response.Type = "error"
-		response.Message = "User not logged in"
+		response := hp.SetError(nil, "User not logged in")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	user := check.(hp.UserResponse)
 
-	request.Status = "pending"
+	request.Status = hp.TxnPending
 
 	insert := bson.M{
 		"txn_uuid": request.Txn_uuid,
@@ -68,9 +65,7 @@ func CreateTransaction(c *gin.Context) {
 		Status:   request.Status,
 	}
 
-	response.Type = "success"
-	response.Message = "Transaction created successfully"
-	response.Data = transactionResponse
+	response := hp.SetSuccess("Transaction created successfully", transactionResponse)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -80,12 +75,19 @@ func UpdateTransactionStatus(c *gin.Context) {
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var request hp.Transactions
-	var response = hp.MongoJsonResponse{
-		Date: time.Now(),
-	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		var response = hp.SetError(err, "Error binding JSON")
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Check Transaction Type Validity
+	ok := hp.TxnStatusIsValid(request.Status)
+
+	if !ok {
+		response := hp.SetError(nil, "Invalid Transaction Type")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
@@ -102,7 +104,9 @@ func UpdateTransactionStatus(c *gin.Context) {
 	updateResult, err := config.TransactionsCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		// c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Error updating transaction status")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 	log.Println("updateResult: ", updateResult)
@@ -112,8 +116,6 @@ func UpdateTransactionStatus(c *gin.Context) {
 		Status: request.Status,
 	}
 
-	response.Type = "success"
-	response.Message = "Transaction updated successfully"
-	response.Data = transactionResponse
+	response := hp.SetSuccess("Transaction updated successfully", transactionResponse)
 	c.JSON(http.StatusOK, response)
 }

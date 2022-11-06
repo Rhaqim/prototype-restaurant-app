@@ -22,27 +22,23 @@ func CreateHostedEvent(c *gin.Context) {
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var request hp.HostingCreate
-	response := hp.MongoJsonResponse{}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		response.Type = "error"
-		response.Message = err.Error() + " Request body is not valid"
+		response := hp.SetError(err, "Error binding json")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	check, ok := c.Get("user") //check if user is logged in
 	if !ok {
-		response.Type = "error"
-		response.Message = "User not logged in"
+		response := hp.SetError(nil, "User not logged in")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	//  Ensure that hostedIDs are not empty
 	if len(request.HostedIDs) < 1 {
-		response.Type = "error"
-		response.Message = "HostedIDs cannot be empty"
+		response := hp.SetError(nil, "HostedIDs cannot be empty")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -54,13 +50,14 @@ func CreateHostedEvent(c *gin.Context) {
 		"title":      request.Title,
 		"hosted_ids": request.HostedIDs,
 		"venue":      request.Venue,
+		"type":       request.Type,
 		"bill":       request.Bill,
 	}
 
 	insertResult, err := hostCollection.InsertOne(ctx, insert)
 	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Error inserting into database")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 	log.Println("insertResult: ", insertResult)
@@ -71,12 +68,11 @@ func CreateHostedEvent(c *gin.Context) {
 		HostID:    user.ID,
 		HostedIDs: request.HostedIDs,
 		Venue:     request.Venue,
+		Type:      request.Type,
 		Bill:      request.Bill,
 	}
 
-	response.Type = "success"
-	response.Message = "Event created"
-	response.Data = hostingResponse
+	response := hp.SetSuccess("Event created", hostingResponse)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -85,12 +81,9 @@ func GetUserHostedEventsByHost(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
-	response := hp.MongoJsonResponse{}
-
 	check, ok := c.Get("user") //check if user is logged in
 	if !ok {
-		response.Type = "error"
-		response.Message = "User not logged in"
+		response := hp.SetError(nil, "User not logged in")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -100,21 +93,19 @@ func GetUserHostedEventsByHost(c *gin.Context) {
 	filter := bson.M{"host_id": user.ID}
 	cursor, err := hostCollection.Find(ctx, filter)
 	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Error finding hosted events")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	var hosting []hp.Hosting
 	if err = cursor.All(ctx, &hosting); err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Error decoding hosted events")
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	response.Type = "success"
-	response.Message = "Hosted Events by:" + user.Username
-	response.Data = hosting
+	response := hp.SetSuccess("Hosted events found", hosting)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -124,7 +115,6 @@ func UpdateHostedEvent(c *gin.Context) {
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var request hp.Hosting
-	response := hp.MongoJsonResponse{}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
@@ -133,9 +123,8 @@ func UpdateHostedEvent(c *gin.Context) {
 
 	check, ok := c.Get("user") //check if user is logged in
 	if !ok {
-		response.Type = "error"
-		response.Message = "User not logged in"
-		c.JSON(http.StatusBadRequest, response)
+		response := hp.SetError(nil, "User not logged in")
+		c.JSON(http.StatusNonAuthoritativeInfo, response)
 		return
 	}
 
@@ -143,8 +132,8 @@ func UpdateHostedEvent(c *gin.Context) {
 
 	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
 	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Error converting id to object id")
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
@@ -155,6 +144,7 @@ func UpdateHostedEvent(c *gin.Context) {
 			"title":      request.Title,
 			"hosted_ids": request.HostedIDs,
 			"venue":      request.Venue,
+			"type":       request.Type,
 			"bill":       request.Bill,
 		},
 	}
@@ -162,14 +152,12 @@ func UpdateHostedEvent(c *gin.Context) {
 	updateResult, err := hostCollection.UpdateOne(ctx, filter, update)
 
 	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Error updating hosted event")
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	log.Println("insertResult: ", updateResult)
-	response.Type = "success"
-	response.Message = "Event updated"
+	response := hp.SetSuccess("Hosted event updated", updateResult)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -178,13 +166,10 @@ func DeleteHostedEvent(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
-	response := hp.MongoJsonResponse{}
-
 	check, ok := c.Get("user") //check if user is logged in
 	if !ok {
-		response.Type = "error"
-		response.Message = "User not logged in"
-		c.JSON(http.StatusBadRequest, response)
+		response := hp.SetError(nil, "User not logged in")
+		c.JSON(http.StatusNonAuthoritativeInfo, response)
 		return
 	}
 
@@ -192,8 +177,8 @@ func DeleteHostedEvent(c *gin.Context) {
 
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Error converting id to object id")
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
@@ -202,13 +187,11 @@ func DeleteHostedEvent(c *gin.Context) {
 	deleteResult, err := hostCollection.DeleteOne(ctx, filter)
 
 	if err != nil {
-		config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Error deleting hosted event")
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	log.Println("insertResult: ", deleteResult)
-	response.Type = "success"
-	response.Message = "Event deleted"
+	response := hp.SetSuccess("Hosted event deleted", deleteResult)
 	c.JSON(http.StatusOK, response)
 }

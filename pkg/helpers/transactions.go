@@ -10,15 +10,22 @@ type TxnType string
 
 type TxnStatus string
 
+type TxnPurpose string
+
 const (
 	Debit  TxnType = "debit"
 	Credit TxnType = "credit"
 )
 
 const (
-	Success TxnStatus = "success"
-	Pending TxnStatus = "pending"
-	Fail    TxnStatus = "fail"
+	Event    TxnPurpose = "event"
+	Personal TxnPurpose = "personal"
+)
+
+const (
+	TxnSuccess TxnStatus = "success"
+	TxnPending TxnStatus = "pending"
+	TxnFail    TxnStatus = "fail"
 )
 
 type Transactions struct {

@@ -12,11 +12,46 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type JsonResponseType string
+
+const (
+	Error   JsonResponseType = "error"
+	Success JsonResponseType = "success"
+)
+
 type MongoJsonResponse struct {
-	Type    string      `json:"type"`
-	Data    interface{} `json:"data"`
-	Message string      `json:"message"`
-	Date    time.Time   `json:"date"`
+	Type    JsonResponseType `json:"type"`
+	Data    interface{}      `json:"data"`
+	Message string           `json:"message"`
+	Date    time.Time        `json:"date"`
+}
+
+func SetError(err error, message string) *MongoJsonResponse {
+	if err != nil {
+		config.Logs("error", err.Error()+" "+message)
+		return &MongoJsonResponse{
+			Type:    Error,
+			Message: message + ", " + err.Error(),
+			Date:    time.Now(),
+		}
+	}
+
+	config.Logs("error", message)
+	return &MongoJsonResponse{
+		Type:    Error,
+		Message: message,
+		Date:    time.Now(),
+	}
+}
+
+func SetSuccess(message string, data interface{}) *MongoJsonResponse {
+	config.Logs("info", message+" "+data.(string))
+	return &MongoJsonResponse{
+		Type:    Success,
+		Data:    data,
+		Message: message,
+		Date:    time.Now(),
+	}
 }
 
 var PasswordOpts = options.FindOne().SetProjection(bson.M{"password": 0})
@@ -77,7 +112,7 @@ func TxnTypeIsValid(TT TxnType) bool {
 
 func TxnStatusIsValid(TS TxnStatus) bool {
 	switch TS {
-	case Success, Pending, Fail:
+	case TxnSuccess, TxnPending, TxnFail:
 		return true
 	}
 	return false
