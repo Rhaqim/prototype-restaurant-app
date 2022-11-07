@@ -146,7 +146,7 @@ func GetUserByEmail(c *gin.Context) {
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var user bson.M
-	request := hp.GetUserByEmail{}
+	request := hp.GetUserByEmailStruct{}
 	var response = hp.MongoJsonResponse{}
 
 	if err := c.BindJSON(&request); err != nil {

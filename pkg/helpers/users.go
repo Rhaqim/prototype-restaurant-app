@@ -1,6 +1,13 @@
 package helpers
 
 import (
+	"context"
+	"log"
+	"time"
+
+	"github.com/Rhaqim/thedutchapp/pkg/config"
+	"github.com/Rhaqim/thedutchapp/pkg/database"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -39,7 +46,7 @@ type UserResponse struct {
 	Social        interface{}          `bson:"social" json:"social"`
 	Friends       []primitive.ObjectID `bson:"friends" json:"friends"`
 	Location      primitive.ObjectID   `bson:"location" json:"location"`
-	Wallet        float32              `bson:"wallet" json:"wallet"`
+	Wallet        float64              `bson:"wallet" json:"wallet"`
 	Transactions  []primitive.ObjectID `bson:"transactions" json:"transactions"`
 	RefreshToken  string               `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
 	EmailVerified bool                 `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty" default:"false"`
@@ -66,7 +73,7 @@ type GetUserById struct {
 	ID primitive.ObjectID `json:"id"`
 }
 
-type GetUserByEmail struct {
+type GetUserByEmailStruct struct {
 	Email string `json:"email"`
 }
 
@@ -75,4 +82,40 @@ type UpdateUserAvatar struct {
 	Avatar    string             `json:"avatar"`
 	CreatedAt primitive.DateTime `json:"createdAt"`
 	UpdatedAt primitive.DateTime `json:"updatedAt"`
+}
+
+func GetUserByID(userID primitive.ObjectID) UserResponse {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var user UserResponse
+	config.Logs("info", "User ID: "+userID.Hex())
+
+	filter := bson.M{"_id": userID}
+	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
+		config.Logs("error", err.Error())
+		return UserResponse{}
+	}
+
+	return user
+}
+
+func GetUserByEmail(email string) UserResponse {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var user UserResponse
+	log.Print("Request ID sent by client:", email)
+
+	config.Logs("info", "Email: "+email)
+
+	filter := bson.M{"email": email}
+	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
+		config.Logs("error", err.Error())
+		return UserResponse{}
+	}
+
+	return user
 }

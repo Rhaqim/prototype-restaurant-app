@@ -118,17 +118,12 @@ func TxnStatusIsValid(TS TxnStatus) bool {
 	return false
 }
 
-func VerifyFriends(userID primitive.ObjectID, friendID primitive.ObjectID) bool {
+func VerifyFriends(user UserResponse, friendID primitive.ObjectID) bool {
 	var friend UserResponse
-	var user UserResponse
 	err := config.UserCollection.FindOne(context.TODO(), bson.M{"_id": friendID}).Decode(&friend)
 	if err != nil {
 		config.Logs("error", err.Error())
-	}
-
-	err = config.UserCollection.FindOne(context.TODO(), bson.M{"_id": userID}).Decode(&user)
-	if err != nil {
-		config.Logs("error", err.Error())
+		return false
 	}
 
 	if checkIfFriendExists(user) && checkIfFriendExists(friend) {

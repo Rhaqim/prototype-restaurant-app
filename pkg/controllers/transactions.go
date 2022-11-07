@@ -37,10 +37,19 @@ func CreateTransaction(c *gin.Context) {
 
 	user := check.(hp.UserResponse)
 
-	friends := hp.VerifyFriends(user.ID, request.ToID)
+	// Transaction Verification
+	friends := hp.VerifyFriends(user, request.ToID)
 
 	if !friends {
 		response := hp.SetError(nil, "You are not friends with this user")
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	sufficientBalance := hp.VerifyWalletSufficientBalance(user, request.Amount)
+
+	if !sufficientBalance {
+		response := hp.SetError(nil, "Insufficient balance")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -137,132 +146,3 @@ func UpdateTransactionStatus(c *gin.Context) {
 	response := hp.SetSuccess("Transaction updated successfully", transactionResponse)
 	c.JSON(http.StatusOK, response)
 }
-
-// Deducts the amount from the user's wallet and adds it to the merchant's wallet
-// func DeductFromUser(sender primitive.ObjectID, receiver primitive.ObjectID) {
-// 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-// 	defer cancel()
-// 	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
-// 	// Get Transaction Details
-// 	filter := bson.M{
-// 		"_id": sender,
-// 	}
-
-// 	var transaction hp.Transactions
-
-// 	err := config.TransactionsCollection.FindOne(ctx, filter).Decode(&transaction)
-// 	if err != nil {
-// 		config.Logs("error", err.Error())
-// 	}
-
-// 	// Get User Details
-// 	filter = bson.M{
-// 		"_id": transaction.FromID,
-// 	}
-
-// 	var user hp.UserResponse
-
-// 	err = config.UsersCollection.FindOne(ctx, filter).Decode(&user)
-// 	if err != nil {
-// 		config.Logs("error", err.Error())
-// 	}
-
-// 	// Get Merchant Details
-// 	filter = bson.M{
-// 		"_id": transaction.ToID,
-// 	}
-
-// 	var merchant hp.UserResponse
-
-// 	err = config.UsersCollection.FindOne(ctx, filter).Decode(&merchant)
-// 	if err != nil {
-// 		config.Logs("error", err.Error())
-// 	}
-
-// 	// Deduct from User
-// 	filter = bson.M{
-// 		"_id": transaction.FromID,
-// 	}
-
-// 	update := bson.M{
-// 		"$set": bson.M{
-// 			"wallet": user.Wallet - transaction.Amount,
-// 		},
-
-// 		"$push": bson.M{
-// 			"transactions": transaction.ID,
-// 		},
-
-// 		"$inc": bson.M{
-// 			"transactions_count": 1,
-// 		},
-
-// 		"$currentDate": bson.M{
-// 			"last_updated": true,
-// 		},
-
-// 		"$setOnInsert": bson.M{
-// 			"created_at": time.Now(),
-// 		},
-
-// 		"$addToSet": bson.M{
-// 			"merchants": merchant.ID,
-// 		},
-
-// 		"$inc": bson.M{
-// 			"merchants_count": 1,
-// 		},
-// 	}
-
-// 	updateResult, err := config.UsersCollection.UpdateOne(ctx, filter, update)
-// 	if err != nil {
-// 		config.Logs("error", err.Error())
-// 	}
-
-// 	log.Println("updateResult: ", updateResult)
-
-// 	// Add to Merchant
-
-// 	filter = bson.M{
-// 		"_id": transaction.ToID,
-// 	}
-
-// 	update = bson.M{
-// 		"$set": bson.M{
-// 			"wallet": merchant.Wallet + transaction.Amount,
-// 		},
-// 		"$push": bson.M{
-// 			"transactions": transaction.ID,
-// 		},
-// 	}
-
-// 	updateResult, err = config.UsersCollection.UpdateOne(ctx, filter, update)
-// 	if err != nil {
-// 		config.Logs("error", err.Error())
-// 	}
-
-// 	log.Println("updateResult: ", updateResult)
-
-// 	// Update Transaction Status
-// 	filter = bson.M{
-// 		"_id": transaction.ID,
-// 	}
-
-// 	update = bson.M{
-// 		"$set": bson.M{
-// 			"status": "completed",
-// 		},
-
-// 		"$currentDate": bson.M{
-// 			"last_updated": true,
-// 		},
-// 	}
-
-// 	updateResult, err = config.TransactionsCollection.UpdateOne(ctx, filter, update)
-// 	if err != nil {
-// 		config.Logs("error", err.Error())
-// 	}
-
-// 	log.Println("updateResult: ", updateResult)
-// }

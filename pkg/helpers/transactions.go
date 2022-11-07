@@ -38,53 +38,14 @@ type TransactionStatus struct {
 	Status   TxnStatus          `json:"status" bson:"status" binding:"required"`
 }
 
-// func VerifyTransaction(user UserResponse, txn Transactions) bool {
-// 	//  Check Reciver in Friends List
-// 	for _, friend := range user.Friends {
-// 		if friend == request.Receiver {
-// 			//  Check if Sender has enough money
-// 			if user.Balance >= request.Amount {
-// 				//  Check if Receiver exists
-// 				var receiver hp.UserResponse
-// 				err := database.ConnectMongoDB().Database(config.DB).Collection(config.USERS).FindOne(ctx, bson.M{"_id": request.Receiver}).Decode(&receiver)
-// 				if err != nil {
-// 					response := hp.SetError(err, "Error finding receiver")
-// 					c.JSON(http.StatusBadRequest, response)
-// 					return
-// 				}
+func VerifyWalletSufficientBalance(user UserResponse, amount float64) bool {
+	return user.Wallet >= amount
+}
 
-// 				//  Update Sender Balance
-// 				_, err = database.ConnectMongoDB().Database(config.DB).Collection(config.USERS).UpdateOne(ctx, bson.M{"_id": user.ID}, bson.M{"$inc": bson.M{"balance": -request.Amount}})
-// 				if err != nil {
-// 					response := hp.SetError(err, "Error updating sender balance")
-// 					c.JSON(http.StatusBadRequest, response)
-// 					return
-// 				}
+func UpdateSenderTransaction(user UserResponse, amount float64) bool {
+	return true
+}
 
-// 				//  Update Receiver Balance
-// 				_, err = database.ConnectMongoDB().Database(config.DB).Collection(config.USERS).UpdateOne(ctx, bson.M{"_id": receiver.ID}, bson.M{"$inc": bson.M{"balance": request.Amount}})
-// 				if err != nil {
-// 					response := hp.SetError(err, "Error updating receiver balance")
-// 					c.JSON(http.StatusBadRequest, response)
-// 					return
-// 				}
-
-// 				//  Create Transaction
-// 				transaction := hp.Transactions{
-// 					ID:       primitive.NewObjectID(),
-// 					FromID:   user.ID,
-// 					ToID:     receiver.ID,
-// 					Amount:   request.Amount,
-// 					Type:     hp.Debit,
-// 					Status:   hp.TxnSuccess,
-// 					Date:     time.Now(),
-// 					Txn_uuid: ut.GenerateUUID(),
-// 				}
-
-// 				_, err = database.ConnectMongoDB().Database(config.DB).Collection(config.TRANSACTIONS).InsertOne(ctx, transaction)
-// 				if err != nil {
-// 					response := hp.SetError(err, "Error creating transaction")
-// 					c.JSON(http.StatusBadRequest, response)
-// 					return
-// 				}
-// }
+func UpdateReceiverTransaction(user UserResponse, amount float64) bool {
+	return true
+}

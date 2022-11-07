@@ -29,13 +29,13 @@ func GinRouter() *gin.Engine {
 	}
 
 	user := router.Group("/user")
+	user.GET("/getUserById", views.GetUserByID)
+	user.GET("/getUserByEmail", views.GetUserByEmail)
 	user.Use(TokenGuardMiddleware())
 	{
 		user.POST("/createUser", views.CreatNewUser)
 		user.PUT("/updateUser", views.UpdateAvatar)
 		user.DELETE("/deleteUser", views.DeleteUser)
-		user.GET("/getUserById", views.GetUserByID)
-		user.GET("/getUserByEmail", views.GetUserByID)
 		// user.GET("/getAllUsers", views.GetAllUsers)
 
 		transactions := user.Group("/transactions")
