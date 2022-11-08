@@ -88,7 +88,7 @@ func CreatNewUser(c *gin.Context) {
 		"password":      password,
 		"social":        user.Social,
 		"role":          user.Role,
-		"refreshtoken":  user.RefreshToken,
+		"refreshToken":  user.RefreshToken,
 		"emailverified": user.EmailVerified,
 		"createdAt":     user.CreatedAt,
 		"updatedAt":     user.UpdatedAt,

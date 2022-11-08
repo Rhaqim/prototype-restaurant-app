@@ -82,8 +82,8 @@ func AcceptFriendRequest(ctx context.Context, userID UserResponse, friendshipID 
 		return err
 	}
 
-	var user = GetUserByID(userID.ID)
-	var friend = GetUserByID(friendshipID)
+	var user = GetUserByID(ctx, userID.ID)
+	var friend = GetUserByID(ctx, friendshipID)
 
 	// Update Friendship list for user and friend.
 	user.Friends = append(user.Friends, friend.ID)

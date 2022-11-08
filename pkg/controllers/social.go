@@ -24,21 +24,16 @@ func SendFriendRequest(c *gin.Context) {
 	}
 
 	// Get the user ID from the token.
-	check, ok := c.Get("user")
-
-	if !ok {
-		c.JSON(http.StatusBadRequest, hp.SetError(nil, "Invalid token", funcName))
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	// Get the user ID from the token.
-	user := check.(hp.UserResponse)
-
-	request.UserID = user
-
 	// Send Friend Request
 	// Send a friend request to another user.
-	err := hp.SendFriendRequest(ctx, request.UserID, request.FriendID)
+	err = hp.SendFriendRequest(ctx, user, request.FriendID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to send friend request", funcName))
 		return
@@ -55,7 +50,7 @@ func AcceptFriendRequest(c *gin.Context) {
 
 	var funcName = ut.GetFunctionName()
 
-	var request = hp.FriendshipRequest{}
+	var request = hp.Friendship{}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
@@ -63,25 +58,24 @@ func AcceptFriendRequest(c *gin.Context) {
 	}
 
 	// Get the user ID from the token.
-	check, ok := c.Get("user")
-
-	if !ok {
-		c.JSON(http.StatusBadRequest, hp.SetError(nil, "Invalid token", funcName))
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-
-	// Get the user ID from the token.
-	user := check.(hp.UserResponse)
 
 	// Check that friendID is User ID
 	if request.FriendID != user.ID {
-		c.JSON(http.StatusBadRequest, hp.SetError(nil, "Invalid Friend reqeust", funcName))
+		c.JSON(http.StatusBadRequest, hp.SetError(nil, "Invalid Friend request", funcName))
 		return
 	}
 
+	from := hp.GetUserByID(ctx, request.UserID)
+
 	// Accept Friend Request
 	// Accept a friend request from another user.
-	err := hp.AcceptFriendRequest(ctx, request.UserID, request.ID)
+	err = hp.AcceptFriendRequest(ctx, from, request.ID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to accept friend request", funcName))
 		return

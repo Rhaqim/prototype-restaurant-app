@@ -30,14 +30,12 @@ func CreateTransaction(c *gin.Context) {
 		return
 	}
 
-	check, ok := c.Get("user") //check if user is logged in
-	if !ok {
-		response := hp.SetError(nil, "User not logged in", funcName)
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-
-	user := check.(hp.UserResponse)
 
 	// Transaction Verification
 	friends := hp.VerifyFriends(user, request.ToID)

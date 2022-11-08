@@ -2,12 +2,14 @@ package helpers
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -85,11 +87,14 @@ type UpdateUserAvatar struct {
 	UpdatedAt primitive.DateTime `json:"updatedAt"`
 }
 
-func GetUserByID(userID primitive.ObjectID) UserResponse {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
+/*Get user data by:
+- ID
+- Email
+- Username
+- From token
+*/
+// Get user by ID
+func GetUserByID(ctx context.Context, userID primitive.ObjectID) UserResponse {
 	var user UserResponse
 	config.Logs("info", "User ID: "+userID.Hex(), ut.GetFunctionName())
 
@@ -102,6 +107,7 @@ func GetUserByID(userID primitive.ObjectID) UserResponse {
 	return user
 }
 
+// Get user by Email
 func GetUserByEmail(email string) UserResponse {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -119,4 +125,36 @@ func GetUserByEmail(email string) UserResponse {
 	}
 
 	return user
+}
+
+// Get user by Username
+func GetUserByUsername(username string) UserResponse {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var user UserResponse
+	log.Print("Request ID sent by client:", username)
+
+	config.Logs("info", "Username: "+username, ut.GetFunctionName())
+
+	filter := bson.M{"username": username}
+	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
+		config.Logs("error", err.Error(), ut.GetFunctionName())
+		return UserResponse{}
+	}
+
+	return user
+}
+
+// Get user from token
+func GetUserFromToken(c *gin.Context) (UserResponse, error) {
+	check, ok := c.Get("user") // Check if user is logged in
+	if !ok {
+		return UserResponse{}, errors.New("Unauthorized")
+	}
+
+	user := check.(UserResponse)
+
+	return user, nil
 }

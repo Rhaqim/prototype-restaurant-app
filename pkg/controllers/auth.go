@@ -90,7 +90,7 @@ func Signup(c *gin.Context) {
 		"location":      user.Location,
 		"wallet":        user.Wallet,
 		"transactions":  user.Transactions,
-		"refreshtoken":  user.RefreshToken,
+		"refreshToken":  user.RefreshToken,
 		"emailverified": user.EmailVerified,
 		"role":          user.Role,
 		"createdAt":     user.CreatedAt,

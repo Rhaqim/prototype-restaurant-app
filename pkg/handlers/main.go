@@ -43,6 +43,12 @@ func GinRouter() *gin.Engine {
 			transactions.POST("/createTransaction", views.CreateTransaction)
 			transactions.PUT("/updateTransaction", views.UpdateTransactionStatus)
 		}
+
+		social := user.Group("/social")
+		{
+			social.POST("/sendFriendRequest", views.SendFriendRequest)
+			social.POST("/acceptFriendRequest", views.AcceptFriendRequest)
+		}
 	}
 
 	hosting := router.Group("/hosting")
