@@ -7,6 +7,7 @@ import (
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
+	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -27,9 +28,9 @@ type MongoJsonResponse struct {
 	Date    time.Time        `json:"date"`
 }
 
-func SetError(err error, message string) *MongoJsonResponse {
+func SetError(err error, message string, funcName string) *MongoJsonResponse {
 	if err != nil {
-		config.Logs("error", err.Error()+" "+message)
+		config.Logs("error", err.Error()+" "+message, funcName)
 		return &MongoJsonResponse{
 			Type:    Error,
 			Message: message + ", " + err.Error(),
@@ -37,7 +38,7 @@ func SetError(err error, message string) *MongoJsonResponse {
 		}
 	}
 
-	config.Logs("error", message)
+	config.Logs("error", message, funcName)
 	return &MongoJsonResponse{
 		Type:    Error,
 		Message: message,
@@ -45,9 +46,8 @@ func SetError(err error, message string) *MongoJsonResponse {
 	}
 }
 
-func SetSuccess(message string, data interface{}) *MongoJsonResponse {
-	config.Logs("info", message+"\n")
-	config.Logs("info", data)
+func SetSuccess(message string, data interface{}, funcName string) *MongoJsonResponse {
+	config.Logs("info", message, funcName)
 	return &MongoJsonResponse{
 		Type:    Success,
 		Data:    data,
@@ -127,7 +127,7 @@ func VerifyFriends(user UserResponse, friendID primitive.ObjectID) bool {
 	var friend UserResponse
 	err := config.UserCollection.FindOne(context.TODO(), bson.M{"_id": friendID}).Decode(&friend)
 	if err != nil {
-		config.Logs("error", err.Error())
+		config.Logs("error", err.Error(), ut.GetFunctionName())
 		return false
 	}
 

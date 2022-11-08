@@ -7,6 +7,7 @@ import (
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
+	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -90,11 +91,11 @@ func GetUserByID(userID primitive.ObjectID) UserResponse {
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var user UserResponse
-	config.Logs("info", "User ID: "+userID.Hex())
+	config.Logs("info", "User ID: "+userID.Hex(), ut.GetFunctionName())
 
 	filter := bson.M{"_id": userID}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error())
+		config.Logs("error", err.Error(), ut.GetFunctionName())
 		return UserResponse{}
 	}
 
@@ -109,11 +110,11 @@ func GetUserByEmail(email string) UserResponse {
 	var user UserResponse
 	log.Print("Request ID sent by client:", email)
 
-	config.Logs("info", "Email: "+email)
+	config.Logs("info", "Email: "+email, ut.GetFunctionName())
 
 	filter := bson.M{"email": email}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error())
+		config.Logs("error", err.Error(), ut.GetFunctionName())
 		return UserResponse{}
 	}
 

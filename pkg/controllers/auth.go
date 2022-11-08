@@ -10,6 +10,7 @@ import (
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
+	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 
@@ -24,32 +25,36 @@ func Signup(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
+	var funcName = ut.GetFunctionName()
+
 	var user = hp.CreatUser{}
 
 	if err := c.BindJSON(&user); err != nil {
-		config.Logs("error", err.Error())
-		response := hp.SetError(err, "fullname, username, email, password are required ")
+		response := hp.SetError(err, "fullname, username, email, password are required ", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	config.Logs("info", "User: "+user.Fullname+" "+user.Username+" "+user.Email)
 
 	checkEmail, err := hp.CheckIfEmailExists(user.Email) // check if email exists
 	if err != nil {
-		config.Logs("error", err.Error())
+		response := hp.SetError(err, "Error checking email", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
 	}
 	if checkEmail {
-		response := hp.SetError(nil, "Email already exists")
+		response := hp.SetError(nil, "Email already exists", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	checkUsername, err := hp.CheckIfUsernameExists(user.Username) // check if username exists
 	if err != nil {
-		config.Logs("error", err.Error())
+		response := hp.SetError(err, "Error checking username", funcName)
+		c.JSON(http.StatusInternalServerError, response)
+		return
 	}
 	if checkUsername {
-		response := hp.SetError(nil, "Username already exists")
+		response := hp.SetError(nil, "Username already exists", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -80,9 +85,8 @@ func Signup(c *gin.Context) {
 	}
 	insertResult, err := authCollection.InsertOne(ctx, filter)
 	if err != nil {
-		config.Logs("error", err.Error())
-		response := hp.SetError(err, "Error creating user")
-		c.JSON(http.StatusBadRequest, response)
+		response := hp.SetError(err, "Error creating user", funcName)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 	log.Println("insertResult: ", insertResult)
@@ -90,16 +94,14 @@ func Signup(c *gin.Context) {
 	t, rt, err := auth.GenerateJWT(user.Email, user.Username, insertResult.InsertedID.(primitive.ObjectID))
 
 	if err != nil {
-		config.Logs("error", err.Error()+" Error generating token")
-		response := hp.SetError(err, "Error creating user")
+		response := hp.SetError(err, "Error creating user", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	err = hp.UpdateRefreshToken(ctx, insertResult.InsertedID.(primitive.ObjectID), rt)
 	if err != nil {
-		config.Logs("error", err.Error()+" Error updating refresh token")
-		response := hp.SetError(err, "Error creating user")
+		response := hp.SetError(err, "Error updating refresh token", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -122,7 +124,7 @@ func Signup(c *gin.Context) {
 		"expiresAt":    time.Now().Add(time.Hour * 24).Unix(),
 	}
 
-	response := hp.SetSuccess("User created successfully", data)
+	response := hp.SetSuccess("User created successfully", data, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -131,12 +133,13 @@ func SignIn(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
+	funcName := ut.GetFunctionName()
+
 	var request = hp.SignIn{}
 	var user = hp.UserStruct{}
 
 	if err := c.BindJSON(&request); err != nil {
-		config.Logs("error", err.Error())
-		response := hp.SetError(err, "email and password are required ")
+		response := hp.SetError(err, "email and password are required ", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -144,8 +147,7 @@ func SignIn(c *gin.Context) {
 
 	filter := bson.M{"username": request.Username}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error())
-		response := hp.SetError(err, "User not found")
+		response := hp.SetError(err, "User not found", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -155,9 +157,8 @@ func SignIn(c *gin.Context) {
 		t, rt, err := auth.GenerateJWT(user.Email, user.Username, user.ID)
 
 		if err != nil {
-			config.Logs("error", err.Error()+" Error generating token")
-			response := hp.SetError(err, "Error Signing in, please try again later")
-			c.JSON(http.StatusBadRequest, response)
+			response := hp.SetError(err, " Error generating token: Error Signing in, please try again later", funcName)
+			c.JSON(http.StatusInternalServerError, response)
 			return
 		}
 
@@ -178,10 +179,10 @@ func SignIn(c *gin.Context) {
 			"user":         userResponse,
 			"expiresAt":    time.Now().Add(time.Hour * 24).Unix(),
 		}
-		response := hp.SetSuccess("User signed in successfully", data)
+		response := hp.SetSuccess("User signed in successfully", data, funcName)
 		c.JSON(http.StatusOK, response)
 	} else {
-		response := hp.SetError(nil, "Invalid password")
+		response := hp.SetError(nil, "Invalid password", funcName)
 		c.JSON(http.StatusBadRequest, response)
 	}
 }
@@ -191,11 +192,13 @@ func Signout(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
+	funcName := ut.GetFunctionName()
+
 	user := hp.UserResponse{}
 
 	check, ok := c.Get("user") //check if user is logged in
 	if !ok {
-		response := hp.SetError(nil, "User not logged in")
+		response := hp.SetError(nil, "User not logged in", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -204,21 +207,19 @@ func Signout(c *gin.Context) {
 	filter := bson.M{"username": request.Username}
 
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error())
-		response := hp.SetError(err, "User not found")
+		response := hp.SetError(err, "User not found", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	err := hp.UpdateRefreshToken(ctx, user.ID, "")
 	if err != nil {
-		config.Logs("error", err.Error())
-		response := hp.SetError(err, "Error signing out")
-		c.JSON(http.StatusBadRequest, response)
+		response := hp.SetError(err, "Error signing out", funcName)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	response := hp.SetSuccess("User signed out successfully", nil)
+	response := hp.SetSuccess("User signed out successfully", nil, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -227,9 +228,11 @@ func RefreshToken(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
+	funcName := ut.GetFunctionName()
+
 	check, ok := c.Get("user") //check if user is logged in
 	if !ok {
-		response := hp.SetError(nil, "User not logged in")
+		response := hp.SetError(nil, "User not logged in", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -239,22 +242,20 @@ func RefreshToken(c *gin.Context) {
 
 	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
 	if err != nil {
-		config.Logs("error", err.Error())
-		response := hp.SetError(err, "Error refreshing token")
-		c.JSON(http.StatusBadRequest, response)
+		response := hp.SetError(err, "Error refreshing token", funcName)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
 	filter := bson.M{"_id": id}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error())
-		response := hp.SetError(err, "User not found")
-		c.JSON(http.StatusBadRequest, response)
+		response := hp.SetError(err, "User not found", funcName)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
 	if user.RefreshToken != request.RefreshToken {
-		response := hp.SetError(nil, "Invalid refresh token")
+		response := hp.SetError(nil, "Invalid refresh token", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -262,16 +263,14 @@ func RefreshToken(c *gin.Context) {
 	t, rt, err := auth.GenerateJWT(user.Email, user.Username, user.ID)
 
 	if err != nil {
-		config.Logs("error", err.Error()+" Error generating token")
-		response := hp.SetError(err, "Error refreshing token")
-		c.JSON(http.StatusBadRequest, response)
+		response := hp.SetError(err, "Error generating token", funcName)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
 	err = hp.UpdateRefreshToken(ctx, id, rt)
 	if err != nil {
-		config.Logs("error", err.Error()+" Error updating refresh token")
-		response := hp.SetError(err, "Error refreshing token")
+		response := hp.SetError(err, "Error updating refresh token", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -282,7 +281,7 @@ func RefreshToken(c *gin.Context) {
 		"user":      user.Username,
 		"expiresAt": time.Now().Add(time.Hour * 24).Unix(),
 	}
-	response := hp.SetSuccess("Token refreshed successfully", data)
+	response := hp.SetSuccess("Token refreshed successfully", data, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -291,11 +290,12 @@ func ForgotPassword(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
+	funcName := ut.GetFunctionName()
+
 	request := hp.ForgotPassword{}
 
 	if err := c.BindJSON(&request); err != nil {
-		config.Logs("error", err.Error())
-		response := hp.SetError(err, "Error binding request")
+		response := hp.SetError(err, "Error binding request", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -304,32 +304,29 @@ func ForgotPassword(c *gin.Context) {
 	var user = hp.UserResponse{}
 	filter := bson.M{"email": request.Email}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error()+" User not found")
-		response := hp.SetError(err, "User not found")
+		response := hp.SetError(err, "User not found", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	t, rt, err := auth.GenerateJWT(user.Email, user.Username, user.ID)
 	if err != nil {
-		config.Logs("error", err.Error()+" Error generating token")
-		response := hp.SetError(err, "Error generating token")
-		c.JSON(http.StatusBadRequest, response)
+		response := hp.SetError(err, "Error generating token", funcName)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
 	err = hp.UpdateRefreshToken(ctx, user.ID, rt)
 	if err != nil {
-		config.Logs("error", err.Error()+" Error updating refresh token")
-		response := hp.SetError(err, "Error updating refresh token")
-		c.JSON(http.StatusBadRequest, response)
+		response := hp.SetError(err, "Error updating refresh token", funcName)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
 	var data = gin.H{
 		"token": t,
 	}
-	response := hp.SetSuccess("Token generated successfully", data)
+	response := hp.SetSuccess("Token generated successfully", data, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -338,11 +335,12 @@ func ResetPassword(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
+	funcName := ut.GetFunctionName()
+
 	request := hp.ResetPassword{}
 
 	if err := c.BindJSON(&request); err != nil {
-		config.Logs("error", err.Error()+" Error binding request")
-		response := hp.SetError(err, "Error binding request")
+		response := hp.SetError(err, "Error binding request", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -350,8 +348,7 @@ func ResetPassword(c *gin.Context) {
 
 	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
 	if err != nil {
-		config.Logs("error", err.Error()+" Error converting id")
-		response := hp.SetError(err, "Error converting id")
+		response := hp.SetError(err, "Error converting id", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -359,24 +356,21 @@ func ResetPassword(c *gin.Context) {
 	var user = hp.UserStruct{}
 	filter := bson.M{"_id": id}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error()+" User not found")
-		response := hp.SetError(err, "User not found")
+		response := hp.SetError(err, "User not found", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	if user.RefreshToken != request.RefreshToken {
-		config.Logs("error", "Invalid refresh token")
-		response := hp.SetError(nil, "Invalid refresh token")
+		response := hp.SetError(nil, "Invalid refresh token", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	hashedPassword, err := auth.HashPassword(request.NewPassword)
 	if err != nil {
-		config.Logs("error", err.Error()+" Error hashing password")
-		response := hp.SetError(err, "Error hashing password")
-		c.JSON(http.StatusBadRequest, response)
+		response := hp.SetError(err, "Error hashing password", funcName)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
@@ -388,12 +382,11 @@ func ResetPassword(c *gin.Context) {
 
 	_, err = usersCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		config.Logs("error", err.Error()+" Error updating password")
-		response := hp.SetError(err, "Error updating password")
-		c.JSON(http.StatusBadRequest, response)
+		response := hp.SetError(err, "Error updating password", funcName)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	var response = hp.SetSuccess("Password updated successfully", nil)
+	var response = hp.SetSuccess("Password updated successfully", nil, funcName)
 	c.JSON(http.StatusOK, response)
 }

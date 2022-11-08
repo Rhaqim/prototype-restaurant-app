@@ -10,6 +10,7 @@ import (
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
+	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -33,7 +34,7 @@ func TokenGuardMiddleware() gin.HandlerFunc {
 
 		claims, err := auth.VerifyToken(token)
 		if err != nil {
-			config.Logs("error", err.Error())
+			config.Logs("error", err.Error(), ut.GetFunctionName())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			c.Abort()
 			return
@@ -42,7 +43,7 @@ func TokenGuardMiddleware() gin.HandlerFunc {
 		var user = hp.UserResponse{}
 		filter := bson.M{"email": claims.Email}
 		if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-			config.Logs("error", err.Error())
+			config.Logs("error", err.Error(), ut.GetFunctionName())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			c.Abort()
 			return
@@ -77,7 +78,7 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 
 		claims, err := auth.VerifyRefreshToken(token)
 		if err != nil {
-			config.Logs("error", err.Error())
+			config.Logs("error", err.Error(), ut.GetFunctionName())
 			response.Message = err.Error()
 			c.JSON(http.StatusBadRequest, response)
 			c.Abort()
@@ -87,7 +88,7 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 		var user = hp.UserResponse{}
 		filter := bson.M{"email": claims.Email}
 		if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-			config.Logs("error", err.Error())
+			config.Logs("error", err.Error(), ut.GetFunctionName())
 			response.Message = err.Error()
 			c.JSON(http.StatusBadRequest, response)
 			c.Abort()

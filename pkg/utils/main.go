@@ -37,6 +37,28 @@ func CallAPI(url string, method string, body io.Reader) (string, error) {
 }
 
 // Get name of function
-func GetFunctionName(i interface{}) string {
+func GetFunctionNameV1(i interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+}
+
+// Colorise text in the terminal
+func Colorise(color string, text string) string {
+	colors := map[string]string{
+		"reset":   "\033[0m",
+		"black":   "\033[30m",
+		"red":     "\033[31m",
+		"green":   "\033[32m",
+		"yellow":  "\033[33m",
+		"blue":    "\033[34m",
+		"magenta": "\033[35m",
+		"cyan":    "\033[36m",
+		"white":   "\033[37m",
+	}
+	return colors[color] + text + colors["reset"]
+}
+
+// Get the name of the current function
+func GetFunctionName() string {
+	pc, _, _, _ := runtime.Caller(1)
+	return runtime.FuncForPC(pc).Name()
 }

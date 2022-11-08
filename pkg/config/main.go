@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/database"
+	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 )
 
 const (
@@ -40,19 +41,44 @@ const (
 	Debug   LogType = "debug"
 )
 
-func Logs(level LogType, message interface{}) {
+func Logs(level LogType, message, funcName interface{}) {
+	var timeFMT = time.Now().Format("2006-01-02 15:04:05")
+	var strFuncNmae = funcName.(string)
+	// var strMessage = message.(string)
+
+	var clrInfoTime = coloriseInfo(timeFMT)
+	var clrInfoFunc = coloriseInfo(strFuncNmae)
+	// var clrInfoMessage = coloriseInfo(strMessage)
+
 	switch level {
 	case Info:
-		log.Printf("INFO: \n %s ---> %s", time.Now(), message)
+		log.Printf("%s %s %s", clrInfoTime, clrInfoFunc, coloriseInfo(message.(string)))
 	case Error:
-		log.Printf("ERROR: \n %s ---> %s", time.Now(), message)
+		log.Printf("%s %s %s", clrInfoTime, clrInfoFunc, coloriseError(message.(string)))
 	case Warning:
-		log.Printf("WARNING: \n %s ---> %s", time.Now(), message)
+		log.Printf("%s %s %s", clrInfoTime, clrInfoFunc, coloriseWarning(message.(string)))
 	case Debug:
-		log.Printf("DEBUG: \n %s ---> %s", time.Now(), message)
+		log.Printf("%s %s %s", clrInfoTime, clrInfoFunc, coloriseDebug(message.(string)))
 	default:
-		log.Printf("INFO: \n %s ---> %s", time.Now(), message)
+		log.Printf("%s %s %s", clrInfoTime, clrInfoFunc, coloriseInfo(message.(string)))
+
 	}
+}
+
+func coloriseInfo(message string) string {
+	return ut.Colorise("green", message)
+}
+
+func coloriseError(message string) string {
+	return ut.Colorise("red", message)
+}
+
+func coloriseWarning(message string) string {
+	return ut.Colorise("yellow", message)
+}
+
+func coloriseDebug(message string) string {
+	return ut.Colorise("blue", message)
 }
 
 func CheckErr(err error) {
