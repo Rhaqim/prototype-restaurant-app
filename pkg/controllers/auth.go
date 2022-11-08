@@ -267,20 +267,13 @@ func RefreshToken(c *gin.Context) {
 		return
 	}
 
-	request := check.(hp.UserResponse)
-	var user = hp.UserResponse{}
+	user := check.(hp.UserResponse)
 
-	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
-	if err != nil {
-		response := hp.SetError(err, "Error refreshing token", funcName)
-		c.JSON(http.StatusInternalServerError, response)
-		return
-	}
+	request := hp.RefreshToken{}
 
-	filter := bson.M{"_id": id}
-	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		response := hp.SetError(err, "User not found", funcName)
-		c.JSON(http.StatusInternalServerError, response)
+	if err := c.BindJSON(&request); err != nil {
+		response := hp.SetError(err, "refresh token is required", funcName)
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
@@ -298,7 +291,7 @@ func RefreshToken(c *gin.Context) {
 		return
 	}
 
-	err = hp.UpdateRefreshToken(ctx, id, rt)
+	err = hp.UpdateRefreshToken(ctx, user.ID, rt)
 	if err != nil {
 		response := hp.SetError(err, "Error updating refresh token", funcName)
 		c.JSON(http.StatusBadRequest, response)
@@ -374,22 +367,16 @@ func ResetPassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	log.Print("Request ID sent by client:", request.ID)
 
-	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
-	if err != nil {
-		response := hp.SetError(err, "Error converting id", funcName)
+	check, ok := c.Get("user") //check if user is logged in
+	if !ok {
+		response := hp.SetError(nil, "User not logged in", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	var user = hp.UserStruct{}
-	filter := bson.M{"_id": id}
-	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		response := hp.SetError(err, "User not found", funcName)
-		c.JSON(http.StatusBadRequest, response)
-		return
-	}
+	var user = check.(hp.UserResponse)
+	filter := bson.M{"_id": user.ID}
 
 	if user.RefreshToken != request.RefreshToken {
 		response := hp.SetError(nil, "Invalid refresh token", funcName)

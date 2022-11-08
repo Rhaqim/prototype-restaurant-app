@@ -1,9 +1,5 @@
 package helpers
 
-import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
-
 type SignIn struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -14,8 +10,7 @@ type SignOut struct {
 }
 
 type RefreshToken struct {
-	ID           primitive.ObjectID `json:"id"`
-	RefreshToken string             `json:"refresh_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 type ForgotPassword struct {
@@ -23,9 +18,7 @@ type ForgotPassword struct {
 }
 
 type ResetPassword struct {
-	ID           primitive.ObjectID `json:"id"`
-	Email        string             `json:"email"`
-	RefreshToken string             `json:"refresh_token"`
-	OldPassword  string             `json:"old_password"`
-	NewPassword  string             `json:"new_password"`
+	RefreshToken string `json:"refresh_token"`
+	OldPassword  string `json:"old_password"`
+	NewPassword  string `json:"new_password"`
 }
