@@ -50,17 +50,24 @@ func Logs(level LogType, message, funcName interface{}) {
 	var clrInfoFunc = coloriseInfo(strFuncNmae)
 	// var clrInfoMessage = coloriseInfo(strMessage)
 
+	var infoStr = coloriseInfo("[INFO]")
+	var errorStr = coloriseError("[ERROR]")
+	var warningStr = coloriseWarning("[WARNING]")
+	var debugStr = coloriseDebug("[DEBUG]")
+
+	var baseStr = " \n %s \n TIME:%s \n FUNC:%s \n MSG:%s \n"
+
 	switch level {
 	case Info:
-		log.Printf("%s %s %s", clrInfoTime, clrInfoFunc, coloriseInfo(message.(string)))
+		log.Printf(baseStr, infoStr, clrInfoTime, clrInfoFunc, coloriseInfo(message.(string)))
 	case Error:
-		log.Printf("%s %s %s", clrInfoTime, clrInfoFunc, coloriseError(message.(string)))
+		log.Printf(baseStr, errorStr, clrInfoTime, clrInfoFunc, coloriseError(message.(string)))
 	case Warning:
-		log.Printf("%s %s %s", clrInfoTime, clrInfoFunc, coloriseWarning(message.(string)))
+		log.Printf(baseStr, warningStr, clrInfoTime, clrInfoFunc, coloriseWarning(message.(string)))
 	case Debug:
-		log.Printf("%s %s %s", clrInfoTime, clrInfoFunc, coloriseDebug(message.(string)))
+		log.Printf(baseStr, debugStr, clrInfoTime, clrInfoFunc, coloriseDebug(message.(string)))
 	default:
-		log.Printf("%s %s %s", clrInfoTime, clrInfoFunc, coloriseInfo(message.(string)))
+		log.Printf(baseStr, infoStr, clrInfoTime, clrInfoFunc, coloriseInfo(message.(string)))
 
 	}
 }
