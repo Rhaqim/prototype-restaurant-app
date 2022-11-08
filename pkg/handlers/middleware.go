@@ -25,7 +25,9 @@ func TokenGuardMiddleware() gin.HandlerFunc {
 
 		token := c.Request.Header.Get("Authorization")
 		if token == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing Token required!"})
+			hp.SetDebug("Missing Token required!", ut.GetFunctionName())
+			response := hp.SetError(nil, "Missing Token required!", ut.GetFunctionName())
+			c.JSON(http.StatusBadRequest, response)
 			c.Abort()
 			return
 		}
@@ -34,8 +36,9 @@ func TokenGuardMiddleware() gin.HandlerFunc {
 
 		claims, err := auth.VerifyToken(token)
 		if err != nil {
-			config.Logs("error", err.Error(), ut.GetFunctionName())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			hp.SetDebug(err.Error(), ut.GetFunctionName())
+			response := hp.SetError(err, "Invalid Token!", ut.GetFunctionName())
+			c.JSON(http.StatusBadRequest, response)
 			c.Abort()
 			return
 		}
@@ -43,8 +46,9 @@ func TokenGuardMiddleware() gin.HandlerFunc {
 		var user = hp.UserResponse{}
 		filter := bson.M{"email": claims.Email}
 		if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-			config.Logs("error", err.Error(), ut.GetFunctionName())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			hp.SetDebug(err.Error(), ut.GetFunctionName())
+			response := hp.SetError(nil, err.Error(), ut.GetFunctionName())
+			c.JSON(http.StatusBadRequest, response)
 			c.Abort()
 			return
 		}
@@ -60,15 +64,15 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 		defer cancel()
 		defer database.ConnectMongoDB().Disconnect(context.TODO())
 
-		response := hp.MongoJsonResponse{
-			Type: "error",
-			Data: nil,
-			Date: time.Now(),
-		}
+		// response := hp.MongoJsonResponse{
+		// 	Type: "error",
+		// 	Data: nil,
+		// 	Date: time.Now(),
+		// }
 
 		token := c.Request.Header.Get("Authorization")
 		if token == "" {
-			response.Message = "Missing Token required!"
+			response := hp.SetError(nil, "Missing Token required!", ut.GetFunctionName())
 			c.JSON(http.StatusBadRequest, response)
 			c.Abort()
 			return
@@ -78,8 +82,8 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 
 		claims, err := auth.VerifyRefreshToken(token)
 		if err != nil {
-			config.Logs("error", err.Error(), ut.GetFunctionName())
-			response.Message = err.Error()
+			hp.SetDebug(err.Error(), ut.GetFunctionName())
+			response := hp.SetError(err, "Invalid Token!", ut.GetFunctionName())
 			c.JSON(http.StatusBadRequest, response)
 			c.Abort()
 			return
@@ -88,8 +92,8 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 		var user = hp.UserResponse{}
 		filter := bson.M{"email": claims.Email}
 		if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-			config.Logs("error", err.Error(), ut.GetFunctionName())
-			response.Message = err.Error()
+			hp.SetDebug(err.Error(), ut.GetFunctionName())
+			response := hp.SetError(nil, err.Error(), ut.GetFunctionName())
 			c.JSON(http.StatusBadRequest, response)
 			c.Abort()
 			return

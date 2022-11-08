@@ -56,6 +56,16 @@ func SetSuccess(message string, data interface{}, funcName string) *MongoJsonRes
 	}
 }
 
+func SetDebug(message string, funcName string) {
+	config.Logs("debug", message, funcName)
+	// panic("debug")
+}
+
+func SetWarning(message string, funcName string) {
+	config.Logs("warning", message, funcName)
+	log.Fatal(message)
+}
+
 // REMOVE PASSWORD FROM USER STRUCT
 var PasswordOpts = options.FindOne().SetProjection(bson.M{"password": 0})
 
@@ -67,6 +77,10 @@ func CheckIfEmailExists(email string) (bool, error) {
 	filter := bson.M{"email": email}
 	err := usersCollection.FindOne(context.TODO(), filter).Decode(&user)
 	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return false, nil
+		}
+		SetDebug(err.Error(), ut.GetFunctionName())
 		return false, err
 	}
 	return true, nil
@@ -76,9 +90,16 @@ func CheckIfUsernameExists(username string) (bool, error) {
 	var user UserStruct
 	err := usersCollection.FindOne(context.TODO(), bson.M{"username": username}).Decode(&user)
 	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return false, nil
+		}
+		SetDebug(err.Error(), ut.GetFunctionName())
 		return false, err
 	}
-	return true, nil
+	if user.Username == username {
+		return true, nil
+	}
+	return false, nil
 }
 
 // UPDATE REFRESH TOKEN

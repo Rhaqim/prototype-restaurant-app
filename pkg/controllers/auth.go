@@ -27,7 +27,7 @@ func Signup(c *gin.Context) {
 
 	var funcName = ut.GetFunctionName()
 
-	var user = hp.CreatUser{}
+	var user = hp.UserStruct{}
 
 	if err := c.BindJSON(&user); err != nil {
 		response := hp.SetError(err, "fullname, username, email, password are required ", funcName)
@@ -37,12 +37,12 @@ func Signup(c *gin.Context) {
 
 	checkEmail, err := hp.CheckIfEmailExists(user.Email) // check if email exists
 	if err != nil {
-		response := hp.SetError(err, "Error checking email", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		response := hp.SetError(err, ", Error checking email", funcName)
+		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
 	if checkEmail {
-		response := hp.SetError(nil, "Email already exists", funcName)
+		response := hp.SetError(nil, ", Email already exists", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -59,10 +59,19 @@ func Signup(c *gin.Context) {
 		return
 	}
 
+	user.Wallet = 0
+	user.Transactions = []primitive.ObjectID{}
+	user.EmailVerified = false
 	user.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 	user.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+
 	password, err := auth.HashAndSalt(user.Password)
-	config.CheckErr(err)
+	if err != nil {
+		response := hp.SetError(err, "Error hashing password", funcName)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+	user.Password = password
 
 	ok := hp.RoleIsValid(user.Role)
 
@@ -75,11 +84,15 @@ func Signup(c *gin.Context) {
 		"username":      user.Username,
 		"avatar":        user.Avatar,
 		"email":         user.Email,
-		"password":      password,
+		"password":      user.Password,
 		"social":        user.Social,
-		"role":          user.Role,
+		"friends":       user.Friends,
+		"location":      user.Location,
+		"wallet":        user.Wallet,
+		"transactions":  user.Transactions,
 		"refreshtoken":  user.RefreshToken,
 		"emailverified": user.EmailVerified,
+		"role":          user.Role,
 		"createdAt":     user.CreatedAt,
 		"updatedAt":     user.UpdatedAt,
 	}
@@ -107,14 +120,19 @@ func Signup(c *gin.Context) {
 	}
 
 	userResponse := hp.UserResponse{
-		ID:        insertResult.InsertedID.(primitive.ObjectID),
-		Fullname:  user.Fullname,
-		Username:  user.Username,
-		Avatar:    user.Avatar,
-		Email:     user.Email,
-		Role:      user.Role,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		ID:           insertResult.InsertedID.(primitive.ObjectID),
+		Fullname:     user.Fullname,
+		Username:     user.Username,
+		Avatar:       user.Avatar,
+		Email:        user.Email,
+		Social:       user.Social,
+		Friends:      user.Friends,
+		Location:     user.Location,
+		Wallet:       user.Wallet,
+		Transactions: user.Transactions,
+		Role:         user.Role,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
 	}
 
 	data := gin.H{
@@ -163,14 +181,19 @@ func SignIn(c *gin.Context) {
 		}
 
 		userResponse := hp.UserResponse{
-			ID:        user.ID,
-			Fullname:  user.Fullname,
-			Username:  user.Username,
-			Email:     user.Email,
-			Avatar:    user.Avatar,
-			Role:      user.Role,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
+			ID:           user.ID,
+			Fullname:     user.Fullname,
+			Username:     user.Username,
+			Avatar:       user.Avatar,
+			Email:        user.Email,
+			Social:       user.Social,
+			Friends:      user.Friends,
+			Location:     user.Location,
+			Wallet:       user.Wallet,
+			Transactions: user.Transactions,
+			Role:         user.Role,
+			CreatedAt:    user.CreatedAt,
+			UpdatedAt:    user.UpdatedAt,
 		}
 
 		var data = gin.H{

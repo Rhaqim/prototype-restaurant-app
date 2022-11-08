@@ -29,7 +29,7 @@ type UserStruct struct {
 	Social        interface{}          `bson:"social" json:"social"`
 	Friends       []primitive.ObjectID `bson:"friends" json:"friends"`
 	Location      primitive.ObjectID   `bson:"location" json:"location"`
-	Wallet        float32              `bson:"wallet" json:"wallet"`
+	Wallet        float64              `bson:"wallet" json:"wallet"`
 	Transactions  []primitive.ObjectID `bson:"transactions" json:"transactions"`
 	RefreshToken  string               `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
 	EmailVerified bool                 `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty" default:"false"`

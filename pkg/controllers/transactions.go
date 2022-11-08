@@ -25,7 +25,7 @@ func CreateTransaction(c *gin.Context) {
 	var request hp.Transactions
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		response := hp.SetError(err, "Error binding JSON", funcName)
+		response := hp.SetError(err, ", Error binding JSON", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -58,6 +58,7 @@ func CreateTransaction(c *gin.Context) {
 
 	request.Status = hp.TxnPending
 	request.Txn_uuid = ut.GenerateUUID()
+	request.Date = time.Now()
 
 	insert := bson.M{
 		"txn_uuid": request.Txn_uuid,
@@ -66,6 +67,7 @@ func CreateTransaction(c *gin.Context) {
 		"amount":   request.Amount,
 		"type":     request.Type,
 		"status":   request.Status,
+		"date":     request.Date,
 	}
 
 	insertResult, err := config.TransactionsCollection.InsertOne(ctx, insert)

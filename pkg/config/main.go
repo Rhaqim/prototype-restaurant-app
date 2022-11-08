@@ -42,13 +42,11 @@ const (
 )
 
 func Logs(level LogType, message, funcName interface{}) {
-	var timeFMT = time.Now().Format("2006-01-02 15:04:05")
+	var timeFMT = time.Now().Format("15:04:05 02-01-2006")
 	var strFuncNmae = funcName.(string)
-	// var strMessage = message.(string)
 
-	var clrInfoTime = coloriseInfo(timeFMT)
-	var clrInfoFunc = coloriseInfo(strFuncNmae)
-	// var clrInfoMessage = coloriseInfo(strMessage)
+	var clrInfoTime = coloriseTime(timeFMT)
+	var clrInfoFunc = coloriseFunc(strFuncNmae)
 
 	var infoStr = coloriseInfo("[INFO]")
 	var errorStr = coloriseError("[ERROR]")
@@ -86,6 +84,14 @@ func coloriseWarning(message string) string {
 
 func coloriseDebug(message string) string {
 	return ut.Colorise("blue", message)
+}
+
+func coloriseTime(message string) string {
+	return ut.Colorise("cyan", message)
+}
+
+func coloriseFunc(message string) string {
+	return ut.Colorise("magenta", message)
 }
 
 func CheckErr(err error) {
