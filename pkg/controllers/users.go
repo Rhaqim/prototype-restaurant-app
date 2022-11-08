@@ -31,17 +31,17 @@ func CreatNewUser(c *gin.Context) {
 		Date: time.Now(),
 	}
 	if err := c.BindJSON(&user); err != nil {
-		config.Logs("error", err.Error())
+		// config.Logs("error", err.Error())
 		response.Type = "error"
 		response.Message = "fullname, username, email, password are required"
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	config.Logs("info", "User: "+user.Fullname+" "+user.Username+" "+user.Email)
+	// config.Logs("info", "User: "+user.Fullname+" "+user.Username+" "+user.Email)
 
 	checkEmail, err := hp.CheckIfEmailExists(user.Email) // check if email exists
 	if err != nil {
-		config.Logs("error", err.Error())
+		// config.Logs("error", err.Error())
 		response.Type = "error"
 		response.Message = err.Error()
 		c.JSON(http.StatusBadRequest, response)
@@ -56,7 +56,7 @@ func CreatNewUser(c *gin.Context) {
 
 	checkUsername, err := hp.CheckIfUsernameExists(user.Username) // check if username exists
 	if err != nil {
-		config.Logs("error", err.Error())
+		// config.Logs("error", err.Error())
 		response.Type = "error"
 		response.Message = err.Error()
 		c.JSON(http.StatusBadRequest, response)
@@ -95,7 +95,7 @@ func CreatNewUser(c *gin.Context) {
 	}
 	insertResult, err := usersCollection.InsertOne(ctx, filter)
 	if err != nil {
-		config.Logs("error", err.Error())
+		// config.Logs("error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -115,7 +115,7 @@ func GetUserByID(c *gin.Context) {
 	var response = hp.MongoJsonResponse{}
 
 	if err := c.BindJSON(&request); err != nil {
-		config.Logs("error", err.Error())
+		// config.Logs("error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -124,11 +124,11 @@ func GetUserByID(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
 	config.CheckErr(err)
 
-	config.Logs("info", "ID: "+id.Hex())
+	// config.Logs("info", "ID: "+id.Hex())
 
 	filter := bson.M{"_id": id}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error())
+		// config.Logs("error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -150,17 +150,17 @@ func GetUserByEmail(c *gin.Context) {
 	var response = hp.MongoJsonResponse{}
 
 	if err := c.BindJSON(&request); err != nil {
-		config.Logs("error", err.Error())
+		// config.Logs("error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	log.Print("Request ID sent by client:", request.Email)
 
-	config.Logs("info", "Email: "+request.Email)
+	// config.Logs("info", "Email: "+request.Email)
 
 	filter := bson.M{"email": request.Email}
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error())
+		// config.Logs("error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -182,7 +182,7 @@ func UpdateAvatar(c *gin.Context) {
 	response := hp.MongoJsonResponse{}
 
 	if err := c.BindJSON(&request); err != nil {
-		config.Logs("error", err.Error())
+		// config.Logs("error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -191,7 +191,7 @@ func UpdateAvatar(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
 	config.CheckErr(err)
 
-	config.Logs("info", "ID: "+id.Hex())
+	// config.Logs("info", "ID: "+id.Hex())
 
 	request.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
 
@@ -206,7 +206,7 @@ func UpdateAvatar(c *gin.Context) {
 
 	updateResult, err := usersCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		config.Logs("error", err.Error())
+		// config.Logs("error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -227,7 +227,7 @@ func DeleteUser(c *gin.Context) {
 	response := hp.MongoJsonResponse{}
 
 	if err := c.BindJSON(&request); err != nil {
-		config.Logs("error", err.Error())
+		// config.Logs("error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -236,13 +236,13 @@ func DeleteUser(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
 	config.CheckErr(err)
 
-	config.Logs("info", "ID: "+id.Hex())
+	// config.Logs("info", "ID: "+id.Hex())
 
 	filter := bson.M{"_id": id}
 
 	updateResult, err := usersCollection.DeleteOne(ctx, filter)
 	if err != nil {
-		config.Logs("error", err.Error())
+		// config.Logs("error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
