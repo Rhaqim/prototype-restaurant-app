@@ -180,6 +180,13 @@ func SignIn(c *gin.Context) {
 			return
 		}
 
+		err = hp.UpdateRefreshToken(ctx, user.ID, rt)
+		if err != nil {
+			response := hp.SetError(err, "Error updating refresh token", funcName)
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
 		userResponse := hp.UserResponse{
 			ID:           user.ID,
 			Fullname:     user.Fullname,
