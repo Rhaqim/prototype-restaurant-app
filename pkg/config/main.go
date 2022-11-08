@@ -31,14 +31,27 @@ var (
 )
 
 // Log Messages
-func Logs(level string, message interface{}) {
+type LogType string
+
+const (
+	Error   LogType = "error"
+	Info    LogType = "info"
+	Warning LogType = "warning"
+	Debug   LogType = "debug"
+)
+
+func Logs(level LogType, message interface{}) {
 	switch level {
-	case "info":
-		log.Printf("INFO: %s --> %s", time.Now(), message)
-	case "error":
-		log.Printf("ERROR: %s --> %s", time.Now(), message)
+	case Info:
+		log.Printf("INFO: \n %s ---> %s", time.Now(), message)
+	case Error:
+		log.Printf("ERROR: \n %s ---> %s", time.Now(), message)
+	case Warning:
+		log.Printf("WARNING: \n %s ---> %s", time.Now(), message)
+	case Debug:
+		log.Printf("DEBUG: \n %s ---> %s", time.Now(), message)
 	default:
-		log.Printf("INFO: %s --> %s", time.Now(), message)
+		log.Printf("INFO: \n %s ---> %s", time.Now(), message)
 	}
 }
 

@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// JSON RESPONSE TO USERS
 type JsonResponseType string
 
 const (
@@ -45,7 +46,8 @@ func SetError(err error, message string) *MongoJsonResponse {
 }
 
 func SetSuccess(message string, data interface{}) *MongoJsonResponse {
-	config.Logs("info", message+" "+data.(string))
+	config.Logs("info", message+"\n")
+	config.Logs("info", data)
 	return &MongoJsonResponse{
 		Type:    Success,
 		Data:    data,
@@ -54,10 +56,12 @@ func SetSuccess(message string, data interface{}) *MongoJsonResponse {
 	}
 }
 
+// REMOVE PASSWORD FROM USER STRUCT
 var PasswordOpts = options.FindOne().SetProjection(bson.M{"password": 0})
 
 var usersCollection = database.OpenCollection(database.ConnectMongoDB(), config.DB, config.USERS)
 
+// USER VALIDATION EMAIL AND USERNAME
 func CheckIfEmailExists(email string) (bool, error) {
 	var user UserStruct
 	filter := bson.M{"email": email}
@@ -77,6 +81,7 @@ func CheckIfUsernameExists(username string) (bool, error) {
 	return true, nil
 }
 
+// UPDATE REFRESH TOKEN
 func UpdateRefreshToken(ctx context.Context, id primitive.ObjectID, refreshToken string) error {
 	filter := bson.M{"_id": id}
 	update := bson.M{

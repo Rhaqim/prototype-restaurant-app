@@ -3,6 +3,8 @@ package utils
 import (
 	"io"
 	"net/http"
+	"reflect"
+	"runtime"
 
 	"github.com/google/uuid"
 )
@@ -32,4 +34,9 @@ func CallAPI(url string, method string, body io.Reader) (string, error) {
 	}
 	bodyString := string(bodyBytes)
 	return bodyString, nil
+}
+
+// Get name of function
+func GetFunctionName(i interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }
