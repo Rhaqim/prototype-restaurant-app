@@ -20,17 +20,19 @@ func CreateTransaction(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
+	var funcName = ut.GetFunctionName()
+
 	var request hp.Transactions
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		response := hp.SetError(err, "Error binding JSON")
+		response := hp.SetError(err, "Error binding JSON", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	check, ok := c.Get("user") //check if user is logged in
 	if !ok {
-		response := hp.SetError(nil, "User not logged in")
+		response := hp.SetError(nil, "User not logged in", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -41,7 +43,7 @@ func CreateTransaction(c *gin.Context) {
 	friends := hp.VerifyFriends(user, request.ToID)
 
 	if !friends {
-		response := hp.SetError(nil, "You are not friends with this user")
+		response := hp.SetError(nil, "You are not friends with this user", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -49,7 +51,7 @@ func CreateTransaction(c *gin.Context) {
 	sufficientBalance := hp.VerifyWalletSufficientBalance(user, request.Amount)
 
 	if !sufficientBalance {
-		response := hp.SetError(nil, "Insufficient balance")
+		response := hp.SetError(nil, "Insufficient balance", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -82,7 +84,7 @@ func CreateTransaction(c *gin.Context) {
 		Status:   request.Status,
 	}
 
-	response := hp.SetSuccess("Transaction created successfully", transactionResponse)
+	response := hp.SetSuccess("Transaction created successfully", transactionResponse, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -91,17 +93,19 @@ func UpdateTransactionStatus(c *gin.Context) {
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
+	var funcName = ut.GetFunctionName()
+
 	var request hp.TransactionStatus
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		var response = hp.SetError(err, "Error binding JSON")
+		var response = hp.SetError(err, "Error binding JSON", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	check, auth := c.Get("user") //check if user is logged in
 	if !auth {
-		response := hp.SetError(nil, "User not logged in")
+		response := hp.SetError(nil, "User not logged in", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -112,7 +116,7 @@ func UpdateTransactionStatus(c *gin.Context) {
 	ok := hp.TxnStatusIsValid(request.Status)
 
 	if !ok {
-		response := hp.SetError(nil, "Invalid Transaction Type")
+		response := hp.SetError(nil, "Invalid Transaction Type", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -130,9 +134,7 @@ func UpdateTransactionStatus(c *gin.Context) {
 
 	updateResult, err := config.TransactionsCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		config.Logs("error", err.Error())
-		// c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		response := hp.SetError(err, "Error updating transaction status")
+		response := hp.SetError(err, "Error updating transaction status", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -143,6 +145,6 @@ func UpdateTransactionStatus(c *gin.Context) {
 		Status: request.Status,
 	}
 
-	response := hp.SetSuccess("Transaction updated successfully", transactionResponse)
+	response := hp.SetSuccess("Transaction updated successfully", transactionResponse, funcName)
 	c.JSON(http.StatusOK, response)
 }
