@@ -16,6 +16,7 @@ const (
 	RESTAURAUNT = "restauraunts"
 	HOSTING     = "hosting"
 	TRANSACTION = "transactions"
+	FRIENDSHIP  = "friendship"
 )
 
 var (
@@ -24,6 +25,7 @@ var (
 	RestaurantCollection   = database.OpenCollection(database.ConnectMongoDB(), DB, RESTAURAUNT)
 	HostCollection         = database.OpenCollection(database.ConnectMongoDB(), DB, HOSTING)
 	TransactionsCollection = database.OpenCollection(database.ConnectMongoDB(), DB, TRANSACTION)
+	FriendshipCollection   = database.OpenCollection(database.ConnectMongoDB(), DB, FRIENDSHIP)
 )
 
 var (

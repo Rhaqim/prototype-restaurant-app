@@ -148,7 +148,7 @@ func VerifyFriends(user UserResponse, friendID primitive.ObjectID) bool {
 	var friend UserResponse
 	err := config.UserCollection.FindOne(context.TODO(), bson.M{"_id": friendID}).Decode(&friend)
 	if err != nil {
-		config.Logs("error", err.Error(), ut.GetFunctionName())
+		SetDebug(err.Error(), ut.GetFunctionName())
 		return false
 	}
 
