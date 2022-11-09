@@ -31,59 +31,70 @@ type Friendship struct {
 	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id"`
 	UserID    primitive.ObjectID `json:"user_id" bson:"user_id" validate:"required"`
 	FriendID  primitive.ObjectID `json:"friend_id" bson:"friend_id"`
-	Status    int                `json:"status" bson:"status"`
+	Status    FriendshipStatus   `json:"status" bson:"status"`
 	CreatedAt time.Time          `json:"created_at" bson:"created_at" default:"now()"`
 	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at" default:"now()"`
 }
 
 type FriendshipRequest struct {
-	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id"`
-	UserID    UserResponse       `json:"user_id" bson:"user_id" validate:"required"`
 	FriendID  primitive.ObjectID `json:"friend_id" bson:"friend_id"`
-	Status    int                `json:"status" bson:"status"`
+	Status    FriendshipStatus   `json:"status" bson:"status"`
 	CreatedAt time.Time          `json:"created_at" bson:"created_at" default:"now()"`
 	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at" default:"now()"`
 }
 
+type FriendshipAcceptRequest struct {
+	ID       primitive.ObjectID `json:"id,omitempty" bson:"_id"`
+	UserID   primitive.ObjectID `json:"user_id" bson:"user_id" validate:"required"`
+	FriendID primitive.ObjectID `json:"friend_id" bson:"friend_id"`
+}
+
 // Send Friend Request
 // Send a friend request to another user.
-func SendFriendRequest(ctx context.Context, userID UserResponse, friendID primitive.ObjectID) error {
+func SendFriendRequest(ctx context.Context, userID UserResponse, friendID primitive.ObjectID) (Friendship, error) {
 	// Check if the friendship already exists.
 	friendship := VerifyFriends(userID, friendID)
 	// If the friendship already exists, return a message.
 	if friendship {
-		return errors.New("Friendship already exists")
+		return Friendship{}, errors.New("Friendship already exists")
 	}
 
 	// Create a new friendship request.
-	friendshipRequest := Friendship{
-		UserID:   userID.ID,
-		FriendID: friendID,
-		Status:   int(FriendshipStatusPending),
+	friendshipRequest := bson.M{
+		"user_id":    userID.ID,
+		"friend_id":  friendID,
+		"status":     FriendshipStatusPending,
+		"created_at": time.Now(),
+		"updated_at": time.Now(),
 	}
 
 	// Insert the friendship request into the database.
-	_, err := config.FriendshipCollection.InsertOne(ctx, friendshipRequest)
+	insertUpdate, err := config.FriendshipCollection.InsertOne(ctx, friendshipRequest)
 	if err != nil {
-		return err
+		return Friendship{}, err
 	}
 
-	return nil
+	return Friendship{
+		ID:       insertUpdate.InsertedID.(primitive.ObjectID),
+		UserID:   userID.ID,
+		FriendID: friendID,
+		Status:   FriendshipStatusPending,
+	}, nil
 }
 
 // Accept Friend Request
 // Accept a friend request from another user.
-func AcceptFriendRequest(ctx context.Context, userID UserResponse, friendshipID primitive.ObjectID) error {
+func AcceptFriendRequest(ctx context.Context, FROM, TO UserResponse, friendshipID primitive.ObjectID) error {
 	// Update the friendship request in the database.
-	var filter = bson.M{"_id": friendshipID, "friend_id": userID.ID}
-	var update = bson.M{"$set": bson.M{"status": int(FriendshipStatusAccepted)}}
+	var filter = bson.M{"_id": friendshipID, "friend_id": TO.ID}
+	var update = bson.M{"$set": bson.M{"status": FriendshipStatusAccepted, "updated_at": time.Now()}}
 	_, err := config.FriendshipCollection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		return err
 	}
 
-	var user = GetUserByID(ctx, userID.ID)
-	var friend = GetUserByID(ctx, friendshipID)
+	var user = GetUserByID(ctx, FROM.ID)
+	var friend = GetUserByID(ctx, TO.ID)
 
 	// Update Friendship list for user and friend.
 	user.Friends = append(user.Friends, friend.ID)

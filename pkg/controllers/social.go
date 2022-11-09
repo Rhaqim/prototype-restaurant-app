@@ -33,13 +33,13 @@ func SendFriendRequest(c *gin.Context) {
 
 	// Send Friend Request
 	// Send a friend request to another user.
-	err = hp.SendFriendRequest(ctx, user, request.FriendID)
+	friendRequest, err := hp.SendFriendRequest(ctx, user, request.FriendID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to send friend request", funcName))
 		return
 	}
 
-	c.JSON(http.StatusOK, hp.SetSuccess("Friend request sent", nil, funcName))
+	c.JSON(http.StatusOK, hp.SetSuccess("Friend request sent", friendRequest, funcName))
 }
 
 // Accept Friend Request
@@ -50,7 +50,7 @@ func AcceptFriendRequest(c *gin.Context) {
 
 	var funcName = ut.GetFunctionName()
 
-	var request = hp.Friendship{}
+	var request = hp.FriendshipAcceptRequest{}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
@@ -75,7 +75,7 @@ func AcceptFriendRequest(c *gin.Context) {
 
 	// Accept Friend Request
 	// Accept a friend request from another user.
-	err = hp.AcceptFriendRequest(ctx, from, request.ID)
+	err = hp.AcceptFriendRequest(ctx, from, user, request.ID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to accept friend request", funcName))
 		return
