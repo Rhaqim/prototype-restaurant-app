@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
+	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -85,6 +86,13 @@ func SendFriendRequest(ctx context.Context, userID UserResponse, friendID primit
 // Accept Friend Request
 // Accept a friend request from another user.
 func AcceptFriendRequest(ctx context.Context, FROM, TO UserResponse, friendshipID primitive.ObjectID) error {
+	// Check if the friendship already exists.
+	friendship := VerifyFriends(TO, FROM.ID)
+	// If the friendship already exists, return a message.
+	if friendship {
+		return errors.New("Friendship already exists")
+	}
+
 	// Update the friendship request in the database.
 	var filter = bson.M{"_id": friendshipID, "friend_id": TO.ID}
 	var update = bson.M{"$set": bson.M{"status": FriendshipStatusAccepted, "updated_at": time.Now()}}
@@ -112,4 +120,28 @@ func AcceptFriendRequest(ctx context.Context, FROM, TO UserResponse, friendshipI
 	}
 
 	return nil
+}
+
+func checkIfFriendExists(user, friend UserResponse) bool {
+	for _, person := range user.Friends {
+		if person == friend.ID {
+			return true
+		}
+	}
+	return false
+}
+
+func VerifyFriends(user UserResponse, friendID primitive.ObjectID) bool {
+	var friend UserResponse
+	err := config.UserCollection.FindOne(context.TODO(), bson.M{"_id": friendID}).Decode(&friend)
+	if err != nil {
+		SetDebug(err.Error(), ut.GetFunctionName())
+		return false
+	}
+
+	if checkIfFriendExists(user, friend) && checkIfFriendExists(friend, user) {
+		return true
+	}
+
+	return false
 }
