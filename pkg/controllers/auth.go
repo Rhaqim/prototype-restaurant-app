@@ -226,14 +226,13 @@ func Signout(c *gin.Context) {
 
 	user := hp.UserResponse{}
 
-	check, ok := c.Get("user") //check if user is logged in
-	if !ok {
-		response := hp.SetError(nil, "User not logged in", funcName)
+	request, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	request := check.(hp.UserResponse)
 	filter := bson.M{"username": request.Username}
 
 	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
@@ -242,7 +241,7 @@ func Signout(c *gin.Context) {
 		return
 	}
 
-	err := hp.UpdateRefreshToken(ctx, user.ID, "")
+	err = hp.UpdateRefreshToken(ctx, user.ID, "")
 	if err != nil {
 		response := hp.SetError(err, "Error signing out", funcName)
 		c.JSON(http.StatusInternalServerError, response)
@@ -260,14 +259,12 @@ func RefreshToken(c *gin.Context) {
 
 	funcName := ut.GetFunctionName()
 
-	check, ok := c.Get("user") //check if user is logged in
-	if !ok {
-		response := hp.SetError(nil, "User not logged in", funcName)
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-
-	user := check.(hp.UserResponse)
 
 	request := hp.RefreshToken{}
 
@@ -368,14 +365,13 @@ func ResetPassword(c *gin.Context) {
 		return
 	}
 
-	check, ok := c.Get("user") //check if user is logged in
-	if !ok {
-		response := hp.SetError(nil, "User not logged in", funcName)
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	var user = check.(hp.UserResponse)
 	filter := bson.M{"_id": user.ID}
 
 	if user.RefreshToken != request.RefreshToken {

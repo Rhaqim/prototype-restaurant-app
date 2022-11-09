@@ -103,14 +103,12 @@ func UpdateTransactionStatus(c *gin.Context) {
 		return
 	}
 
-	check, auth := c.Get("user") //check if user is logged in
-	if !auth {
-		response := hp.SetError(nil, "User not logged in", funcName)
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-
-	user := check.(hp.UserResponse)
 
 	// Check Transaction Type Validity
 	ok := hp.TxnStatusIsValid(request.Status)

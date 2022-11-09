@@ -32,9 +32,9 @@ func CreateHostedEvent(c *gin.Context) {
 		return
 	}
 
-	check, ok := c.Get("user") //check if user is logged in
-	if !ok {
-		response := hp.SetError(nil, "User not logged in", funcName)
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -45,8 +45,6 @@ func CreateHostedEvent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-
-	user := check.(hp.UserResponse)
 
 	insert := bson.M{
 		"host_id":    user.ID,
@@ -86,14 +84,12 @@ func GetUserHostedEventsByHost(c *gin.Context) {
 
 	var funcName = ut.GetFunctionName()
 
-	check, ok := c.Get("user") //check if user is logged in
-	if !ok {
-		response := hp.SetError(nil, "User not logged in", funcName)
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-
-	user := check.(hp.UserResponse)
 
 	filter := bson.M{"host_id": user.ID}
 	cursor, err := hostCollection.Find(ctx, filter)
@@ -129,14 +125,12 @@ func UpdateHostedEvent(c *gin.Context) {
 		return
 	}
 
-	check, ok := c.Get("user") //check if user is logged in
-	if !ok {
-		response := hp.SetError(nil, "User not logged in", funcName)
-		c.JSON(http.StatusNonAuthoritativeInfo, response)
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-
-	user := check.(hp.UserResponse)
 
 	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
 	if err != nil {
@@ -176,14 +170,12 @@ func DeleteHostedEvent(c *gin.Context) {
 
 	var funcName = ut.GetFunctionName()
 
-	check, ok := c.Get("user") //check if user is logged in
-	if !ok {
-		response := hp.SetError(nil, "User not logged in", funcName)
-		c.JSON(http.StatusNonAuthoritativeInfo, response)
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-
-	user := check.(hp.UserResponse)
 
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
