@@ -59,18 +59,6 @@ func GetFunctionName() string {
 	return runtime.FuncForPC(pc).Name()
 }
 
-// Signup godoc
-// @Summary Create a new account
-// @Description Create a new account
-// @Tags auth
-// @Accept  json
-// @Produce  json
-// @Param account body hp.Account true "Account"
-// @Success 200 {object} hp.Account
-// @Failure 400 {object} hp.Error
-// @Failure 500 {object} hp.Error
-// @Router /auth/signup [post]
-
 // func GetSocial(c *gin.Context) {
 // 	collection := config.MI.DB.Collection("socials")
 // 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

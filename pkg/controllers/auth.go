@@ -20,6 +20,20 @@ import (
 
 var authCollection = config.UserCollection
 
+/*
+	Signup godoc
+
+@Summary Create a new account
+@Description Creates a new user account
+@Tags auth
+@Accept  json
+@Produce  json
+@Param account body hp.UserStruct true "UserStruct"
+@Success 200 {object} hp.UserStruct
+@Failure 400 {object} hp.Error
+@Failure 500 {object} hp.Error
+@Router /auth/signup [post]
+*/
 func Signup(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -145,6 +159,19 @@ func Signup(c *gin.Context) {
 	response := hp.SetSuccess("User created successfully", data, funcName)
 	c.JSON(http.StatusOK, response)
 }
+
+/* Signin godoc
+@Summary Signin a User
+@Description Signin an Existing user
+@Tags auth
+@Accept  json
+@Produce  json
+@Param account body hp.SingIn true "SignIn"
+@Success 200 {object} hp.UserStruct
+@Failure 400 {object} hp.Error
+@Failure 500 {object} hp.Error
+@Router /auth/signup [post]
+*/
 
 func SignIn(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
