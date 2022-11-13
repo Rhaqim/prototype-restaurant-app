@@ -8,6 +8,9 @@ build:
 run:
 	./$(ARGS)
 
+run-no-build:
+	go run cmd/server/main.go
+
 clean:
 	if [ -f $(BINARY_NAME) ] ; then rm $(BINARY_NAME) ; fi
 
