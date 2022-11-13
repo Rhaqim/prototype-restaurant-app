@@ -8,6 +8,7 @@ import (
 func GinRouter() *gin.Engine {
 	router := gin.Default()
 
+	/* Auth Routes */
 	auth := router.Group("/auth")
 	{
 		auth.POST("/signup", views.Signup)
@@ -28,6 +29,7 @@ func GinRouter() *gin.Engine {
 		refreshTokenProtected.POST("/changePassword", views.ResetPassword)
 	}
 
+	/* User Routes */
 	user := router.Group("/user")
 	user.GET("/getUserById", views.GetUserByID)
 	user.GET("/getUserByEmail", views.GetUserByEmail)
@@ -38,12 +40,14 @@ func GinRouter() *gin.Engine {
 		user.DELETE("/deleteUser", views.DeleteUser)
 		// user.GET("/getAllUsers", views.GetAllUsers)
 
+		/* Transaction Routes */
 		transactions := user.Group("/transactions")
 		{
 			transactions.POST("/createTransaction", views.CreateTransaction)
 			transactions.PUT("/updateTransaction", views.UpdateTransactionStatus)
 		}
 
+		/* Social Routes */
 		social := user.Group("/social")
 		{
 			social.POST("/sendFriendRequest", views.SendFriendRequest)
@@ -51,6 +55,7 @@ func GinRouter() *gin.Engine {
 		}
 	}
 
+	/* Hosting Routes */
 	hosting := router.Group("/hosting")
 	// hosting.GET("/getAllHostedEvents", views.GetHostingByID)
 	hosting.Use(TokenGuardMiddleware())

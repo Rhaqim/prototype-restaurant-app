@@ -1,17 +1,13 @@
 package main
 
 import (
-	"os"
-
 	"github.com/Rhaqim/thedutchapp/pkg/handlers"
+	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 )
 
 func main() {
 	run := handlers.GinRouter()
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = ":8080"
-	}
+	port := ut.GetEnv("PORT")
 
 	run.Run(port)
 }

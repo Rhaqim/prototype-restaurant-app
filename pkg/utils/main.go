@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"bytes"
+	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 	"reflect"
 	"runtime"
 
@@ -15,25 +18,18 @@ func GenerateUUID() string {
 	return uuid.String()
 }
 
-// Call external API
-func CallAPI(url string, method string, body io.Reader) (string, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest(method, url, body)
-	if err != nil {
-		return "", err
+func StructToJSON(i interface{}) io.Reader {
+	json, _ := json.Marshal(i)
+	return bytes.NewReader(json)
+}
+
+func GetEnv(key string) string {
+	if key == "PORT" {
+		if os.Getenv(key) == "" {
+			return ":8080"
+		}
 	}
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	bodyString := string(bodyBytes)
-	return bodyString, nil
+	return os.Getenv(key)
 }
 
 // Get name of function
@@ -63,6 +59,18 @@ func GetFunctionName() string {
 	return runtime.FuncForPC(pc).Name()
 }
 
+// Signup godoc
+// @Summary Create a new account
+// @Description Create a new account
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param account body hp.Account true "Account"
+// @Success 200 {object} hp.Account
+// @Failure 400 {object} hp.Error
+// @Failure 500 {object} hp.Error
+// @Router /auth/signup [post]
+
 // func GetSocial(c *gin.Context) {
 // 	collection := config.MI.DB.Collection("socials")
 // 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -89,3 +97,55 @@ func GetFunctionName() string {
 // 	}
 // 	c.JSON(http.StatusOK, helpers.SetSuccess("Socials found", socials, "GetSocial"))
 // }
+
+// Call external API
+type APIMethods string
+
+const (
+	POST   APIMethods = "POST"
+	GET    APIMethods = "GET"
+	PUT    APIMethods = "PUT"
+	DELETE APIMethods = "DELETE"
+)
+
+type BankApiStruct struct {
+	Method        APIMethods
+	URL           string
+	Body          io.Reader
+	ContentType   string
+	Authorization string
+}
+
+func InitBankApi(method APIMethods, endpoint string, body io.Reader, authorization string) *BankApiStruct {
+	return &BankApiStruct{
+		Method:        method,
+		URL:           "https://api.finicity.com/" + endpoint,
+		Body:          body,
+		ContentType:   "application/json",
+		Authorization: "Bearer " + authorization,
+	}
+}
+
+func (api *BankApiStruct) Call() (int, []byte, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest(string(api.Method), api.URL, api.Body)
+	if err != nil {
+		return 0, nil, err
+	}
+	req.Header.Add("Content-Type", api.ContentType)
+	req.Header.Add("Authorization", api.Authorization)
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, nil, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, nil, err
+	}
+	return resp.StatusCode, body, nil
+}
+
+type BankAPI interface {
+	Call() (int, []byte, error)
+}
