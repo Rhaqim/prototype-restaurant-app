@@ -21,11 +21,24 @@ run-docker:
 
 build-and-run-docker: build-docker run-docker
 
-tidy:
-	go mod tidy
-
 test:
 	go test -v ./...
 
+coverage:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out
+
 get:
 	go get -u $(PKG)
+
+tidy:
+	go mod tidy
+
+dep:
+	go mod download
+
+lint:
+	go fmt ./...
+
+vet:
+	go vet ./...
