@@ -1,12 +1,12 @@
 .PHONY: build run clean build-and-run build-docker run-docker build-and-run-docker tidy test
 
-BINARY_NAME=THEDUTCHAPP
+BINARY_NAME=thedutchapp
 
 build:
 	go build -o $(BINARY_NAME) cmd/server/main.go
 
 run:
-	./$(ARGS)
+	./$(BINARY_NAME)
 
 run-no-build:
 	go run cmd/server/main.go

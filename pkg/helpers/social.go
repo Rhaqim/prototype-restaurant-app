@@ -53,6 +53,11 @@ type FriendshipAcceptRequest struct {
 // Send Friend Request
 // Send a friend request to another user.
 func SendFriendRequest(ctx context.Context, userID UserResponse, friendID primitive.ObjectID) (Friendship, error) {
+	// check that userID is not the same as friendID
+	if userID.ID == friendID {
+		return Friendship{}, errors.New("you cannot be friends with yourself, c'mon")
+	}
+
 	// Check if the friendship already exists.
 	friendship := VerifyFriends(userID, friendID)
 	// If the friendship already exists, return a message.
