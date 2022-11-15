@@ -5,10 +5,10 @@ BINARY_NAME=thedutchapp
 build:
 	go build -o $(BINARY_NAME) cmd/server/main.go
 
-run:
+run-build:
 	./$(BINARY_NAME)
 
-run-no-build:
+run:
 	go run cmd/server/main.go
 
 clean:

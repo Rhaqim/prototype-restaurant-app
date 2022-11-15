@@ -43,9 +43,10 @@ func TokenGuardMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		var user = hp.UserResponse{}
+		var user = hp.UserStruct{}
 		filter := bson.M{"email": claims.Email}
-		if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
+		options := hp.PasswordOpts
+		if err := usersCollection.FindOne(ctx, filter, options).Decode(&user); err != nil {
 			hp.SetDebug(err.Error(), ut.GetFunctionName())
 			response := hp.SetError(nil, err.Error(), ut.GetFunctionName())
 			c.JSON(http.StatusBadRequest, response)
@@ -63,12 +64,6 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		defer database.ConnectMongoDB().Disconnect(context.TODO())
-
-		// response := hp.MongoJsonResponse{
-		// 	Type: "error",
-		// 	Data: nil,
-		// 	Date: time.Now(),
-		// }
 
 		token := c.Request.Header.Get("Authorization")
 		if token == "" {
@@ -89,9 +84,10 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		var user = hp.UserResponse{}
+		var user = hp.UserStruct{}
 		filter := bson.M{"email": claims.Email}
-		if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
+		options := hp.PasswordOpts
+		if err := usersCollection.FindOne(ctx, filter, options).Decode(&user); err != nil {
 			hp.SetDebug(err.Error(), ut.GetFunctionName())
 			response := hp.SetError(nil, err.Error(), ut.GetFunctionName())
 			c.JSON(http.StatusBadRequest, response)

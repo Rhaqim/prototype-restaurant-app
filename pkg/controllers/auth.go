@@ -93,24 +93,7 @@ func Signup(c *gin.Context) {
 		user.Role = "user"
 	}
 
-	filter := bson.M{
-		"fullname":      user.Fullname,
-		"username":      user.Username,
-		"avatar":        user.Avatar,
-		"email":         user.Email,
-		"password":      user.Password,
-		"social":        user.Social,
-		"friends":       user.Friends,
-		"location":      user.Location,
-		"wallet":        user.Wallet,
-		"transactions":  user.Transactions,
-		"refreshToken":  user.RefreshToken,
-		"emailverified": user.EmailVerified,
-		"role":          user.Role,
-		"createdAt":     user.CreatedAt,
-		"updatedAt":     user.UpdatedAt,
-	}
-	insertResult, err := authCollection.InsertOne(ctx, filter)
+	insertResult, err := authCollection.InsertOne(ctx, user)
 	if err != nil {
 		response := hp.SetError(err, "Error creating user", funcName)
 		c.JSON(http.StatusInternalServerError, response)
@@ -133,21 +116,10 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	userResponse := hp.UserResponse{
-		ID:           insertResult.InsertedID.(primitive.ObjectID),
-		Fullname:     user.Fullname,
-		Username:     user.Username,
-		Avatar:       user.Avatar,
-		Email:        user.Email,
-		Social:       user.Social,
-		Friends:      user.Friends,
-		Location:     user.Location,
-		Wallet:       user.Wallet,
-		Transactions: user.Transactions,
-		Role:         user.Role,
-		CreatedAt:    user.CreatedAt,
-		UpdatedAt:    user.UpdatedAt,
-	}
+	userResponse := user
+
+	userResponse.ID = insertResult.InsertedID.(primitive.ObjectID)
+	userResponse.Password = ""
 
 	data := gin.H{
 		"accessToken":  t,
@@ -191,11 +163,14 @@ func SignIn(c *gin.Context) {
 	log.Print("Request ID sent by client:", request.Username)
 
 	filter := bson.M{"username": request.Username}
-	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		response := hp.SetError(err, "User not found", funcName)
+
+	err := authCollection.FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		response := hp.SetError(err, "Error finding user", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
+
 	log.Println("User: ", user)
 	if auth.CheckPasswordHash(request.Password, user.Password) {
 
@@ -214,21 +189,9 @@ func SignIn(c *gin.Context) {
 			return
 		}
 
-		userResponse := hp.UserResponse{
-			ID:           user.ID,
-			Fullname:     user.Fullname,
-			Username:     user.Username,
-			Avatar:       user.Avatar,
-			Email:        user.Email,
-			Social:       user.Social,
-			Friends:      user.Friends,
-			Location:     user.Location,
-			Wallet:       user.Wallet,
-			Transactions: user.Transactions,
-			Role:         user.Role,
-			CreatedAt:    user.CreatedAt,
-			UpdatedAt:    user.UpdatedAt,
-		}
+		userResponse := user
+
+		userResponse.Password = ""
 
 		var data = gin.H{
 			"accessToken":  t,
@@ -251,19 +214,9 @@ func Signout(c *gin.Context) {
 
 	funcName := ut.GetFunctionName()
 
-	user := hp.UserResponse{}
-
-	request, err := hp.GetUserFromToken(c)
+	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
-		return
-	}
-
-	filter := bson.M{"username": request.Username}
-
-	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		response := hp.SetError(err, "User not found", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -348,9 +301,10 @@ func ForgotPassword(c *gin.Context) {
 	}
 	log.Print("Request ID sent by client:", request.Email)
 
-	var user = hp.UserResponse{}
+	var user = hp.UserStruct{}
+	options := hp.PasswordOpts
 	filter := bson.M{"email": request.Email}
-	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
+	if err := usersCollection.FindOne(ctx, filter, options).Decode(&user); err != nil {
 		response := hp.SetError(err, "User not found", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return

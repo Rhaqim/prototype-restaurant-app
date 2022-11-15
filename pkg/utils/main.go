@@ -4,13 +4,20 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"net/http"
 	"os"
 	"reflect"
 	"runtime"
+	"time"
 
 	"github.com/google/uuid"
 )
+
+func Now(format string) time.Time {
+	if format == "date" {
+		return time.Now().UTC().Truncate(24 * time.Hour)
+	}
+	return time.Now().UTC()
+}
 
 // generate random uuid
 func GenerateUUID() string {
@@ -37,6 +44,12 @@ func GetFunctionNameV1(i interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }
 
+// Get the name of the current function
+func GetFunctionName() string {
+	pc, _, _, _ := runtime.Caller(1)
+	return runtime.FuncForPC(pc).Name()
+}
+
 // Colorise text in the terminal
 func Colorise(color string, text string) string {
 	colors := map[string]string{
@@ -53,10 +66,17 @@ func Colorise(color string, text string) string {
 	return colors[color] + text + colors["reset"]
 }
 
-// Get the name of the current function
-func GetFunctionName() string {
-	pc, _, _, _ := runtime.Caller(1)
-	return runtime.FuncForPC(pc).Name()
+func LoadJsonFile(path string) []byte {
+	jsonFile, err := os.Open(path)
+	if err != nil {
+		panic(err)
+	}
+	defer jsonFile.Close()
+	jsonData, err := io.ReadAll(jsonFile)
+	if err != nil {
+		panic(err)
+	}
+	return jsonData
 }
 
 // func GetSocial(c *gin.Context) {
@@ -85,55 +105,3 @@ func GetFunctionName() string {
 // 	}
 // 	c.JSON(http.StatusOK, helpers.SetSuccess("Socials found", socials, "GetSocial"))
 // }
-
-// Call external API
-type APIMethods string
-
-const (
-	POST   APIMethods = "POST"
-	GET    APIMethods = "GET"
-	PUT    APIMethods = "PUT"
-	DELETE APIMethods = "DELETE"
-)
-
-type BankApiStruct struct {
-	Method        APIMethods
-	URL           string
-	Body          io.Reader
-	ContentType   string
-	Authorization string
-}
-
-func InitBankApi(method APIMethods, endpoint string, body io.Reader, authorization string) *BankApiStruct {
-	return &BankApiStruct{
-		Method:        method,
-		URL:           "https://api.finicity.com/" + endpoint,
-		Body:          body,
-		ContentType:   "application/json",
-		Authorization: "Bearer " + authorization,
-	}
-}
-
-func (api *BankApiStruct) Call() (int, []byte, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest(string(api.Method), api.URL, api.Body)
-	if err != nil {
-		return 0, nil, err
-	}
-	req.Header.Add("Content-Type", api.ContentType)
-	req.Header.Add("Authorization", api.Authorization)
-	resp, err := client.Do(req)
-	if err != nil {
-		return 0, nil, err
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return 0, nil, err
-	}
-	return resp.StatusCode, body, nil
-}
-
-type BankAPI interface {
-	Call() (int, []byte, error)
-}

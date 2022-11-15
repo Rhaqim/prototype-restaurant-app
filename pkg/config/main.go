@@ -17,6 +17,9 @@ const (
 	HOSTING     = "hosting"
 	TRANSACTION = "transactions"
 	FRIENDSHIP  = "friendship"
+	COUNTRY     = "country"
+	STATE       = "state"
+	CITY        = "city"
 )
 
 var (
@@ -26,6 +29,9 @@ var (
 	HostCollection         = database.OpenCollection(database.ConnectMongoDB(), DB, HOSTING)
 	TransactionsCollection = database.OpenCollection(database.ConnectMongoDB(), DB, TRANSACTION)
 	FriendshipCollection   = database.OpenCollection(database.ConnectMongoDB(), DB, FRIENDSHIP)
+	CountryCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, COUNTRY)
+	StateCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, STATE)
+	CityCollection         = database.OpenCollection(database.ConnectMongoDB(), DB, CITY)
 )
 
 var (

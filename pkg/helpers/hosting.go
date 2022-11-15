@@ -26,6 +26,8 @@ type HostingCreate struct {
 	Venue     primitive.ObjectID   `json:"venue" bson:"venue"`
 	Type      HostingType          `json:"type" bson:"type"`
 	Bill      int                  `json:"bill" bson:"bill"`
+	CreatedAt primitive.DateTime   `bson:"createdAt" json:"createdAt" default:"Now()"`
+	UpdatedAt primitive.DateTime   `bson:"updatedAt" json:"updatedAt" default:"Now()"`
 }
 
 type Hosting struct {
@@ -36,4 +38,6 @@ type Hosting struct {
 	Venue     primitive.ObjectID   `json:"venue" bson:"venue"`
 	Type      HostingType          `json:"type" bson:"type"`
 	Bill      int                  `json:"bill" bson:"bill"`
+	CreatedAt primitive.DateTime   `bson:"createdAt" json:"createdAt" default:"Now()"`
+	UpdatedAt primitive.DateTime   `bson:"updatedAt" json:"updatedAt" default:"Now()"`
 }
