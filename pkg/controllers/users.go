@@ -10,6 +10,7 @@ import (
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
+	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -249,6 +250,49 @@ func DeleteUser(c *gin.Context) {
 	log.Println("updateResult: ", updateResult)
 	response.Type = "success"
 	response.Message = "User updated"
+	c.JSON(http.StatusOK, response)
+
+}
+
+func UpdateUsersKYC(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	funcName := ut.GetFunctionName()
+
+	request := hp.KYC{}
+
+	user, err := hp.GetUserFromToken(c) // get user from token
+	if err != nil {
+		respons := hp.SetError(err, "User not found", funcName)
+		c.JSON(http.StatusBadRequest, respons)
+		return
+	}
+
+	if err := c.BindJSON(&request); err != nil {
+		response := hp.SetError(err, "Error binding JSON", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	request.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+
+	// update user kyc
+	filter := bson.M{"_id": user.ID}
+	update := bson.M{
+		"$set": request,
+	}
+
+	updateResult, err := usersCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		// config.Logs("error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	log.Println("updateResult: ", updateResult)
+	response := hp.SetSuccess("success", "User updated", funcName)
 	c.JSON(http.StatusOK, response)
 
 }

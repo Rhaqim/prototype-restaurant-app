@@ -189,9 +189,19 @@ func SignIn(c *gin.Context) {
 			return
 		}
 
-		userResponse := user
-
-		userResponse.Password = ""
+		userResponse := hp.UserResponse{
+			ID:            user.ID,
+			FirstName:     user.FirstName,
+			LastName:      user.LastName,
+			Username:      user.Username,
+			Email:         user.Email,
+			EmailVerified: user.EmailVerified,
+			Friends:       user.Friends,
+			Wallet:        user.Wallet,
+			Transactions:  user.Transactions,
+			CreatedAt:     user.CreatedAt,
+			UpdatedAt:     user.UpdatedAt,
+		}
 
 		var data = gin.H{
 			"accessToken":  t,

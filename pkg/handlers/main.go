@@ -37,8 +37,8 @@ func GinRouter() *gin.Engine {
 	{
 		user.POST("/createUser", views.CreatNewUser)
 		user.PUT("/updateUser", views.UpdateAvatar)
+		user.PUT("/updateUserKyc", views.UpdateUsersKYC)
 		user.DELETE("/deleteUser", views.DeleteUser)
-		// user.GET("/getAllUsers", views.GetAllUsers)
 
 		/* Transaction Routes */
 		transactions := user.Group("/transactions")

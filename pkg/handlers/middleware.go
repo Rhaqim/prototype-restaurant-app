@@ -43,7 +43,7 @@ func TokenGuardMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		var user = hp.UserStruct{}
+		var user = hp.UserResponse{}
 		filter := bson.M{"email": claims.Email}
 		options := hp.PasswordOpts
 		if err := usersCollection.FindOne(ctx, filter, options).Decode(&user); err != nil {
@@ -84,7 +84,7 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		var user = hp.UserStruct{}
+		var user = hp.UserResponse{}
 		filter := bson.M{"email": claims.Email}
 		options := hp.PasswordOpts
 		if err := usersCollection.FindOne(ctx, filter, options).Decode(&user); err != nil {

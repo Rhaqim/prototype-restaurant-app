@@ -23,62 +23,43 @@ const (
 )
 
 type UserStruct struct {
-	ID             primitive.ObjectID   `bson:"_id" json:"_id,omitempty"`
-	FirstName      string               `json:"firstName"`
-	LastName       string               `json:"lastName"`
-	Email          string               `bson:"email" json:"email"`
-	Phone          string               `json:"phone"`
-	DOB            string               `json:"dob"`
-	Address        string               `json:"address"`
-	City           primitive.ObjectID   `json:"city"`
-	State          primitive.ObjectID   `json:"state"`
-	Zip            string               `json:"zip"`
-	Country        primitive.ObjectID   `json:"country"`
-	IdentityType   string               `json:"identityType"`
-	IdentityNumber string               `json:"identityNumber"`
-	IdentityPhoto  interface{}          `json:"identityPhoto"`
-	Username       string               `bson:"username" json:"username"`
-	Password       string               `bson:"password" json:"password"`
-	Avatar         interface{}          `bson:"avatar" json:"avatar"`
-	Social         interface{}          `bson:"social" json:"social"`
-	Friends        []primitive.ObjectID `bson:"friends" json:"friends"`
-	Location       string               `bson:"location" json:"location"`
-	Wallet         float64              `bson:"wallet" json:"wallet"`
-	Transactions   []primitive.ObjectID `bson:"transactions" json:"transactions"`
-	RefreshToken   string               `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
-	EmailVerified  bool                 `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty" default:"false"`
-	Role           Roles                `bson:"role" json:"role"`
-	CreatedAt      primitive.DateTime   `bson:"createdAt" json:"createdAt" default:"Now()"`
-	UpdatedAt      primitive.DateTime   `bson:"updatedAt" json:"updatedAt" default:"Now()"`
+	ID primitive.ObjectID `bson:"_id" json:"_id,omitempty"`
+
+	FirstName     string               `json:"firstName"`
+	LastName      string               `json:"lastName"`
+	Email         string               `bson:"email" json:"email"`
+	Username      string               `bson:"username" json:"username"`
+	Password      string               `bson:"password" json:"password"`
+	Avatar        interface{}          `bson:"avatar" json:"avatar"`
+	Social        interface{}          `bson:"social" json:"social"`
+	Friends       []primitive.ObjectID `bson:"friends" json:"friends"`
+	Location      string               `bson:"location" json:"location"`
+	Wallet        float64              `bson:"wallet" json:"wallet"`
+	Transactions  []primitive.ObjectID `bson:"transactions" json:"transactions"`
+	RefreshToken  string               `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
+	EmailVerified bool                 `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty" default:"false"`
+	Role          Roles                `bson:"role" json:"role"`
+	CreatedAt     primitive.DateTime   `bson:"createdAt" json:"createdAt" default:"Now()"`
+	UpdatedAt     primitive.DateTime   `bson:"updatedAt" json:"updatedAt" default:"Now()"`
 }
 
 type UserResponse struct {
-	ID             primitive.ObjectID   `bson:"_id" json:"_id,omitempty"`
-	FirstName      string               `json:"firstName"`
-	LastName       string               `json:"lastName"`
-	Email          string               `bson:"email" json:"email"`
-	Phone          string               `json:"phone"`
-	DOB            string               `json:"dob"`
-	Address        string               `json:"address"`
-	City           primitive.ObjectID   `json:"city"`
-	State          primitive.ObjectID   `json:"state"`
-	Zip            string               `json:"zip"`
-	Country        primitive.ObjectID   `json:"country"`
-	IdentityType   string               `json:"identityType"`
-	IdentityNumber string               `json:"identityNumber"`
-	IdentityPhoto  interface{}          `json:"identityPhoto"`
-	Username       string               `bson:"username" json:"username"`
-	Avatar         interface{}          `bson:"avatar" json:"avatar"`
-	Social         interface{}          `bson:"social" json:"social"`
-	Friends        []primitive.ObjectID `bson:"friends" json:"friends"`
-	Location       string               `bson:"location" json:"location"`
-	Wallet         float64              `bson:"wallet" json:"wallet"`
-	Transactions   []primitive.ObjectID `bson:"transactions" json:"transactions"`
-	RefreshToken   string               `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
-	EmailVerified  bool                 `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty" default:"false"`
-	Role           Roles                `bson:"role" json:"role"`
-	CreatedAt      primitive.DateTime   `bson:"createdAt" json:"createdAt"`
-	UpdatedAt      primitive.DateTime   `bson:"updatedAt" json:"updatedAt"`
+	ID            primitive.ObjectID   `bson:"_id" json:"_id,omitempty"`
+	FirstName     string               `json:"firstName"`
+	LastName      string               `json:"lastName"`
+	Email         string               `bson:"email" json:"email"`
+	Username      string               `bson:"username" json:"username"`
+	Avatar        interface{}          `bson:"avatar" json:"avatar"`
+	Social        interface{}          `bson:"social" json:"social"`
+	Friends       []primitive.ObjectID `bson:"friends" json:"friends"`
+	Location      string               `bson:"location" json:"location"`
+	Wallet        float64              `bson:"wallet" json:"wallet"`
+	Transactions  []primitive.ObjectID `bson:"transactions" json:"transactions"`
+	RefreshToken  string               `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
+	EmailVerified bool                 `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty" default:"false"`
+	Role          Roles                `bson:"role" json:"role"`
+	CreatedAt     primitive.DateTime   `bson:"createdAt" json:"createdAt"`
+	UpdatedAt     primitive.DateTime   `bson:"updatedAt" json:"updatedAt"`
 }
 
 type CreatUser struct {
