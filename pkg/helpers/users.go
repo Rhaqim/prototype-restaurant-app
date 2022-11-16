@@ -35,7 +35,8 @@ type UserStruct struct {
 	Friends       []primitive.ObjectID `bson:"friends" json:"friends"`
 	Location      string               `bson:"location" json:"location"`
 	Wallet        float64              `bson:"wallet" json:"wallet"`
-	Transactions  []primitive.ObjectID `bson:"transactions" json:"transactions"`
+	Account       BankAccount          `bson:"account" json:"account"`
+	Transactions  []Transactions       `bson:"transactions" json:"transactions"`
 	RefreshToken  string               `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
 	EmailVerified bool                 `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty" default:"false"`
 	Role          Roles                `bson:"role" json:"role"`
@@ -54,7 +55,8 @@ type UserResponse struct {
 	Friends       []primitive.ObjectID `bson:"friends" json:"friends"`
 	Location      string               `bson:"location" json:"location"`
 	Wallet        float64              `bson:"wallet" json:"wallet"`
-	Transactions  []primitive.ObjectID `bson:"transactions" json:"transactions"`
+	Account       BankAccount          `bson:"account" json:"account"`
+	Transactions  []Transactions       `bson:"transactions" json:"transactions"`
 	RefreshToken  string               `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
 	EmailVerified bool                 `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty" default:"false"`
 	Role          Roles                `bson:"role" json:"role"`

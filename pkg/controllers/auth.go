@@ -74,7 +74,7 @@ func Signup(c *gin.Context) {
 	}
 
 	user.Wallet = 0
-	user.Transactions = []primitive.ObjectID{}
+	user.Transactions = []hp.Transactions{}
 	user.EmailVerified = false
 	user.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 	user.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())

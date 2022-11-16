@@ -56,19 +56,8 @@ func CreateTransaction(c *gin.Context) {
 
 	request.Status = hp.TxnPending
 	request.Txn_uuid = ut.GenerateUUID()
-	request.Date = time.Now()
 
-	insert := bson.M{
-		"txn_uuid": request.Txn_uuid,
-		"from_id":  user.ID,
-		"to_id":    request.ToID,
-		"amount":   request.Amount,
-		"type":     request.Type,
-		"status":   request.Status,
-		"date":     request.Date,
-	}
-
-	insertResult, err := config.TransactionsCollection.InsertOne(ctx, insert)
+	insertResult, err := config.TransactionsCollection.InsertOne(ctx, request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -120,8 +109,9 @@ func UpdateTransactionStatus(c *gin.Context) {
 	}
 
 	filter := bson.M{
-		"_id":     request.ID,
-		"from_id": user.ID,
+		"_id":      request.ID,
+		"fromId":   user.ID,
+		"txn_uuid": request.Txn_uuid,
 	}
 
 	update := bson.M{
@@ -138,11 +128,29 @@ func UpdateTransactionStatus(c *gin.Context) {
 	}
 	log.Println("updateResult: ", updateResult)
 
-	transactionResponse := hp.Transactions{
-		ID:     request.ID,
-		Status: request.Status,
+	// Update Wallet Balance
+	var transaction hp.Transactions
+	err = config.TransactionsCollection.FindOne(ctx, filter).Decode(&transaction)
+	if err != nil {
+		response := hp.SetError(err, "Error fetching transaction", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
 	}
 
-	response := hp.SetSuccess("Transaction updated successfully", transactionResponse, funcName)
+	if transaction.Status != hp.TxnSuccess {
+		response := hp.SetError(nil, "Transaction not successful", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Update Wallet Balance
+	err = hp.UpdateWalletBalance(ctx, transaction)
+	if err != nil {
+		response := hp.SetError(err, "Error updating wallet balance", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("Transaction status updated successfully", updateResult, funcName)
 	c.JSON(http.StatusOK, response)
 }
