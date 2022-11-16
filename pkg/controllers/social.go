@@ -83,3 +83,167 @@ func AcceptFriendRequest(c *gin.Context) {
 
 	c.JSON(http.StatusOK, hp.SetSuccess("Friend request accepted", nil, funcName))
 }
+
+// Decline Friend Request
+// Decline a friend request from another user.
+func DeclineFriendRequest(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var funcName = ut.GetFunctionName()
+
+	var request = hp.FriendshipAcceptRequest{}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
+		return
+	}
+
+	// Get the user ID from the token.
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Check that friendID is User ID
+	if request.FriendID != user.ID {
+		c.JSON(http.StatusBadRequest, hp.SetError(nil, "Invalid Friend request", funcName))
+		return
+	}
+
+	from := hp.GetUserByID(ctx, request.UserID)
+
+	// Decline Friend Request
+	// Decline a friend request from another user.
+	err = hp.DeclineFriendRequest(ctx, from, user, request.ID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to decline friend request", funcName))
+		return
+	}
+
+	c.JSON(http.StatusOK, hp.SetSuccess("Friend request declined", nil, funcName))
+}
+
+// Get Friend Requests
+// Get all friend requests for a user.
+func GetFriendRequests(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var funcName = ut.GetFunctionName()
+
+	// Get the user ID from the token.
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Get Friend Requests
+	// Get all friend requests for a user.
+	friendRequests, err := hp.GetSocial(ctx, user.ID, hp.FriendshipStatusPending)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to get friend requests", funcName))
+		return
+	}
+
+	c.JSON(http.StatusOK, hp.SetSuccess("Friend requests", friendRequests, funcName))
+}
+
+// Get Friends
+// Get all friends for a user.
+func GetFriends(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var funcName = ut.GetFunctionName()
+
+	// Get the user ID from the token.
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Get Friends
+	// Get all friends for a user.
+	friends, err := hp.GetSocial(ctx, user.ID, hp.FriendshipStatusAccepted)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to get friends", funcName))
+		return
+	}
+
+	c.JSON(http.StatusOK, hp.SetSuccess("Friends", friends, funcName))
+}
+
+// Block User
+// Block a user.
+func BlockUser(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var funcName = ut.GetFunctionName()
+
+	var request = hp.FriendshipRequest{}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
+		return
+	}
+
+	// Get the user ID from the token.
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Block User
+	// Block a user.
+	err = hp.BlockUser(ctx, user, request.FriendID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to block user", funcName))
+		return
+	}
+
+	c.JSON(http.StatusOK, hp.SetSuccess("User blocked", nil, funcName))
+}
+
+// Unblock User
+// Unblock a user.
+func UnblockUser(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var funcName = ut.GetFunctionName()
+
+	var request = hp.FriendshipRequest{}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
+		return
+	}
+
+	// Get the user ID from the token.
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Unblock User
+	// Unblock a user.
+	err = hp.UnblockUser(ctx, user, request.FriendID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to unblock user", funcName))
+		return
+	}
+
+	c.JSON(http.StatusOK, hp.SetSuccess("User unblocked", nil, funcName))
+}

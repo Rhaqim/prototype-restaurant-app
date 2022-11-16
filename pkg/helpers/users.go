@@ -164,20 +164,3 @@ func GetUserFromToken(c *gin.Context) (UserResponse, error) {
 
 	return user, nil
 }
-
-// Fintech KYC
-type FintechKYC struct {
-	FirstName      string      `json:"firstName"`
-	LastName       string      `json:"lastName"`
-	Email          string      `json:"email"`
-	Phone          string      `json:"phone"`
-	DOB            string      `json:"dob"`
-	Address        string      `json:"address"`
-	City           string      `json:"city"`
-	State          string      `json:"state"`
-	Zip            string      `json:"zip"`
-	Country        string      `json:"country"`
-	IdentityType   string      `json:"identityType"`
-	IdentityNumber string      `json:"identityNumber"`
-	IdentityPhoto  interface{} `json:"identityPhoto"`
-}

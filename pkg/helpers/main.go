@@ -10,6 +10,7 @@ import (
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -142,4 +143,23 @@ func TxnStatusIsValid(TS TxnStatus) bool {
 		return true
 	}
 	return false
+}
+
+// Get from DB
+func GetFromDB(ctx context.Context, filter bson.M, collection *mongo.Collection) (bson.M, error) {
+	var result bson.M
+	err := collection.FindOne(ctx, filter).Decode(&result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// Update in DB
+func UpdateInDB(ctx context.Context, filter bson.M, update bson.M, collection *mongo.Collection) error {
+	_, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
 }
