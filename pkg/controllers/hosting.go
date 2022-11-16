@@ -47,12 +47,12 @@ func CreateHostedEvent(c *gin.Context) {
 	}
 
 	insert := bson.M{
-		"host_id":    user.ID,
-		"title":      request.Title,
-		"hosted_ids": request.HostedIDs,
-		"venue":      request.Venue,
-		"type":       request.Type,
-		"bill":       request.Bill,
+		"title":     request.Title,
+		"hostId":    user.ID,
+		"hostedIds": request.HostedIDs,
+		"venue":     request.Venue,
+		"type":      request.Type,
+		"bill":      request.Bill,
 	}
 
 	insertResult, err := hostCollection.InsertOne(ctx, insert)
