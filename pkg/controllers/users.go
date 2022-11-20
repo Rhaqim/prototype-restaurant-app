@@ -23,7 +23,7 @@ Get User by ID
 var usersCollection = config.UserCollection
 
 func CreatNewUser(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
@@ -107,7 +107,7 @@ func CreatNewUser(c *gin.Context) {
 }
 
 func GetUserByID(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
@@ -142,7 +142,7 @@ func GetUserByID(c *gin.Context) {
 }
 
 func GetUserByEmail(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
@@ -174,7 +174,7 @@ func GetUserByEmail(c *gin.Context) {
 }
 
 func UpdateAvatar(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
@@ -219,7 +219,7 @@ func UpdateAvatar(c *gin.Context) {
 }
 
 func DeleteUser(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
@@ -255,7 +255,7 @@ func DeleteUser(c *gin.Context) {
 }
 
 func UpdateUsersKYC(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
@@ -278,6 +278,14 @@ func UpdateUsersKYC(c *gin.Context) {
 	}
 
 	request.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+
+	// check valid year of birth
+	okDOB := hp.ValidateKYCDOB(request.DOB)
+	if !okDOB {
+		response := hp.SetError(err, "Invalid year of birth", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
 
 	// update user kyc
 	filter := bson.M{"_id": user.ID}

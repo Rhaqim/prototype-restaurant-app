@@ -11,7 +11,7 @@ import (
 )
 
 func SendFriendRequest(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 
 	var funcName = ut.GetFunctionName()
@@ -45,7 +45,7 @@ func SendFriendRequest(c *gin.Context) {
 // Accept Friend Request
 // Accept a friend request from another user.
 func AcceptFriendRequest(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 
 	var funcName = ut.GetFunctionName()
@@ -87,7 +87,7 @@ func AcceptFriendRequest(c *gin.Context) {
 // Decline Friend Request
 // Decline a friend request from another user.
 func DeclineFriendRequest(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 
 	var funcName = ut.GetFunctionName()
@@ -129,7 +129,7 @@ func DeclineFriendRequest(c *gin.Context) {
 // Get Friend Requests
 // Get all friend requests for a user.
 func GetFriendRequests(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 
 	var funcName = ut.GetFunctionName()
@@ -156,7 +156,7 @@ func GetFriendRequests(c *gin.Context) {
 // Get Friends
 // Get all friends for a user.
 func GetFriends(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 
 	var funcName = ut.GetFunctionName()
@@ -183,7 +183,7 @@ func GetFriends(c *gin.Context) {
 // Block User
 // Block a user.
 func BlockUser(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 
 	var funcName = ut.GetFunctionName()
@@ -217,7 +217,7 @@ func BlockUser(c *gin.Context) {
 // Unblock User
 // Unblock a user.
 func UnblockUser(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 
 	var funcName = ut.GetFunctionName()

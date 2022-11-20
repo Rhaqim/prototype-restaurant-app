@@ -18,7 +18,7 @@ import (
 var hostCollection = config.HostCollection
 
 func CreateHostedEvent(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
@@ -78,7 +78,7 @@ func CreateHostedEvent(c *gin.Context) {
 }
 
 func GetUserHostedEventsByHost(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
@@ -111,7 +111,7 @@ func GetUserHostedEventsByHost(c *gin.Context) {
 }
 
 func UpdateHostedEvent(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
@@ -164,7 +164,7 @@ func UpdateHostedEvent(c *gin.Context) {
 }
 
 func DeleteHostedEvent(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
