@@ -157,7 +157,7 @@ func SignIn(c *gin.Context) {
 
 	if err := c.BindJSON(&request); err != nil {
 		response := hp.SetError(err, "email and password are required ", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 	log.Print("Request ID sent by client:", request.Username)

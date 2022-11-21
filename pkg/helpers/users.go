@@ -25,11 +25,11 @@ const (
 type UserStruct struct {
 	ID primitive.ObjectID `bson:"_id" json:"_id,omitempty"`
 
-	FirstName     string               `json:"firstName"`
-	LastName      string               `json:"lastName"`
-	Email         string               `bson:"email" json:"email"`
-	Username      string               `bson:"username" json:"username"`
-	Password      string               `bson:"password" json:"password"`
+	FirstName     string               `json:"firstName" bson:"firstName" binding:"required"`
+	LastName      string               `json:"lastName" bson:"lastName" binding:"required"`
+	Email         string               `bson:"email" json:"email" binding:"required,email"`
+	Username      string               `bson:"username" json:"username" binding:"required"`
+	Password      string               `bson:"password" json:"password" binding:"required,min=8,max=32,alphanum"`
 	Avatar        interface{}          `bson:"avatar" json:"avatar"`
 	Social        interface{}          `bson:"social" json:"social"`
 	Friends       []primitive.ObjectID `bson:"friends" json:"friends"`
@@ -39,7 +39,7 @@ type UserStruct struct {
 	Transactions  []Transactions       `bson:"transactions" json:"transactions"`
 	RefreshToken  string               `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
 	EmailVerified bool                 `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty" default:"false"`
-	Role          Roles                `bson:"role" json:"role"`
+	Role          Roles                `bson:"role" json:"role" default:"user"`
 	CreatedAt     primitive.DateTime   `bson:"createdAt" json:"createdAt" default:"Now()"`
 	UpdatedAt     primitive.DateTime   `bson:"updatedAt" json:"updatedAt" default:"Now()"`
 }

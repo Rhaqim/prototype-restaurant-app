@@ -25,7 +25,7 @@ type HostingCreate struct {
 	HostedIDs []primitive.ObjectID `json:"hostedIds" binding:"required" bson:"hostedIds"`
 	Venue     primitive.ObjectID   `json:"venue" bson:"venue"`
 	Type      HostingType          `json:"type" bson:"type"`
-	Bill      int                  `json:"bill" bson:"bill"`
+	Bill      int                  `json:"bill" bson:"bill" binding:"required,number" default:"0"`
 	CreatedAt primitive.DateTime   `bson:"createdAt" json:"createdAt" default:"Now()"`
 	UpdatedAt primitive.DateTime   `bson:"updatedAt" json:"updatedAt" default:"Now()"`
 }

@@ -247,3 +247,28 @@ func UnblockUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, hp.SetSuccess("User unblocked", nil, funcName))
 }
+
+func GetBlockedUsers(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+
+	var funcName = ut.GetFunctionName()
+
+	// Get the user ID from the token.
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Get Blocked Users
+	// Get all blocked users for a user.
+	blockedUsers, err := hp.GetSocial(ctx, user.ID, hp.FriendshipStatusBlocked)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to get blocked users", funcName))
+		return
+	}
+
+	c.JSON(http.StatusOK, hp.SetSuccess("Blocked users", blockedUsers, funcName))
+}

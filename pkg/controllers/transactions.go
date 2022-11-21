@@ -154,3 +154,43 @@ func UpdateTransactionStatus(c *gin.Context) {
 	response := hp.SetSuccess("Transaction status updated successfully", updateResult, funcName)
 	c.JSON(http.StatusOK, response)
 }
+
+func GetTransactions(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	filter := bson.M{
+		"$or": []bson.M{
+			{"fromId": user.ID},
+			{"toId": user.ID},
+		},
+	}
+
+	var transactions []hp.Transactions
+
+	cursor, err := config.TransactionsCollection.Find(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error fetching transactions", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	if err = cursor.All(ctx, &transactions); err != nil {
+		response := hp.SetError(err, "Error fetching transactions", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("Transactions fetched successfully", transactions, funcName)
+	c.JSON(http.StatusOK, response)
+}

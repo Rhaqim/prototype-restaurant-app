@@ -34,14 +34,14 @@ type Friendship struct {
 	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id"`
 	UserID    primitive.ObjectID `json:"userId" bson:"userId" validate:"required"`
 	FriendID  primitive.ObjectID `json:"friendId" bson:"friendId"`
-	Status    FriendshipStatus   `json:"status" bson:"status"`
+	Status    FriendshipStatus   `json:"status" bson:"status" default:"0"`
 	CreatedAt time.Time          `json:"createdAt" bson:"createdAt" default:"now()"`
 	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt" default:"now()"`
 }
 
 type FriendshipRequest struct {
 	FriendID  primitive.ObjectID `json:"friendId" bson:"friendId"`
-	Status    FriendshipStatus   `json:"status" bson:"status"`
+	Status    FriendshipStatus   `json:"status" bson:"status" default:"0"`
 	CreatedAt time.Time          `json:"createdAt" bson:"createdAt" default:"now()"`
 	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt" default:"now()"`
 }

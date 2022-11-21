@@ -45,6 +45,7 @@ func GinRouter() *gin.Engine {
 		{
 			transactions.POST("/createTransaction", views.CreateTransaction)
 			transactions.PUT("/updateTransaction", views.UpdateTransactionStatus)
+			transactions.GET("/getTransactions", views.GetTransactions)
 		}
 
 		/* Social Routes */
@@ -52,6 +53,12 @@ func GinRouter() *gin.Engine {
 		{
 			social.POST("/sendFriendRequest", views.SendFriendRequest)
 			social.POST("/acceptFriendRequest", views.AcceptFriendRequest)
+			social.POST("/declineFriendRequest", views.DeclineFriendRequest)
+			social.POST("/block", views.BlockUser)
+			social.POST("/unblock", views.UnblockUser)
+			social.GET("/getFriends", views.GetFriends)
+			social.GET("/getFriendRequests", views.GetFriendRequests)
+			social.GET("/getBlockedUsers", views.GetBlockedUsers)
 		}
 	}
 
