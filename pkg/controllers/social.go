@@ -19,7 +19,7 @@ func SendFriendRequest(c *gin.Context) {
 	var request = hp.FriendshipRequest{}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
+		c.AbortWithStatusJSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
 		return
 	}
 
@@ -27,7 +27,7 @@ func SendFriendRequest(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
@@ -35,7 +35,7 @@ func SendFriendRequest(c *gin.Context) {
 	// Send a friend request to another user.
 	friendRequest, err := hp.SendFriendRequest(ctx, user, request.FriendID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to send friend request", funcName))
+		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Failed to send friend request", funcName))
 		return
 	}
 
@@ -53,7 +53,7 @@ func AcceptFriendRequest(c *gin.Context) {
 	var request = hp.FriendshipAcceptRequest{}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
+		c.AbortWithStatusJSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
 		return
 	}
 
@@ -61,13 +61,13 @@ func AcceptFriendRequest(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
 	// Check that friendID is User ID
 	if request.FriendID != user.ID {
-		c.JSON(http.StatusBadRequest, hp.SetError(nil, "Invalid Friend request", funcName))
+		c.AbortWithStatusJSON(http.StatusBadRequest, hp.SetError(nil, "Invalid Friend request", funcName))
 		return
 	}
 
@@ -77,7 +77,7 @@ func AcceptFriendRequest(c *gin.Context) {
 	// Accept a friend request from another user.
 	err = hp.AcceptFriendRequest(ctx, from, user, request.ID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to accept friend request", funcName))
+		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Failed to accept friend request", funcName))
 		return
 	}
 
@@ -95,7 +95,7 @@ func DeclineFriendRequest(c *gin.Context) {
 	var request = hp.FriendshipAcceptRequest{}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
+		c.AbortWithStatusJSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
 		return
 	}
 
@@ -103,13 +103,13 @@ func DeclineFriendRequest(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
 	// Check that friendID is User ID
 	if request.FriendID != user.ID {
-		c.JSON(http.StatusBadRequest, hp.SetError(nil, "Invalid Friend request", funcName))
+		c.AbortWithStatusJSON(http.StatusBadRequest, hp.SetError(nil, "Invalid Friend request", funcName))
 		return
 	}
 
@@ -119,7 +119,7 @@ func DeclineFriendRequest(c *gin.Context) {
 	// Decline a friend request from another user.
 	err = hp.DeclineFriendRequest(ctx, from, user, request.ID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to decline friend request", funcName))
+		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Failed to decline friend request", funcName))
 		return
 	}
 
@@ -138,7 +138,7 @@ func GetFriendRequests(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -146,7 +146,7 @@ func GetFriendRequests(c *gin.Context) {
 	// Get all friend requests for a user.
 	friendRequests, err := hp.GetSocial(ctx, user.ID, hp.FriendshipStatusPending)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to get friend requests", funcName))
+		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Failed to get friend requests", funcName))
 		return
 	}
 
@@ -165,7 +165,7 @@ func GetFriends(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -173,7 +173,7 @@ func GetFriends(c *gin.Context) {
 	// Get all friends for a user.
 	friends, err := hp.GetSocial(ctx, user.ID, hp.FriendshipStatusAccepted)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to get friends", funcName))
+		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Failed to get friends", funcName))
 		return
 	}
 
@@ -191,7 +191,7 @@ func BlockUser(c *gin.Context) {
 	var request = hp.FriendshipRequest{}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
+		c.AbortWithStatusJSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
 		return
 	}
 
@@ -199,7 +199,7 @@ func BlockUser(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -207,7 +207,7 @@ func BlockUser(c *gin.Context) {
 	// Block a user.
 	err = hp.BlockUser(ctx, user, request.FriendID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to block user", funcName))
+		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Failed to block user", funcName))
 		return
 	}
 
@@ -225,7 +225,7 @@ func UnblockUser(c *gin.Context) {
 	var request = hp.FriendshipRequest{}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
+		c.AbortWithStatusJSON(http.StatusBadRequest, hp.SetError(err, "Invalid JSON", funcName))
 		return
 	}
 
@@ -233,7 +233,7 @@ func UnblockUser(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -241,7 +241,7 @@ func UnblockUser(c *gin.Context) {
 	// Unblock a user.
 	err = hp.UnblockUser(ctx, user, request.FriendID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to unblock user", funcName))
+		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Failed to unblock user", funcName))
 		return
 	}
 
@@ -258,7 +258,7 @@ func GetBlockedUsers(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -266,7 +266,7 @@ func GetBlockedUsers(c *gin.Context) {
 	// Get all blocked users for a user.
 	blockedUsers, err := hp.GetSocial(ctx, user.ID, hp.FriendshipStatusBlocked)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, hp.SetError(err, "Failed to get blocked users", funcName))
+		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Failed to get blocked users", funcName))
 		return
 	}
 

@@ -28,21 +28,21 @@ func CreateHostedEvent(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		response := hp.SetError(err, "Error binding json", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
 	//  Ensure that hostedIDs are not empty
 	if len(request.HostedIDs) < 1 {
 		response := hp.SetError(nil, "HostedIDs cannot be empty", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
@@ -58,7 +58,7 @@ func CreateHostedEvent(c *gin.Context) {
 	insertResult, err := hostCollection.InsertOne(ctx, insert)
 	if err != nil {
 		response := hp.SetError(err, "Error inserting into database", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 	log.Println("insertResult: ", insertResult)
@@ -87,7 +87,7 @@ func GetUserHostedEventsByHost(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
@@ -95,14 +95,14 @@ func GetUserHostedEventsByHost(c *gin.Context) {
 	cursor, err := hostCollection.Find(ctx, filter)
 	if err != nil {
 		response := hp.SetError(err, "Error finding hosted events", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
 	var hosting []hp.Hosting
 	if err = cursor.All(ctx, &hosting); err != nil {
 		response := hp.SetError(err, "Error decoding hosted events", funcName)
-		c.JSON(http.StatusInternalServerError, response)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
 	}
 
@@ -121,21 +121,21 @@ func UpdateHostedEvent(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		response := hp.SetError(err, "Error binding json", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
 	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
 	if err != nil {
 		response := hp.SetError(err, "Error converting id to object id", funcName)
-		c.JSON(http.StatusInternalServerError, response)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
 	}
 
@@ -148,6 +148,7 @@ func UpdateHostedEvent(c *gin.Context) {
 			"venue":      request.Venue,
 			"type":       request.Type,
 			"bill":       request.Bill,
+			"updatedAt":  request.UpdatedAt,
 		},
 	}
 
@@ -155,7 +156,7 @@ func UpdateHostedEvent(c *gin.Context) {
 
 	if err != nil {
 		response := hp.SetError(err, "Error updating hosted event", funcName)
-		c.JSON(http.StatusInternalServerError, response)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
 	}
 
@@ -173,14 +174,14 @@ func DeleteHostedEvent(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
 		response := hp.SetError(err, "Error converting id to object id", funcName)
-		c.JSON(http.StatusInternalServerError, response)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
 	}
 
@@ -190,7 +191,7 @@ func DeleteHostedEvent(c *gin.Context) {
 
 	if err != nil {
 		response := hp.SetError(err, "Error deleting hosted event", funcName)
-		c.JSON(http.StatusInternalServerError, response)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
 	}
 

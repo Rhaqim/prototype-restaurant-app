@@ -165,7 +165,7 @@ func GetTransactions(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -181,13 +181,13 @@ func GetTransactions(c *gin.Context) {
 	cursor, err := config.TransactionsCollection.Find(ctx, filter)
 	if err != nil {
 		response := hp.SetError(err, "Error fetching transactions", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
 	}
 
 	if err = cursor.All(ctx, &transactions); err != nil {
 		response := hp.SetError(err, "Error fetching transactions", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
 	}
 

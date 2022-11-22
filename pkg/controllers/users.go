@@ -254,6 +254,11 @@ func DeleteUser(c *gin.Context) {
 
 }
 
+/* Customer KYC
+@params: KYC struct
+@returns: success, error
+*/
+
 func UpdateUsersKYC(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
@@ -267,13 +272,13 @@ func UpdateUsersKYC(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c) // get user from token
 	if err != nil {
 		respons := hp.SetError(err, "User not found", funcName)
-		c.JSON(http.StatusBadRequest, respons)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, respons)
 		return
 	}
 
 	if err := c.BindJSON(&request); err != nil {
 		response := hp.SetError(err, "Error binding JSON", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
@@ -283,7 +288,7 @@ func UpdateUsersKYC(c *gin.Context) {
 	okDOB := hp.ValidateKYCDOB(request.DOB)
 	if !okDOB {
 		response := hp.SetError(err, "Invalid year of birth", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
@@ -296,7 +301,7 @@ func UpdateUsersKYC(c *gin.Context) {
 	updateResult, err := usersCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		// config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	log.Println("updateResult: ", updateResult)
