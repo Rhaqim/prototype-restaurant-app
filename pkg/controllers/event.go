@@ -15,7 +15,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var hostCollection = config.HostCollection
+var eventCollection = config.EventCollection
+var orderCollection = config.OrderCollection
 
 func CreateEvent(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
@@ -55,7 +56,7 @@ func CreateEvent(c *gin.Context) {
 		"bill":      request.Bill,
 	}
 
-	insertResult, err := hostCollection.InsertOne(ctx, insert)
+	insertResult, err := eventCollection.InsertOne(ctx, insert)
 	if err != nil {
 		response := hp.SetError(err, "Error inserting into database", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
@@ -92,7 +93,7 @@ func GetUserEventsByHost(c *gin.Context) {
 	}
 
 	filter := bson.M{"host_id": user.ID}
-	cursor, err := hostCollection.Find(ctx, filter)
+	cursor, err := eventCollection.Find(ctx, filter)
 	if err != nil {
 		response := hp.SetError(err, "Error finding hosted events", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
@@ -152,7 +153,7 @@ func UpdateEvent(c *gin.Context) {
 		},
 	}
 
-	updateResult, err := hostCollection.UpdateOne(ctx, filter, update)
+	updateResult, err := eventCollection.UpdateOne(ctx, filter, update)
 
 	if err != nil {
 		response := hp.SetError(err, "Error updating hosted event", funcName)
@@ -187,7 +188,7 @@ func DeleteEvent(c *gin.Context) {
 
 	filter := bson.M{"_id": id, "host_id": user.ID}
 
-	deleteResult, err := hostCollection.DeleteOne(ctx, filter)
+	deleteResult, err := eventCollection.DeleteOne(ctx, filter)
 
 	if err != nil {
 		response := hp.SetError(err, "Error deleting hosted event", funcName)
@@ -196,5 +197,47 @@ func DeleteEvent(c *gin.Context) {
 	}
 
 	response := hp.SetSuccess(" event deleted", deleteResult, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func CreatOrder(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	var request hp.Order
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		response := hp.SetError(err, "Error binding json", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	insert := bson.M{
+		"_id":       primitive.NewObjectID(),
+		"customer":  user.ID,
+		"product":   request.ProductID,
+		"quantity":  request.Quantity,
+		"createdAt": time.Now(),
+		"updatedAt": time.Now(),
+	}
+
+	insertResult, err := orderCollection.InsertOne(ctx, insert)
+	if err != nil {
+		response := hp.SetError(err, "Error creating order", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := hp.SetSuccess(" order created", insertResult, funcName)
 	c.JSON(http.StatusOK, response)
 }

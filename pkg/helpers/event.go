@@ -23,6 +23,7 @@ func (h EventType) String() string {
 type EventCreate struct {
 	Title     string               `json:"title" binding:"required"`
 	HostedIDs []primitive.ObjectID `json:"hostedIds" binding:"required" bson:"hostedIds"`
+	Orders    Orders               `json:"orders" bson:"orders"`
 	Venue     primitive.ObjectID   `json:"venue" bson:"venue"`
 	Type      EventType            `json:"type" bson:"type" default:"close"`
 	Bill      int                  `json:"bill" bson:"bill" binding:"required,number" default:"0"`
