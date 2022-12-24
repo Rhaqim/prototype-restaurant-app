@@ -17,6 +17,7 @@ import (
 
 var eventCollection = config.EventCollection
 var orderCollection = config.OrderCollection
+var productCollection = config.ProductCollection
 
 func CreateEvent(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
@@ -224,8 +225,9 @@ func CreatOrder(c *gin.Context) {
 
 	insert := bson.M{
 		"_id":       primitive.NewObjectID(),
-		"customer":  user.ID,
-		"product":   request.ProductID,
+		"event":     request.Event,
+		"customer":  user,
+		"product":   request.Product,
 		"quantity":  request.Quantity,
 		"createdAt": time.Now(),
 		"updatedAt": time.Now(),
@@ -238,6 +240,51 @@ func CreatOrder(c *gin.Context) {
 		return
 	}
 
-	response := hp.SetSuccess(" order created", insertResult, funcName)
+	// Update the Product with the new order
+	product_id, err := primitive.ObjectIDFromHex(request.Product.ID.Hex())
+	if err != nil {
+		response := hp.SetError(err, "Error converting id to object id", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	product_filter := bson.M{"_id": product_id}
+	product_update := bson.M{
+		// decrement stock by quantity
+		"$inc": bson.M{
+			"stock": -request.Quantity,
+		},
+	}
+
+	_, err = productCollection.UpdateOne(ctx, product_filter, product_update)
+	if err != nil {
+		response := hp.SetError(err, "Error updating hosted event", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Update the event with the new order
+	id, err := primitive.ObjectIDFromHex(request.Event.ID.Hex())
+	if err != nil {
+		response := hp.SetError(err, "Error converting id to object id", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	filter := bson.M{"_id": id}
+	update := bson.M{
+		"$push": bson.M{
+			"orders": insertResult.InsertedID,
+		},
+	}
+
+	updateResult, err := eventCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		response := hp.SetError(err, "Error updating hosted event", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := hp.SetSuccess(" order created", updateResult, funcName)
 	c.JSON(http.StatusOK, response)
 }
