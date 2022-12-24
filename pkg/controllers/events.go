@@ -287,6 +287,10 @@ func CreateOrder(c *gin.Context) {
 			"$push": bson.M{
 				"orders": insertResult.InsertedID,
 			},
+			// update bill with new order
+			"$inc": bson.M{
+				"bill": float64(request.Product.Price * float64(request.Quantity)),
+			},
 		}
 
 		_, err = eventCollection.UpdateOne(ctx, event_filter, event_update)
