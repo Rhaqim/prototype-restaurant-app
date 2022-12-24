@@ -62,15 +62,15 @@ func GinRouter() *gin.Engine {
 		}
 	}
 
-	/* Hosting Routes */
-	hosting := router.Group("/hosting")
-	// hosting.GET("/getAllHostedEvents", views.GetHostingByID)
-	hosting.Use(TokenGuardMiddleware())
+	/* Event Routes */
+	event := router.Group("/event")
+	// event.GET("/getAllEvents", views.GetEventByID)
+	event.Use(TokenGuardMiddleware())
 	{
-		hosting.POST("/createHosting", views.CreateHostedEvent)
-		hosting.PUT("/updateHosting", views.UpdateHostedEvent)
-		hosting.DELETE("/deleteHosting/:id", views.DeleteHostedEvent)
-		hosting.GET("/getHostingByHost", views.GetUserHostedEventsByHost)
+		event.POST("/createEvent", views.CreateEvent)
+		event.PUT("/updateEvent", views.UpdateEvent)
+		event.DELETE("/deleteEvent/:id", views.DeleteEvent)
+		event.GET("/getEventByHost", views.GetUserEventsByHost)
 	}
 
 	return router

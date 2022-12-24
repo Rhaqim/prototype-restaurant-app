@@ -17,14 +17,14 @@ import (
 
 var hostCollection = config.HostCollection
 
-func CreateHostedEvent(c *gin.Context) {
+func CreateEvent(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var funcName = ut.GetFunctionName()
 
-	var request hp.HostingCreate
+	var request hp.EventCreate
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		response := hp.SetError(err, "Error binding json", funcName)
@@ -41,7 +41,7 @@ func CreateHostedEvent(c *gin.Context) {
 
 	//  Ensure that hostedIDs are not empty
 	if len(request.HostedIDs) < 1 {
-		response := hp.SetError(nil, "HostedIDs cannot be empty", funcName)
+		response := hp.SetError(nil, "IDs cannot be empty", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
@@ -63,7 +63,7 @@ func CreateHostedEvent(c *gin.Context) {
 	}
 	log.Println("insertResult: ", insertResult)
 
-	hostingResponse := hp.Hosting{
+	hostingResponse := hp.Event{
 		ID:        insertResult.InsertedID.(primitive.ObjectID),
 		Title:     request.Title,
 		HostID:    user.ID,
@@ -77,7 +77,7 @@ func CreateHostedEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetUserHostedEventsByHost(c *gin.Context) {
+func GetUserEventsByHost(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
@@ -99,25 +99,25 @@ func GetUserHostedEventsByHost(c *gin.Context) {
 		return
 	}
 
-	var hosting []hp.Hosting
+	var hosting []hp.Event
 	if err = cursor.All(ctx, &hosting); err != nil {
 		response := hp.SetError(err, "Error decoding hosted events", funcName)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	response := hp.SetSuccess("Hosted events found", hosting, funcName)
+	response := hp.SetSuccess(" events found", hosting, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
-func UpdateHostedEvent(c *gin.Context) {
+func UpdateEvent(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var funcName = ut.GetFunctionName()
 
-	var request hp.Hosting
+	var request hp.Event
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		response := hp.SetError(err, "Error binding json", funcName)
@@ -160,11 +160,11 @@ func UpdateHostedEvent(c *gin.Context) {
 		return
 	}
 
-	response := hp.SetSuccess("Hosted event updated", updateResult, funcName)
+	response := hp.SetSuccess(" event updated", updateResult, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
-func DeleteHostedEvent(c *gin.Context) {
+func DeleteEvent(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
@@ -195,6 +195,6 @@ func DeleteHostedEvent(c *gin.Context) {
 		return
 	}
 
-	response := hp.SetSuccess("Hosted event deleted", deleteResult, funcName)
+	response := hp.SetSuccess(" event deleted", deleteResult, funcName)
 	c.JSON(http.StatusOK, response)
 }
