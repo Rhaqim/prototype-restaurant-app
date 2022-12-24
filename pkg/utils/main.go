@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func Now(format string) time.Time {
@@ -77,4 +79,14 @@ func LoadJsonFile(path string) []byte {
 		panic(err)
 	}
 	return jsonData
+}
+
+// Generic function to fetch data from mongoDB
+
+func FetchDataFromMongoDB(ctx context.Context, collection *mongo.Collection, filter interface{}, result *interface{}) error {
+	err := collection.FindOne(ctx, filter).Decode(&result)
+	if err != nil {
+		return err
+	}
+	return nil
 }

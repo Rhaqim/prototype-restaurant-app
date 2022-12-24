@@ -49,6 +49,13 @@ func SetError(err error, message string, funcName string) *MongoJsonResponse {
 
 func SetSuccess(message string, data interface{}, funcName string) *MongoJsonResponse {
 	config.Logs("info", message, funcName)
+	if data == nil {
+		return &MongoJsonResponse{
+			Type:    Success,
+			Message: message,
+			Date:    time.Now(),
+		}
+	}
 	return &MongoJsonResponse{
 		Type:    Success,
 		Data:    data,

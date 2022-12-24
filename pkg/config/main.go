@@ -15,6 +15,7 @@ const (
 	SESSION     = "sessions"
 	RESTAURAUNT = "restauraunts"
 	EVENT       = "events"
+	ATTENDEE    = "attendees"
 	ORDER       = "orders"
 	PRODUCT     = "products"
 	TRANSACTION = "transactions"
@@ -29,6 +30,7 @@ var (
 	SessionCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, SESSION)
 	RestaurantCollection   = database.OpenCollection(database.ConnectMongoDB(), DB, RESTAURAUNT)
 	EventCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, EVENT)
+	AttendeeCollection     = database.OpenCollection(database.ConnectMongoDB(), DB, ATTENDEE)
 	OrderCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, ORDER)
 	ProductCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, PRODUCT)
 	TransactionsCollection = database.OpenCollection(database.ConnectMongoDB(), DB, TRANSACTION)

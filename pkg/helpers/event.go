@@ -34,71 +34,16 @@ func (h EventType) String() string {
 // }
 
 type Event struct {
-	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Title     string             `json:"title" binding:"required" bson:"title"`
-	HostID    primitive.ObjectID `json:"hostId" bson:"hostId"`
-	Invited   []EventAttendee    `json:"invited" bson:"invited" default:"[]"`
-	Attendees []EventAttendee    `json:"attendees" bson:"attendees" default:"[]"`
-	Orders    Orders             `json:"orders" bson:"orders" default:"[]"`
-	Venue     primitive.ObjectID `json:"venue" bson:"venue"`
-	Type      EventType          `json:"type" bson:"type"`
-	Budget    float64            `json:"budget" bson:"budget" binding:"number" default:"0"`
-	Bill      float64            `json:"bill" bson:"bill"`
-	CreatedAt primitive.DateTime `bson:"created_at" json:"created_at" omitEmpty:"true"`
-	UpdatedAt primitive.DateTime `bson:"updated_at" json:"updated_at" default:"Now()"`
-}
-
-type InviteFriendToEventRequest struct {
-	Event  Event      `json:"event_id" bson:"event_id"`
-	Friend UserStruct `json:"user_id" bson:"user_id"`
-}
-
-type AttendingStatus string
-
-const (
-	Invited      AttendingStatus = "invited"
-	Attending    AttendingStatus = "attending"
-	NotAttending AttendingStatus = "not attending"
-)
-
-func (h AttendingStatus) String() string {
-	switch h {
-	case Invited:
-		return "invited"
-	case Attending:
-		return "attending"
-	case NotAttending:
-		return "not attending"
-	default:
-		return "invited"
-	}
-}
-
-type EventAttendee struct {
-	EventID    primitive.ObjectID `json:"event_id" bson:"event_id"`
-	UserID     primitive.ObjectID `json:"user_id" bson:"user_id"`
-	Status     AttendingStatus    `json:"status" bson:"status"`
-	Budget     float64            `json:"budget" bson:"budget"`
-	InvitedBy  primitive.ObjectID `json:"invited_by" bson:"invited_by"`
-	InvitedAt  primitive.DateTime `json:"invited_at" bson:"invited_at"`
-	AttendedAt primitive.DateTime `json:"attended_at" bson:"attended_at"`
-}
-
-func SendInviteToEvent(event Event, friend UserStruct) {
-	// Send invite to friend
-}
-
-func InviteFriendToEvent(event Event, friend UserStruct) {
-	// Create invite
-	// Send invite to friend
-}
-
-func AcceptInviteToEvent(event Event, friend UserStruct) {
-	// Update invite
-	// Send invite to friend
-}
-
-func DeclineInviteToEvent(event Event, friend UserStruct) {
-	// Update invite
-	// Send invite to friend
+	ID        primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
+	Title     string               `json:"title" binding:"required" bson:"title"`
+	HostID    primitive.ObjectID   `json:"hostId" bson:"hostId"`
+	Invited   []primitive.ObjectID `json:"invited" bson:"invited" default:"[]"`
+	Attendees []primitive.ObjectID `json:"attendees" bson:"attendees" default:"[]"`
+	Orders    []primitive.ObjectID `json:"orders" bson:"orders" default:"[]"`
+	Venue     primitive.ObjectID   `json:"venue" bson:"venue"`
+	Type      EventType            `json:"type" bson:"type"`
+	Budget    float64              `json:"budget" bson:"budget" binding:"number" default:"0"`
+	Bill      float64              `json:"bill" bson:"bill"`
+	CreatedAt primitive.DateTime   `bson:"created_at" json:"created_at" omitEmpty:"true"`
+	UpdatedAt primitive.DateTime   `bson:"updated_at" json:"updated_at" default:"Now()"`
 }

@@ -38,7 +38,7 @@ func TokenGuardMiddleware() gin.HandlerFunc {
 		if err != nil {
 			hp.SetDebug(err.Error(), ut.GetFunctionName())
 			response := hp.SetError(err, "Invalid Token!", ut.GetFunctionName())
-			c.JSON(http.StatusBadRequest, response)
+			c.JSON(http.StatusUnauthorized, response)
 			c.Abort()
 			return
 		}
@@ -49,7 +49,7 @@ func TokenGuardMiddleware() gin.HandlerFunc {
 		if err := usersCollection.FindOne(ctx, filter, options).Decode(&user); err != nil {
 			hp.SetDebug(err.Error(), ut.GetFunctionName())
 			response := hp.SetError(nil, err.Error(), ut.GetFunctionName())
-			c.JSON(http.StatusBadRequest, response)
+			c.JSON(http.StatusInternalServerError, response)
 			c.Abort()
 			return
 		}
@@ -79,7 +79,7 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 		if err != nil {
 			hp.SetDebug(err.Error(), ut.GetFunctionName())
 			response := hp.SetError(err, "Invalid Token!", ut.GetFunctionName())
-			c.JSON(http.StatusBadRequest, response)
+			c.JSON(http.StatusUnauthorized, response)
 			c.Abort()
 			return
 		}
@@ -90,7 +90,7 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 		if err := usersCollection.FindOne(ctx, filter, options).Decode(&user); err != nil {
 			hp.SetDebug(err.Error(), ut.GetFunctionName())
 			response := hp.SetError(nil, err.Error(), ut.GetFunctionName())
-			c.JSON(http.StatusBadRequest, response)
+			c.JSON(http.StatusInternalServerError, response)
 			c.Abort()
 			return
 		}
