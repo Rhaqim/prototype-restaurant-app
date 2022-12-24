@@ -78,30 +78,3 @@ func LoadJsonFile(path string) []byte {
 	}
 	return jsonData
 }
-
-// func GetSocial(c *gin.Context) {
-// 	collection := config.MI.DB.Collection("socials")
-// 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-// 	defer cancel()
-// 	var socials []models.Social
-// 	cur, err := collection.Find(ctx, bson.M{})
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, helpers.SetError(err, "Error while getting socials", "GetSocial"))
-// 		return
-// 	}
-// 	defer cur.Close(ctx)
-// 	for cur.Next(ctx) {
-// 		var social models.Social
-// 		err := cur.Decode(&social)
-// 		if err != nil {
-// 			c.JSON(http.StatusInternalServerError, helpers.SetError(err, "Error while decoding socials", "GetSocial"))
-// 			return
-// 		}
-// 		socials = append(socials, social)
-// 	}
-// 	if err := cur.Err(); err != nil {
-// 		c.JSON(http.StatusInternalServerError, helpers.SetError(err, "Error while getting socials", "GetSocial"))
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, helpers.SetSuccess("Socials found", socials, "GetSocial"))
-// }
