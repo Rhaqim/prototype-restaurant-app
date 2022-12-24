@@ -20,30 +20,32 @@ func (h EventType) String() string {
 	}
 }
 
-type EventCreate struct {
-	Title     string               `json:"title" binding:"required"`
-	HostedIDs []primitive.ObjectID `json:"hosted_ids" binding:"required" bson:"hosted_ids" default:"[]"`
-	Orders    Orders               `json:"orders" bson:"orders" default:"[]"`
-	Venue     primitive.ObjectID   `json:"venue" bson:"venue"`
-	Type      EventType            `json:"type" bson:"type" default:"close"`
-	Budget    float64              `json:"budget" bson:"budget" binding:"number" default:"0"`
-	Bill      float64              `json:"bill" bson:"bill" binding:"number" default:"0"`
-	CreatedAt primitive.DateTime   `bson:"created_at" json:"created_at" default:"Now()"`
-	UpdatedAt primitive.DateTime   `bson:"updated_at" json:"updated_at" default:"Now()"`
-}
+// type EventCreate struct {
+// 	Title     string               `json:"title" binding:"required"`
+// 	Invited   []primitive.ObjectID `json:"invited" bson:"invited" default:"[]"`
+// 	Attendees []primitive.ObjectID `json:"attendees" bson:"attendees" default:"[]"`
+// 	Orders    Orders               `json:"orders" bson:"orders" default:"[]"`
+// 	Venue     primitive.ObjectID   `json:"venue" bson:"venue"`
+// 	Type      EventType            `json:"type" bson:"type" default:"close"`
+// 	Budget    float64              `json:"budget" bson:"budget" binding:"number" default:"0"`
+// 	Bill      float64              `json:"bill" bson:"bill" binding:"number" default:"0"`
+// 	CreatedAt primitive.DateTime   `bson:"created_at" json:"created_at" default:"Now()"`
+// 	UpdatedAt primitive.DateTime   `bson:"updated_at" json:"updated_at" default:"Now()"`
+// }
 
 type Event struct {
-	ID        primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
-	Title     string               `json:"title" binding:"required" bson:"title"`
-	HostID    primitive.ObjectID   `json:"hostId" bson:"hostId"`
-	HostedIDs []primitive.ObjectID `json:"hostedIds" bson:"hostedIds"`
-	Orders    Orders               `json:"orders" bson:"orders" default:"[]"`
-	Venue     primitive.ObjectID   `json:"venue" bson:"venue"`
-	Type      EventType            `json:"type" bson:"type"`
-	Budget    float64              `json:"budget" bson:"budget" binding:"number" default:"0"`
-	Bill      float64              `json:"bill" bson:"bill"`
-	CreatedAt primitive.DateTime   `bson:"created_at" json:"created_at" omitEmpty:"true"`
-	UpdatedAt primitive.DateTime   `bson:"updated_at" json:"updated_at" default:"Now()"`
+	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Title     string             `json:"title" binding:"required" bson:"title"`
+	HostID    primitive.ObjectID `json:"hostId" bson:"hostId"`
+	Invited   []EventAttendee    `json:"invited" bson:"invited" default:"[]"`
+	Attendees []EventAttendee    `json:"attendees" bson:"attendees" default:"[]"`
+	Orders    Orders             `json:"orders" bson:"orders" default:"[]"`
+	Venue     primitive.ObjectID `json:"venue" bson:"venue"`
+	Type      EventType          `json:"type" bson:"type"`
+	Budget    float64            `json:"budget" bson:"budget" binding:"number" default:"0"`
+	Bill      float64            `json:"bill" bson:"bill"`
+	CreatedAt primitive.DateTime `bson:"created_at" json:"created_at" omitEmpty:"true"`
+	UpdatedAt primitive.DateTime `bson:"updated_at" json:"updated_at" default:"Now()"`
 }
 
 type InviteFriendToEventRequest struct {
@@ -76,6 +78,7 @@ type EventAttendee struct {
 	EventID    primitive.ObjectID `json:"event_id" bson:"event_id"`
 	UserID     primitive.ObjectID `json:"user_id" bson:"user_id"`
 	Status     AttendingStatus    `json:"status" bson:"status"`
+	Budget     float64            `json:"budget" bson:"budget"`
 	InvitedBy  primitive.ObjectID `json:"invited_by" bson:"invited_by"`
 	InvitedAt  primitive.DateTime `json:"invited_at" bson:"invited_at"`
 	AttendedAt primitive.DateTime `json:"attended_at" bson:"attended_at"`

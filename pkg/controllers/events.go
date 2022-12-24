@@ -19,7 +19,6 @@ import (
 var eventCollection = config.EventCollection
 var orderCollection = config.OrderCollection
 var productCollection = config.ProductCollection
-var friendshipCollection = config.FriendshipCollection
 
 func CreateEvent(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
@@ -28,7 +27,7 @@ func CreateEvent(c *gin.Context) {
 
 	var funcName = ut.GetFunctionName()
 
-	var request hp.EventCreate
+	var request hp.Event
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		response := hp.SetError(err, "Error binding json", funcName)
@@ -44,23 +43,14 @@ func CreateEvent(c *gin.Context) {
 	}
 
 	//  Ensure that hostedIDs are not empty
-	if len(request.HostedIDs) < 1 {
+	if len(request.Invited) < 1 {
 		response := hp.SetError(nil, "IDs cannot be empty", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
+	request.ID = primitive.NewObjectID()
 
-	insert := bson.M{
-		"title":     request.Title,
-		"hostId":    user.ID,
-		"hostedIds": request.HostedIDs,
-		"orders":    request.Orders,
-		"venue":     request.Venue,
-		"type":      request.Type,
-		"bill":      request.Bill,
-	}
-
-	insertResult, err := eventCollection.InsertOne(ctx, insert)
+	insertResult, err := eventCollection.InsertOne(ctx, request)
 	if err != nil {
 		response := hp.SetError(err, "Error inserting into database", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
@@ -72,10 +62,13 @@ func CreateEvent(c *gin.Context) {
 		ID:        insertResult.InsertedID.(primitive.ObjectID),
 		Title:     request.Title,
 		HostID:    user.ID,
-		HostedIDs: request.HostedIDs,
+		Invited:   request.Invited,
+		Attendees: request.Attendees,
 		Venue:     request.Venue,
 		Type:      request.Type,
 		Bill:      request.Bill,
+		Budget:    request.Budget,
+		CreatedAt: request.CreatedAt,
 	}
 
 	response := hp.SetSuccess("Event created", hostingResponse, funcName)
@@ -148,12 +141,14 @@ func UpdateEvent(c *gin.Context) {
 
 	update := bson.M{
 		"$set": bson.M{
-			"title":      request.Title,
-			"hosted_ids": request.HostedIDs,
-			"venue":      request.Venue,
-			"type":       request.Type,
-			"bill":       request.Bill,
-			"updatedAt":  request.UpdatedAt,
+			"title":     request.Title,
+			"invited":   request.Invited,
+			"attendees": request.Attendees,
+			"orders":    request.Orders,
+			"venue":     request.Venue,
+			"type":      request.Type,
+			"bill":      request.Bill,
+			"updatedAt": request.UpdatedAt,
 		},
 	}
 
