@@ -202,7 +202,7 @@ func DeleteEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func CreatOrder(c *gin.Context) {
+func CreateOrder(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
