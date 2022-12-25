@@ -53,6 +53,20 @@ func GetProductbyID(c context.Context, productID primitive.ObjectID) (Product, e
 
 	filter := bson.M{"_id": productID}
 
+	product, err := GetProduct(c, filter)
+	if err != nil {
+		SetDebug(err.Error(), funcName)
+		return product, err
+	}
+
+	return product, nil
+}
+
+func GetProduct(c context.Context, filter bson.M) (Product, error) {
+	var product Product
+
+	funcName := ut.GetFunctionName()
+
 	err := productCollection.FindOne(c, filter).Decode(&product)
 	if err != nil {
 		SetDebug(err.Error(), funcName)
