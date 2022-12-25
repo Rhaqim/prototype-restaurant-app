@@ -81,7 +81,7 @@ func GinRouter() *gin.Engine {
 		{
 			attend.POST("/sendInvites", views.SendEventInvites)
 			attend.GET("/acceptInvite", views.AcceptInvite)
-			// attend.POST("/declineInvite", views.DeclineInvite)
+			attend.POST("/declineInvite", views.DeclineInvite)
 			// attend.GET("/getInvites", views.GetInvites)
 			// attend.GET("/getAttendees", views.GetAttendees)
 		}

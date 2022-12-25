@@ -39,6 +39,7 @@ type Event struct {
 	HostID    primitive.ObjectID   `json:"host_id" bson:"host_id"`
 	Invited   []primitive.ObjectID `json:"invited" bson:"invited" default:"[]"`
 	Attendees []primitive.ObjectID `json:"attendees" bson:"attendees" default:"[]"`
+	Declined  []primitive.ObjectID `json:"declined" bson:"declined" default:"[]"`
 	Orders    []primitive.ObjectID `json:"orders" bson:"orders" default:"[]"`
 	Venue     primitive.ObjectID   `json:"venue" bson:"venue"`
 	Type      EventType            `json:"type" bson:"type"`

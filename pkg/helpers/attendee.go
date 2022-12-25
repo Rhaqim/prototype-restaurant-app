@@ -12,6 +12,10 @@ type AcceptInviteRequest struct {
 	Budget  float64            `json:"budget" bson:"budget"`
 }
 
+type DeclineInviteRequest struct {
+	EventID primitive.ObjectID `json:"event_id" bson:"event_id"`
+}
+
 type AttendingStatus string
 
 const (
