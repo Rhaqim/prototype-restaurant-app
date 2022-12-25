@@ -40,17 +40,10 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
-	insert := bson.M{
-		"_id":       primitive.NewObjectID(),
-		"event":     request.EventID,
-		"customer":  user,
-		"product":   request.ProductID,
-		"quantity":  request.Quantity,
-		"createdAt": time.Now(),
-		"updatedAt": time.Now(),
-	}
+	request.ID = primitive.NewObjectID()
+	request.CustomerID = user.ID
 
-	insertResult, err := orderCollection.InsertOne(ctx, insert)
+	insertResult, err := orderCollection.InsertOne(ctx, request)
 	if err != nil {
 		response := hp.SetError(err, "Error creating order", funcName)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
@@ -146,7 +139,7 @@ func GetOrders(c *gin.Context) {
 		return
 	}
 
-	filter := bson.M{"customer.id": user.ID}
+	filter := bson.M{"customer_id": user.ID}
 
 	cursor, err := orderCollection.Find(ctx, filter)
 	if err != nil {
@@ -187,7 +180,7 @@ func GetOrder(c *gin.Context) {
 		return
 	}
 
-	filter := bson.M{"_id": order_id, "customer.id": user.ID}
+	filter := bson.M{"_id": order_id, "customer_id": user.ID}
 
 	var order hp.Order
 	err = orderCollection.FindOne(ctx, filter).Decode(&order)

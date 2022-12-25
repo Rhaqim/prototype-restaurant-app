@@ -8,8 +8,8 @@ type Order struct {
 	CustomerID primitive.ObjectID  `json:"customer_id,omitempty" bson:"customer_id,omitempty"`
 	ProductID  primitive.ObjectID  `json:"product_id,omitempty" bson:"product_id,omitempty"`
 	Quantity   int                 `json:"quantity,omitempty" bson:"quantity,omitempty" binding:"required,number,min=1"`
-	CreatedAt  primitive.Timestamp `json:"created_at,omitempty" bson:"created_at,omitempty"`
-	UpdatedAt  primitive.Timestamp `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
+	CreatedAt  primitive.Timestamp `json:"created_at,omitempty" bson:"created_at,omitempty" default:"now()"`
+	UpdatedAt  primitive.Timestamp `json:"updated_at,omitempty" bson:"updated_at,omitempty" default:"now()"`
 }
 
 type Orders []Order
