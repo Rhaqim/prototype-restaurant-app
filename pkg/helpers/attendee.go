@@ -9,6 +9,7 @@ type InviteFriendsToEventRequest struct {
 
 type AcceptInviteRequest struct {
 	EventID primitive.ObjectID `json:"event_id" bson:"event_id"`
+	Budget  float64            `json:"budget" bson:"budget"`
 }
 
 type AttendingStatus string

@@ -187,7 +187,14 @@ func AcceptInvite(c *gin.Context) {
 
 		// Update the attendee
 		filter := bson.M{"event_id": request.EventID, "user_id": user.ID}
-		update := bson.M{"$set": bson.M{"status": hp.Attending, "accepted_at": primitive.NewDateTimeFromTime(time.Now())}}
+		update := bson.M{
+			"$set": bson.M{
+				"status":      hp.Attending,
+				"accepted_at": primitive.NewDateTimeFromTime(time.Now()),
+			},
+			"$inc": bson.M{
+				"budget": +request.Budget,
+			}}
 
 		_, err = attendeeCollection.UpdateOne(ctx, filter, update)
 		if err != nil {
@@ -202,7 +209,13 @@ func AcceptInvite(c *gin.Context) {
 
 		// Update the event
 		filter := bson.M{"_id": request.EventID}
-		update := bson.M{"$pull": bson.M{"invited": user.ID}, "$push": bson.M{"attendees": user.ID}}
+		update := bson.M{
+			"$pull": bson.M{"invited": user.ID},
+			"$push": bson.M{"attendees": user.ID},
+			"$inc": bson.M{
+				"attendee_count": 1,
+				"budget":         +request.Budget,
+			}}
 
 		_, err = eventCollection.UpdateOne(ctx, filter, update)
 		if err != nil {
