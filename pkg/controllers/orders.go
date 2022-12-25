@@ -16,7 +16,6 @@ import (
 )
 
 var orderCollection = config.OrderCollection
-var productCollection = config.ProductCollection
 
 func CreateOrder(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
@@ -55,7 +54,9 @@ func CreateOrder(c *gin.Context) {
 
 	wg.Add(2)
 
-	//  Update the Product with the new order and decrement stock by quantity also update the event with the new order using concurrency
+	/*  Update the Product with the new order and decrement stock by quantity
+	also update the event with the new order using concurrency
+	*/
 	go func() {
 		defer wg.Done()
 		// Update the Product with the new order
@@ -92,8 +93,7 @@ func CreateOrder(c *gin.Context) {
 		}
 
 		// Fetch the product to get the price
-		var product hp.Product
-		err = productCollection.FindOne(ctx, bson.M{"_id": request.ProductID}).Decode(&product)
+		product, err := hp.GetProductbyID(ctx, request.ProductID)
 		if err != nil {
 			response := hp.SetError(err, "Error finding product", funcName)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
