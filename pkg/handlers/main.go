@@ -71,7 +71,20 @@ func GinRouter() *gin.Engine {
 		event.PUT("/updateEvent", views.UpdateEvent)
 		event.DELETE("/deleteEvent/:id", views.DeleteEvent)
 		event.GET("/getEventByHost", views.GetUserEventsByHost)
-		event.POST("order", views.CreateOrder)
+
+		order := event.Group("/order")
+		{
+			order.POST("order", views.CreateOrder)
+		}
+
+		attend := event.Group("/attend")
+		{
+			attend.POST("/sendInvites", views.SendEventInvites)
+			attend.GET("/acceptInvite", views.AcceptInvite)
+			// attend.POST("/declineInvite", views.DeclineInvite)
+			// attend.GET("/getInvites", views.GetInvites)
+			// attend.GET("/getAttendees", views.GetAttendees)
+		}
 	}
 
 	return router

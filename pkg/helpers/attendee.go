@@ -7,6 +7,10 @@ type InviteFriendsToEventRequest struct {
 	Friends []primitive.ObjectID `json:"friends" bson:"friends"`
 }
 
+type AcceptInviteRequest struct {
+	EventID primitive.ObjectID `json:"event_id" bson:"event_id"`
+}
+
 type AttendingStatus string
 
 const (

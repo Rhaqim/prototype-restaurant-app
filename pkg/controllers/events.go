@@ -40,6 +40,8 @@ func CreateEvent(c *gin.Context) {
 	}
 
 	request.ID = primitive.NewObjectID()
+	request.HostID = user.ID
+	request.Type = hp.EventType(hp.EventType(request.Type).String())
 
 	insertResult, err := eventCollection.InsertOne(ctx, request)
 	if err != nil {
@@ -55,6 +57,7 @@ func CreateEvent(c *gin.Context) {
 		HostID:    user.ID,
 		Invited:   request.Invited,
 		Attendees: request.Attendees,
+		Orders:    request.Orders,
 		Venue:     request.Venue,
 		Type:      request.Type,
 		Bill:      request.Bill,
