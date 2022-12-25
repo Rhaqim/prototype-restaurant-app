@@ -193,3 +193,85 @@ func GetOrder(c *gin.Context) {
 	response := hp.SetSuccess("Order retrieved", order, funcName)
 	c.JSON(http.StatusOK, response)
 }
+
+func GetUserOrdersByEvent(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	event_id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response := hp.SetError(err, "Error converting id to object id", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	filter := bson.M{"customer_id": user.ID, "event_id": event_id}
+
+	cursor, err := orderCollection.Find(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error getting orders", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	var orders []hp.Order
+	if err = cursor.All(ctx, &orders); err != nil {
+		response := hp.SetError(err, "Error getting orders", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := hp.SetSuccess("Orders retrieved", orders, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func GetOrdersByEvent(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	_, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	event_id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response := hp.SetError(err, "Error converting id to object id", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	filter := bson.M{"event_id": event_id}
+
+	cursor, err := orderCollection.Find(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error getting orders", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	var orders []hp.Order
+	if err = cursor.All(ctx, &orders); err != nil {
+		response := hp.SetError(err, "Error getting orders", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := hp.SetSuccess("Orders retrieved", orders, funcName)
+	c.JSON(http.StatusOK, response)
+}

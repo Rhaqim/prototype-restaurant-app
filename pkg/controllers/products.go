@@ -194,3 +194,45 @@ func DeleteProduct(c *gin.Context) {
 	var response = hp.SetSuccess("Product deleted successfully", deleteResult.DeletedCount, funcName)
 	c.JSON(http.StatusOK, response)
 }
+
+func UpdateProduct(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	var request hp.Product
+	if err := c.ShouldBindJSON(&request); err != nil {
+		response := hp.SetError(err, "Error binding request", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Check if User is Owner of the Restaurant
+	_, err = hp.CheckRestaurantBelongsToUser(ctx, request.RestaurantID, user)
+	if err != nil {
+		response := hp.SetError(err, "Restaurant does not belong to the user", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	request.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+
+	updateResult, err := productCollection.UpdateOne(ctx, bson.M{"_id": request.ID}, request)
+	if err != nil {
+		response := hp.SetError(err, "Error updating product", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	var response = hp.SetSuccess("Product updated successfully", updateResult.ModifiedCount, funcName)
+	c.JSON(http.StatusOK, response)
+}

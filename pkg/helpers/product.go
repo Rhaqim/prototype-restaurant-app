@@ -12,15 +12,15 @@ import (
 var productCollection = config.ProductCollection
 
 type Product struct {
-	ID           primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
-	SuppliedID   primitive.ObjectID  `json:"supplied_id,omitempty" bson:"supplied_id,omitempty"`
-	RestaurantID primitive.ObjectID  `json:"restaurant_id,omitempty" bson:"restaurant_id,omitempty"`
-	Name         string              `json:"name,omitempty" bson:"name" binding:"required"`
-	Category     Categories          `json:"category,omitempty" bson:"category" binding:"required"`
-	Price        float64             `json:"price,omitempty" bson:"price" binding:"required"`
-	Stock        int                 `json:"stock,omitempty" bson:"stock" binding:"required"`
-	CreatedAt    primitive.Timestamp `json:"created_at,omitempty" bson:"created_at" default:"now()"`
-	UpdatedAt    primitive.Timestamp `json:"updated_at,omitempty" bson:"updated_at" default:"now()"`
+	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	SuppliedID   primitive.ObjectID `json:"supplied_id,omitempty" bson:"supplied_id,omitempty"`
+	RestaurantID primitive.ObjectID `json:"restaurant_id,omitempty" bson:"restaurant_id,omitempty"`
+	Name         string             `json:"name,omitempty" bson:"name" binding:"required"`
+	Category     Categories         `json:"category,omitempty" bson:"category" binding:"required"`
+	Price        float64            `json:"price,omitempty" bson:"price" binding:"required"`
+	Stock        int                `json:"stock,omitempty" bson:"stock" binding:"required"`
+	CreatedAt    primitive.DateTime `json:"created_at,omitempty" bson:"created_at" default:"now()"`
+	UpdatedAt    primitive.DateTime `json:"updated_at,omitempty" bson:"updated_at" default:"now()"`
 }
 
 type Products []Product
