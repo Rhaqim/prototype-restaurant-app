@@ -42,13 +42,6 @@ func CreateOrder(c *gin.Context) {
 	request.ID = primitive.NewObjectID()
 	request.CustomerID = user.ID
 
-	insertResult, err := orderCollection.InsertOne(ctx, request)
-	if err != nil {
-		response := hp.SetError(err, "Error creating order", funcName)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-		return
-	}
-
 	// define wait group for concurrency
 	wg := sync.WaitGroup{}
 
@@ -136,9 +129,6 @@ func CreateOrder(c *gin.Context) {
 
 		event_filter := bson.M{"_id": event_id}
 		event_update := bson.M{
-			"$push": bson.M{
-				"orders": insertResult.InsertedID,
-			},
 			// update bill with new order
 			"$inc": bson.M{
 				"bill": <-bill,
@@ -153,8 +143,14 @@ func CreateOrder(c *gin.Context) {
 		}
 
 	}()
-
 	wg.Wait()
+
+	insertResult, err := orderCollection.InsertOne(ctx, request)
+	if err != nil {
+		response := hp.SetError(err, "Error creating order", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
 
 	response := hp.SetSuccess("Order created", insertResult, funcName)
 	c.JSON(http.StatusOK, response)

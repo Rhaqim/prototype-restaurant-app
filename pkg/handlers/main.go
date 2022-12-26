@@ -74,7 +74,7 @@ func GinRouter() *gin.Engine {
 
 		order := event.Group("/order")
 		{
-			order.POST("order", views.CreateOrder)
+			order.POST("create", views.CreateOrder)
 		}
 
 		attend := event.Group("/attend")

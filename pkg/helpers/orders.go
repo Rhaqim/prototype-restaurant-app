@@ -4,9 +4,9 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Order struct {
 	ID         primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
-	EventID    primitive.ObjectID  `json:"event_id,omitempty" bson:"event_id,omitempty"`
+	EventID    primitive.ObjectID  `json:"event_id,omitempty" bson:"event_id" binding:"required"`
 	CustomerID primitive.ObjectID  `json:"customer_id,omitempty" bson:"customer_id,omitempty"`
-	Products   []OrderRequest      `json:"products,omitempty" bson:"products,omitempty"`
+	Products   []OrderRequest      `json:"products,omitempty" bson:"products" min:"1" binding:"required"`
 	CreatedAt  primitive.Timestamp `json:"created_at,omitempty" bson:"created_at,omitempty" default:"now()"`
 	UpdatedAt  primitive.Timestamp `json:"updated_at,omitempty" bson:"updated_at,omitempty" default:"now()"`
 }
