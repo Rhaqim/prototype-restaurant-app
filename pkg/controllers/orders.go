@@ -59,28 +59,37 @@ func CreateOrder(c *gin.Context) {
 	*/
 	go func() {
 		defer wg.Done()
-		// Update the Product with the new order
-		product_id, err := primitive.ObjectIDFromHex(request.ProductID.Hex())
-		if err != nil {
-			response := hp.SetError(err, "Error converting id to object id", funcName)
-			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-			return
-		}
+		// Update the Products Stock by decrementing the quantity with concurrency
+		wgProduct := sync.WaitGroup{}
+		wgProduct.Add(len(request.Products))
 
-		product_filter := bson.M{"_id": product_id}
-		product_update := bson.M{
-			// decrement stock by quantity
-			"$inc": bson.M{
-				"stock": -request.Quantity,
-			},
-		}
+		for i := range request.Products {
+			go func(i int) {
+				defer wgProduct.Done()
+				product_id, err := primitive.ObjectIDFromHex(request.Products[i].ProductID.Hex())
+				if err != nil {
+					response := hp.SetError(err, "Error converting id to object id", funcName)
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+					return
+				}
 
-		_, err = productCollection.UpdateOne(ctx, product_filter, product_update)
-		if err != nil {
-			response := hp.SetError(err, "Error updating hosted event", funcName)
-			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-			return
+				product_filter := bson.M{"_id": product_id}
+				product_update := bson.M{
+					// decrement stock by quantity
+					"$inc": bson.M{
+						"stock": -request.Products[i].Quantity,
+					},
+				}
+
+				_, err = productCollection.UpdateOne(ctx, product_filter, product_update)
+				if err != nil {
+					response := hp.SetError(err, "Error updating product", funcName)
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+					return
+				}
+			}(i)
 		}
+		wgProduct.Wait()
 	}()
 	go func() {
 		defer wg.Done()
@@ -92,13 +101,38 @@ func CreateOrder(c *gin.Context) {
 			return
 		}
 
-		// Fetch the product to get the price
-		product, err := hp.GetProductbyID(ctx, request.ProductID)
-		if err != nil {
-			response := hp.SetError(err, "Error finding product", funcName)
-			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-			return
+		// Fetch each of the products to get their prices using concurrency
+		var wgBill sync.WaitGroup
+		wgBill.Add(len(request.Products))
+
+		bill := make(chan float64, len(request.Products))
+
+		for i := range request.Products {
+			go func(i int) {
+				defer wgBill.Done()
+				product_id, err := primitive.ObjectIDFromHex(request.Products[i].ProductID.Hex())
+				if err != nil {
+					response := hp.SetError(err, "Error converting id to object id", funcName)
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+					return
+				}
+
+				// fetch product
+				product_fetched, err := hp.GetProductbyID(ctx, product_id)
+				if err != nil {
+					response := hp.SetError(err, "Error finding product", funcName)
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+					return
+				}
+
+				bill <- float64(float64(request.Products[i].Quantity) * product_fetched.Price)
+
+			}(i)
+
 		}
+
+		wgBill.Wait()
+		close(bill)
 
 		event_filter := bson.M{"_id": event_id}
 		event_update := bson.M{
@@ -107,7 +141,7 @@ func CreateOrder(c *gin.Context) {
 			},
 			// update bill with new order
 			"$inc": bson.M{
-				"bill": float64(product.Price * float64(request.Quantity)),
+				"bill": <-bill,
 			},
 		}
 
@@ -117,6 +151,7 @@ func CreateOrder(c *gin.Context) {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 			return
 		}
+
 	}()
 
 	wg.Wait()

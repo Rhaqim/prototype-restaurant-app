@@ -49,6 +49,9 @@ package utils
 // c.JSON(http.StatusOK, response)
 // }
 
+/*
+FOR GETTING THE SOCIALS
+*/
 // func GetSocial(c *gin.Context) {
 // 	collection := config.MI.DB.Collection("socials")
 // 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -74,4 +77,73 @@ package utils
 // 		return
 // 	}
 // 	c.JSON(http.StatusOK, helpers.SetSuccess("Socials found", socials, "GetSocial"))
+// }
+
+/*
+FOR UPDATING THE BILL OF THE EVENT
+*/
+///////
+// for _, product := range request.Products {
+// 	product_id, err := primitive.ObjectIDFromHex(product.ProductID.Hex())
+// 	if err != nil {
+// 		response := hp.SetError(err, "Error converting id to object id", funcName)
+// 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+// 		return
+// 	}
+
+// 	// fetch product
+// 	product_fetched, err := hp.GetProductbyID(ctx, product_id)
+// 	if err != nil {
+// 		response := hp.SetError(err, "Error finding product", funcName)
+// 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+// 		return
+// 	}
+
+// 	event_filter := bson.M{"_id": event_id}
+// 	event_update := bson.M{
+// 		"$push": bson.M{
+// 			"orders": insertResult.InsertedID,
+// 		},
+// 		// update bill with new order
+// 		"$inc": bson.M{
+// 			"bill": float64(product_fetched.Price * float64(product.Quantity)),
+// 		},
+// 	}
+
+// 	_, err = eventCollection.UpdateOne(ctx, event_filter, event_update)
+// 	if err != nil {
+// 		response := hp.SetError(err, "Error updating hosted event", funcName)
+// 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+// 		return
+// 	}
+
+// }
+
+/*
+For Updating the Product Stock
+*/
+
+// for _, product := range request.Products {
+// 	product_id, err := primitive.ObjectIDFromHex(product.ProductID.Hex())
+// 	if err != nil {
+// 		response := hp.SetError(err, "Error converting id to object id", funcName)
+// 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+// 		return
+// 	}
+
+// 	product_filter := bson.M{"_id": product_id}
+// 	product_update := bson.M{
+// 		// decrement stock by quantity
+// 		"$inc": bson.M{
+// 			"stock": -product.Quantity,
+// 		},
+// 	}
+
+// 	_, err = productCollection.UpdateOne(ctx, product_filter, product_update)
+// 	if err != nil {
+// 		response := hp.SetError(err, "Error updating product", funcName)
+// 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+// 		return
+// 	}
+
 // }

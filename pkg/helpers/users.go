@@ -3,11 +3,7 @@ package helpers
 import (
 	"context"
 	"errors"
-	"log"
-	"time"
 
-	"github.com/Rhaqim/thedutchapp/pkg/config"
-	"github.com/Rhaqim/thedutchapp/pkg/database"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -93,20 +89,31 @@ type UpdateUserAvatar struct {
 	UpdatedAt primitive.DateTime `json:"updatedAt"`
 }
 
-/*Get user data by:
+/*
+Get user data by:
 - ID
 - Email
 - Username
 - From token
 */
+func GetUser(ctx context.Context, filter bson.M) (UserResponse, error) {
+	var user UserResponse
+	funcName := ut.GetFunctionName()
+
+	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
+		SetError(err, "error", funcName)
+		return UserResponse{}, err
+	}
+
+	return user, nil
+}
+
 // Get user by ID
 func GetUserByID(ctx context.Context, userID primitive.ObjectID) UserResponse {
-	var user UserResponse
-	config.Logs("info", "User ID: "+userID.Hex(), ut.GetFunctionName())
-
 	filter := bson.M{"_id": userID}
-	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error(), ut.GetFunctionName())
+
+	user, err := GetUser(ctx, filter)
+	if err != nil {
 		return UserResponse{}
 	}
 
@@ -114,19 +121,11 @@ func GetUserByID(ctx context.Context, userID primitive.ObjectID) UserResponse {
 }
 
 // Get user by Email
-func GetUserByEmail(email string) UserResponse {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
-	var user UserResponse
-	log.Print("Request ID sent by client:", email)
-
-	config.Logs("info", "Email: "+email, ut.GetFunctionName())
-
+func GetUserByEmail(ctx context.Context, email string) UserResponse {
 	filter := bson.M{"email": email}
-	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error(), ut.GetFunctionName())
+
+	user, err := GetUser(ctx, filter)
+	if err != nil {
 		return UserResponse{}
 	}
 
@@ -134,19 +133,12 @@ func GetUserByEmail(email string) UserResponse {
 }
 
 // Get user by Username
-func GetUserByUsername(username string) UserResponse {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
-	var user UserResponse
-	log.Print("Request ID sent by client:", username)
-
-	config.Logs("info", "Username: "+username, ut.GetFunctionName())
+func GetUserByUsername(ctx context.Context, username string) UserResponse {
 
 	filter := bson.M{"username": username}
-	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		config.Logs("error", err.Error(), ut.GetFunctionName())
+
+	user, err := GetUser(ctx, filter)
+	if err != nil {
 		return UserResponse{}
 	}
 
