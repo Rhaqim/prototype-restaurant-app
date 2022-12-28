@@ -49,7 +49,8 @@ func CreateOrder(c *gin.Context) {
 
 	// Update Bill
 	billErrChan := make(chan error)
-	go hp.UpdateBill(ctx, request, billErrChan)
+	totalChan := make(chan float64)
+	go hp.UpdateBill(ctx, request, billErrChan, totalChan)
 
 	for err := range errChan {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Error updating stock", funcName))
@@ -60,6 +61,8 @@ func CreateOrder(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Error updating bill", funcName))
 		return
 	}
+
+	request.Bill = <-totalChan
 
 	insertResult, err := orderCollection.InsertOne(ctx, request)
 	if err != nil {

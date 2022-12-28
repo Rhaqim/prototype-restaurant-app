@@ -13,6 +13,7 @@ type Order struct {
 	EventID    primitive.ObjectID `json:"event_id" bson:"event_id" binding:"required"`
 	CustomerID primitive.ObjectID `json:"customer_id,omitempty" bson:"customer_id,omitempty"`
 	Products   []OrderRequest     `json:"products,omitempty" bson:"products" min:"1" binding:"required"`
+	Bill       float64            `json:"bill,omitempty" bson:"bill" binding:"number" default:"0"`
 	CreatedAt  primitive.DateTime `json:"created_at" bson:"created_at" default:"now()"`
 	UpdatedAt  primitive.DateTime `json:"updated_at" bson:"updated_at" default:"now()"`
 }
@@ -26,8 +27,9 @@ type OrderRequest struct {
 
 type OrderRequest2 map[*primitive.ObjectID]int
 
-func UpdateBill(ctx context.Context, request Order, billErrChan chan error) {
-	// billErrChan := make(chan error)
+func UpdateBill(ctx context.Context, request Order, billErrChan chan error, totalchan chan float64) {
+	billChan := make(chan float64)
+
 	billWg := sync.WaitGroup{}
 
 	for i := range request.Products {
@@ -43,11 +45,17 @@ func UpdateBill(ctx context.Context, request Order, billErrChan chan error) {
 				return
 			}
 
+			bill := float64(float64(request.Products[i].Quantity) * product_fetched.Price)
+
+			// send bill value through the channel
+			billChan <- bill
+
+			// update event bill
 			event_filter := bson.M{"_id": request.EventID}
 			event_update := bson.M{
 				// update bill with new order
 				"$inc": bson.M{
-					"bill": +float64(float64(request.Products[i].Quantity) * product_fetched.Price),
+					"bill": +bill,
 				},
 			}
 
@@ -61,8 +69,18 @@ func UpdateBill(ctx context.Context, request Order, billErrChan chan error) {
 
 	go func() {
 		billWg.Wait()
+		close(billChan)
 		close(billErrChan)
 	}()
+
+	// calculate total bill
+	var totalBill float64
+	for bill := range billChan {
+		totalBill += bill
+	}
+
+	// send total bill through the channel
+	totalchan <- totalBill
 }
 
 func UpdateStock(ctx context.Context, request Order, errChan chan error) {
