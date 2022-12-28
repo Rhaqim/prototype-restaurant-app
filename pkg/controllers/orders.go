@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
@@ -41,109 +40,26 @@ func CreateOrder(c *gin.Context) {
 
 	request.ID = primitive.NewObjectID()
 	request.CustomerID = user.ID
+	request.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
+	request.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
 
-	// define wait group for concurrency
-	wg := sync.WaitGroup{}
+	// Update Stock
+	errChan := make(chan error)
+	go hp.UpdateStock(ctx, request, errChan)
 
-	wg.Add(2)
+	// Update Bill
+	billErrChan := make(chan error)
+	go hp.UpdateBill(ctx, request, billErrChan)
 
-	/*  Update the Product with the new order and decrement stock by quantity
-	also update the event with the new order using concurrency
-	*/
-	go func() {
-		defer wg.Done()
-		// Update the Products Stock by decrementing the quantity with concurrency
-		wgProduct := sync.WaitGroup{}
-		wgProduct.Add(len(request.Products))
+	for err := range errChan {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Error updating stock", funcName))
+		return
+	}
 
-		for i := range request.Products {
-			go func(i int) {
-				defer wgProduct.Done()
-				product_id, err := primitive.ObjectIDFromHex(request.Products[i].ProductID.Hex())
-				if err != nil {
-					response := hp.SetError(err, "Error converting id to object id", funcName)
-					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-					return
-				}
-
-				product_filter := bson.M{"_id": product_id}
-				product_update := bson.M{
-					// decrement stock by quantity
-					"$inc": bson.M{
-						"stock": -request.Products[i].Quantity,
-					},
-				}
-
-				_, err = productCollection.UpdateOne(ctx, product_filter, product_update)
-				if err != nil {
-					response := hp.SetError(err, "Error updating product", funcName)
-					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-					return
-				}
-			}(i)
-		}
-		wgProduct.Wait()
-	}()
-	go func() {
-		defer wg.Done()
-		// Update the Event with the new order
-		event_id, err := primitive.ObjectIDFromHex(request.EventID.Hex())
-		if err != nil {
-			response := hp.SetError(err, "Error converting id to object id", funcName)
-			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-			return
-		}
-
-		// Fetch each of the products to get their prices using concurrency
-		var wgBill sync.WaitGroup
-		wgBill.Add(len(request.Products))
-
-		bill := make(chan float64, len(request.Products))
-
-		for i := range request.Products {
-			go func(i int) {
-				defer wgBill.Done()
-				product_id, err := primitive.ObjectIDFromHex(request.Products[i].ProductID.Hex())
-				if err != nil {
-					response := hp.SetError(err, "Error converting id to object id", funcName)
-					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-					return
-				}
-
-				// fetch product
-				product_fetched, err := hp.GetProductbyID(ctx, product_id)
-				if err != nil {
-					response := hp.SetError(err, "Error finding product", funcName)
-					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-					return
-				}
-
-				bill <- float64(float64(request.Products[i].Quantity) * product_fetched.Price)
-
-			}(i)
-
-		}
-
-		wgBill.Wait()
-		close(bill)
-
-		event_filter := bson.M{"_id": event_id}
-		event_update := bson.M{
-			// update bill with new order
-			"$inc": bson.M{
-				"bill": <-bill,
-			},
-		}
-
-		_, err = eventCollection.UpdateOne(ctx, event_filter, event_update)
-		if err != nil {
-			response := hp.SetError(err, "Error updating hosted event", funcName)
-			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-			return
-		}
-
-	}()
-	wg.Wait()
+	for err := range billErrChan {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Error updating bill", funcName))
+		return
+	}
 
 	insertResult, err := orderCollection.InsertOne(ctx, request)
 	if err != nil {

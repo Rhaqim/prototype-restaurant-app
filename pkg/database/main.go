@@ -28,6 +28,8 @@ func ConnectMongoDB() *mongo.Client {
 		log.Fatal("Problem connecting to the MongoDB database:", err)
 	}
 
+	log.Println("Connecting to the database... [OK]")
+
 	return client
 }
 
