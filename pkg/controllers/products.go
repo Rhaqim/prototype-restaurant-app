@@ -31,25 +31,25 @@ func AddProduct(c *gin.Context) {
 		return
 	}
 
-	// user, err := hp.GetUserFromToken(c)
-	// if err != nil {
-	// 	response := hp.SetError(err, "User not logged in", funcName)
-	// 	c.AbortWithStatusJSON(http.StatusBadRequest, response)
-	// 	return
-	// }
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
 
 	// Check if User is Owner of the Restaurant
-	// _, err = hp.CheckRestaurantBelongsToUser(ctx, request.RestaurantID, user)
-	// if err != nil {
-	// 	response := hp.SetError(err, "Restaurant does not belong to the user", funcName)
-	// 	c.AbortWithStatusJSON(http.StatusBadRequest, response)
-	// 	return
-	// }
+	_, err = hp.CheckRestaurantBelongsToUser(ctx, request.RestaurantID, user)
+	if err != nil {
+		response := hp.SetError(err, "Restaurant does not belong to the user", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
 
 	// Modify the request
 	request.ID = primitive.NewObjectID()
-	// request.SuppliedID = user.ID
-	// request.Category = hp.Categories(hp.Categories(request.Category).String())
+	request.SuppliedID = user.ID
+	request.Category = hp.Categories(hp.Categories(request.Category).String())
 
 	insertResult, err := productCollection.InsertOne(ctx, request)
 	if err != nil {
@@ -161,27 +161,27 @@ func DeleteProduct(c *gin.Context) {
 		return
 	}
 
-	// product, err := hp.GetProductbyID(ctx, productID)
-	// if err != nil {
-	// 	response := hp.SetError(err, "Error getting product", funcName)
-	// 	c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-	// 	return
-	// }
+	product, err := hp.GetProductbyID(ctx, productID)
+	if err != nil {
+		response := hp.SetError(err, "Error getting product", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
 
-	// user, err := hp.GetUserFromToken(c)
-	// if err != nil {
-	// 	response := hp.SetError(err, "User not logged in", funcName)
-	// 	c.AbortWithStatusJSON(http.StatusBadRequest, response)
-	// 	return
-	// }
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
 
-	// // Check if User is Owner of the Restaurant
-	// _, err = hp.CheckRestaurantBelongsToUser(ctx, product.RestaurantID, user)
-	// if err != nil {
-	// 	response := hp.SetError(err, "Restaurant does not belong to the user", funcName)
-	// 	c.AbortWithStatusJSON(http.StatusBadRequest, response)
-	// 	return
-	// }
+	// Check if User is Owner of the Restaurant
+	_, err = hp.CheckRestaurantBelongsToUser(ctx, product.RestaurantID, user)
+	if err != nil {
+		response := hp.SetError(err, "Restaurant does not belong to the user", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
 
 	// Delete Product
 	deleteResult, err := productCollection.DeleteOne(ctx, bson.M{"_id": productID})
@@ -209,22 +209,22 @@ func UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	// user, err := hp.GetUserFromToken(c)
-	// if err != nil {
-	// 	response := hp.SetError(err, "User not logged in", funcName)
-	// 	c.AbortWithStatusJSON(http.StatusBadRequest, response)
-	// 	return
-	// }
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
 
 	// Check if User is Owner of the Restaurant
-	// _, err = hp.CheckRestaurantBelongsToUser(ctx, request.RestaurantID, user)
-	// if err != nil {
-	// 	response := hp.SetError(err, "Restaurant does not belong to the user", funcName)
-	// 	c.AbortWithStatusJSON(http.StatusBadRequest, response)
-	// 	return
-	// }
+	_, err = hp.CheckRestaurantBelongsToUser(ctx, request.RestaurantID, user)
+	if err != nil {
+		response := hp.SetError(err, "Restaurant does not belong to the user", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
 
-	// request.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	request.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
 
 	updateResult, err := productCollection.UpdateOne(ctx, bson.M{"_id": request.ID}, request)
 	if err != nil {

@@ -64,7 +64,8 @@ func GinRouter() *gin.Engine {
 
 	/* Event Routes */
 	event := router.Group("/event")
-	// event.GET("/getAllEvents", views.GetEventByID)
+	// event.GET("/getAllEventsbyHost", views.GetEventByID)
+	// event.GET("/getAllEventsAttended", views.GetEventByID)
 	event.Use(TokenGuardMiddleware())
 	{
 		event.POST("/createEvent", views.CreateEvent)
@@ -77,6 +78,7 @@ func GinRouter() *gin.Engine {
 			order.POST("create", views.CreateOrder)
 			order.GET("getOrders", views.GetOrders)
 			order.GET("getEventOrders/:id", views.GetEventOrders)
+			order.GET("getUserEventOrders/:id", views.GetUserEventOrders)
 		}
 
 		attend := event.Group("/attend")

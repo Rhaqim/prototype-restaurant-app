@@ -141,7 +141,7 @@ func GetOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetEventOrders(c *gin.Context) {
+func GetUserEventOrders(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
@@ -182,7 +182,7 @@ func GetEventOrders(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetOrdersByEvent(c *gin.Context) {
+func GetEventOrders(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
