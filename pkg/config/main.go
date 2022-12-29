@@ -67,7 +67,7 @@ func Logs(level LogType, message, funcName interface{}) {
 	var warningStr = coloriseWarning("[WARNING]")
 	var debugStr = coloriseDebug("[DEBUG]")
 
-	var baseStr = " \n %s \n TIME:%s \n FUNC:%s \n MSG:%s \n"
+	var baseStr = " \n \n %s \n TIME:%s \n FUNC:%s \n MSG:%s \n \n"
 
 	switch level {
 	case Info:

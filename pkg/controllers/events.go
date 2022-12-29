@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 
@@ -43,29 +42,14 @@ func CreateEvent(c *gin.Context) {
 	request.HostID = user.ID
 	request.Type = hp.EventType(hp.EventType(request.Type).String())
 
-	insertResult, err := eventCollection.InsertOne(ctx, request)
+	_, err = eventCollection.InsertOne(ctx, request)
 	if err != nil {
 		response := hp.SetError(err, "Error inserting into database", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
-	log.Println("insertResult: ", insertResult)
 
-	hostingResponse := hp.Event{
-		ID:        insertResult.InsertedID.(primitive.ObjectID),
-		Title:     request.Title,
-		HostID:    user.ID,
-		Invited:   request.Invited,
-		Attendees: request.Attendees,
-		Declined:  request.Declined,
-		Venue:     request.Venue,
-		Type:      request.Type,
-		Bill:      request.Bill,
-		Budget:    request.Budget,
-		CreatedAt: request.CreatedAt,
-	}
-
-	response := hp.SetSuccess("Event created", hostingResponse, funcName)
+	response := hp.SetSuccess("Event created", request, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -133,17 +117,21 @@ func UpdateEvent(c *gin.Context) {
 
 	filter := bson.M{"_id": id, "host_id": user.ID}
 
+	// update := bson.M{
+	// 	"$set": bson.M{
+	// 		"title":     request.Title,
+	// 		"invited":   request.Invited,
+	// 		"attendees": request.Attendees,
+	// 		"declined":  request.Declined,
+	// 		"venue":     request.Venue,
+	// 		"type":      request.Type,
+	// 		"bill":      request.Bill,
+	// 		"updatedAt": request.UpdatedAt,
+	// 	},
+	// }
+
 	update := bson.M{
-		"$set": bson.M{
-			"title":     request.Title,
-			"invited":   request.Invited,
-			"attendees": request.Attendees,
-			"declined":  request.Declined,
-			"venue":     request.Venue,
-			"type":      request.Type,
-			"bill":      request.Bill,
-			"updatedAt": request.UpdatedAt,
-		},
+		"$set": request,
 	}
 
 	updateResult, err := eventCollection.UpdateOne(ctx, filter, update)
@@ -191,45 +179,4 @@ func DeleteEvent(c *gin.Context) {
 
 	response := hp.SetSuccess(" event deleted", deleteResult, funcName)
 	c.JSON(http.StatusOK, response)
-}
-
-func SendInvitesToEvent(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
-	var funcName = ut.GetFunctionName()
-
-	var request hp.InviteFriendsToEventRequest
-
-	var event hp.Event
-
-	if err := c.ShouldBindJSON(&request); err != nil {
-		response := hp.SetError(err, "Error binding json", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	user, err := hp.GetUserFromToken(c)
-	if err != nil {
-		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	id, err := primitive.ObjectIDFromHex(request.EventID.Hex())
-	if err != nil {
-		response := hp.SetError(err, "Error converting id to object id", funcName)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-		return
-	}
-
-	filter := bson.M{"_id": id, "host_id": user.ID}
-
-	err = eventCollection.FindOne(ctx, filter).Decode(&event)
-	if err != nil {
-		response := hp.SetError(err, "Error finding event", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
 }
