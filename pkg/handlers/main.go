@@ -60,6 +60,12 @@ func GinRouter() *gin.Engine {
 			social.GET("/getFriendRequests", views.GetFriendRequests)
 			social.GET("/getBlockedUsers", views.GetBlockedUsers)
 		}
+
+		/* Wallet Routes */
+		wallet := user.Group("/wallet")
+		{
+			wallet.POST("/fundWallet", views.FundWallet)
+		}
 	}
 
 	/* Event Routes */
