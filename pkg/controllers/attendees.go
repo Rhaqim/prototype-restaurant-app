@@ -159,7 +159,7 @@ func AcceptInvite(c *gin.Context) {
 
 	if !invited {
 		response := hp.SetError(err, "User is not invited to the event", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, response)
 		return
 	}
 
@@ -174,6 +174,13 @@ func AcceptInvite(c *gin.Context) {
 
 	if attendee.Status == hp.Attending {
 		response := hp.SetError(err, "User has already accepted the invite", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Check User has enough budget in wallet
+	if user.Wallet < request.Budget {
+		response := hp.SetError(err, "User does not have enough budget in wallet", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
@@ -225,6 +232,27 @@ func AcceptInvite(c *gin.Context) {
 		}
 	}()
 
+	/*
+		go func() {
+			// deduct budget from user's wallet
+			defer wg.Done()
+
+			filter := bson.M{"_id": user.ID}
+			update := bson.M{
+				"$inc": bson.M{
+					"wallet": -request.Budget,
+				},
+			}
+
+			_, err = authCollection.UpdateOne(ctx, filter, update)
+			if err != nil {
+				response := hp.SetError(err, "Error updating user", funcName)
+				c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+				return
+			}
+
+		}()
+	*/
 	wg.Wait()
 
 	response := hp.SetSuccess("Successfully accepted invite", nil, funcName)

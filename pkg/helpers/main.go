@@ -29,6 +29,15 @@ type MongoJsonResponse struct {
 	Date    time.Time        `json:"date"`
 }
 
+type Codes string // ERROR CODES
+
+const (
+	NotFound          Codes = "not_found"
+	InsufficientFunds Codes = "insufficient_funds"
+	SuccessCode       Codes = "success"
+	AlreadyCompleted  Codes = "already_completed"
+)
+
 func SetError(err error, message string, funcName string) *MongoJsonResponse {
 	if err != nil {
 		config.Logs("error", err.Error()+" "+message, funcName)
