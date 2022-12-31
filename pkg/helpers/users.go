@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Roles string
@@ -97,6 +98,20 @@ Get user data by:
 - From token
 */
 func GetUser(ctx context.Context, filter bson.M) (UserResponse, error) {
+	var user UserResponse
+	funcName := ut.GetFunctionName()
+
+	opts := options.FindOne().SetProjection(bson.M{"password": 0, "refreshToken": 0})
+
+	if err := usersCollection.FindOne(ctx, filter, opts).Decode(&user); err != nil {
+		SetError(err, "error", funcName)
+		return UserResponse{}, err
+	}
+
+	return user, nil
+}
+
+func GetUserAllInfo(ctx context.Context, filter bson.M) (UserResponse, error) {
 	var user UserResponse
 	funcName := ut.GetFunctionName()
 

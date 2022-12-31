@@ -25,8 +25,6 @@ type OrderRequest struct {
 	Quantity  int                `json:"quantity," bson:"quantity" binding:"required,number,gt=0"`
 }
 
-type OrderRequest2 map[*primitive.ObjectID]int
-
 func UpdateBill(ctx context.Context, request Order, billErrChan chan error, totalchan chan float64) {
 	billChan := make(chan float64)
 

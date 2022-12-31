@@ -18,8 +18,32 @@ type Restaurant struct {
 	Name      string              `json:"name,omitempty" bson:"name" binding:"required"`
 	Address   string              `json:"address,omitempty" bson:"address" binding:"required"`
 	Phone     string              `json:"phone,omitempty" bson:"phone" binding:"required"`
+	Currency  string              `json:"currency,omitempty" bson:"currency" binding:"required"`
+	Verified  bool                `json:"verified,omitempty" bson:"verified"`
 	CreatedAt primitive.Timestamp `json:"created_at,omitempty" bson:"created_at" default:"now()"`
 	UpdatedAt primitive.Timestamp `json:"updated_at,omitempty" bson:"updated_at" default:"now()"`
+}
+
+type RestaurantCategory string
+
+const (
+	// Restaurant Categories
+	Bar    RestaurantCategory = "Bar"
+	Lounge RestaurantCategory = "Lounge"
+	Cafe   RestaurantCategory = "Cafe"
+)
+
+func (rc RestaurantCategory) String() string {
+	switch rc {
+	case Bar:
+		return "Bar"
+	case Lounge:
+		return "Lounge"
+	case Cafe:
+		return "Cafe"
+	default:
+		return "Bar"
+	}
 }
 
 // Check if the Restaurant Belongs to the Signin User
@@ -40,15 +64,29 @@ func CheckRestaurantBelongsToUser(c context.Context, restaurantID primitive.Obje
 	return true, nil
 }
 
-// Get Restaurant By ID
-func GetRestaurantByID(c context.Context, restaurantID primitive.ObjectID) (Restaurant, error) {
+func GetRestaurant(c context.Context, filter bson.M) (Restaurant, error) {
 
 	var funcName = ut.GetFunctionName()
 	var restaurant Restaurant
 
+	err := restaurantCollection.FindOne(c, filter).Decode(&restaurant)
+	if err != nil {
+		SetDebug(err.Error(), funcName)
+		return restaurant, err
+	}
+
+	return restaurant, nil
+
+}
+
+// Get Restaurant By ID
+func GetRestaurantByID(c context.Context, restaurantID primitive.ObjectID) (Restaurant, error) {
+
+	var funcName = ut.GetFunctionName()
+
 	filter := bson.M{"_id": restaurantID}
 
-	err := restaurantCollection.FindOne(c, filter).Decode(&restaurant)
+	restaurant, err := GetRestaurant(c, filter)
 	if err != nil {
 		SetDebug(err.Error(), funcName)
 		return restaurant, err

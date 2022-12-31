@@ -47,6 +47,21 @@ func (c Categories) String() string {
 	}
 }
 
+func GetProduct(c context.Context, filter bson.M) (Product, error) {
+	var product Product
+
+	funcName := ut.GetFunctionName()
+
+	err := productCollection.FindOne(c, filter).Decode(&product)
+	if err != nil {
+		SetDebug(err.Error(), funcName)
+		fmt.Printf("Error: %v", filter)
+		return product, err
+	}
+
+	return product, nil
+}
+
 func GetProductbyID(c context.Context, productID primitive.ObjectID) (Product, error) {
 	var product Product
 
@@ -61,20 +76,5 @@ func GetProductbyID(c context.Context, productID primitive.ObjectID) (Product, e
 	}
 
 	SetInfo(fmt.Sprintf("Product %v found", product.Name), funcName)
-	return product, nil
-}
-
-func GetProduct(c context.Context, filter bson.M) (Product, error) {
-	var product Product
-
-	funcName := ut.GetFunctionName()
-
-	err := productCollection.FindOne(c, filter).Decode(&product)
-	if err != nil {
-		SetDebug(err.Error(), funcName)
-		fmt.Printf("Error: %v", filter)
-		return product, err
-	}
-
 	return product, nil
 }
