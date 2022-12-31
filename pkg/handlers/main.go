@@ -97,5 +97,16 @@ func GinRouter() *gin.Engine {
 		}
 	}
 
+	/* Restaurant Routes */
+	restaurant := router.Group("/restaurant")
+	// restaurant.GET("/getRestaurantById", views.GetRestaurantByID)
+	// restaurant.GET("/getRestaurantByName", views.GetRestaurantByName)
+	restaurant.Use(TokenGuardMiddleware())
+	{
+		restaurant.POST("/createRestaurant", views.CreateRestaurant)
+		// restaurant.PUT("/updateRestaurant", views.UpdateRestaurant)
+		// restaurant.DELETE("/deleteRestaurant", views.DeleteRestaurant)
+	}
+
 	return router
 }
