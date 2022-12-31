@@ -104,14 +104,13 @@ func CheckRestaurantExists(c context.Context, name string) (bool, error) {
 
 	filter := bson.M{"name": name}
 
-	restaurant, err := GetRestaurant(c, filter)
+	_, err := GetRestaurant(c, filter)
 	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return false, nil
+		}
 		SetDebug(err.Error(), funcName)
 		return false, err
-	}
-
-	if restaurant.ID.IsZero() {
-		return false, nil
 	}
 
 	return true, nil

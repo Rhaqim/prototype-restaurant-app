@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -32,7 +33,8 @@ func (h OpenHours) Validate() error {
 func (h OpenHours) DayIsValid() bool {
 	days := []string{"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"}
 	for _, day := range days {
-		if h.Day == day {
+		// convert to lowercase
+		if strings.ToLower(h.Day) == day {
 			return true
 		}
 	}

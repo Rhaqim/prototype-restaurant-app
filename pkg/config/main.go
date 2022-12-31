@@ -13,7 +13,7 @@ const (
 	DB          = "thedutchapp"
 	USERS       = "users"
 	SESSION     = "sessions"
-	RESTAURAUNT = "restauraunts"
+	RESTAURAUNT = "restaurants"
 	EVENT       = "events"
 	ATTENDEE    = "attendees"
 	ORDER       = "orders"

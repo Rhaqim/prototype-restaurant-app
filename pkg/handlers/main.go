@@ -103,7 +103,7 @@ func GinRouter() *gin.Engine {
 	// restaurant.GET("/getRestaurantByName", views.GetRestaurantByName)
 	restaurant.Use(TokenGuardMiddleware())
 	{
-		restaurant.POST("/createRestaurant", views.CreateRestaurant)
+		restaurant.POST("/create", views.CreateRestaurant)
 		// restaurant.PUT("/updateRestaurant", views.UpdateRestaurant)
 		// restaurant.DELETE("/deleteRestaurant", views.DeleteRestaurant)
 	}

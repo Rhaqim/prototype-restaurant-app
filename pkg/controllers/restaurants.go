@@ -47,8 +47,14 @@ func CreateRestaurant(c *gin.Context) {
 	request.OwnerID = user.ID
 
 	// Check if Restaurant already exists
-	_, err = hp.CheckRestaurantExists(ctx, request.Name)
+	ok, err := hp.CheckRestaurantExists(ctx, request.Name)
 	if err != nil {
+		response := hp.SetError(err, "Error checking if restaurant exists", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	if ok {
 		response := hp.SetError(err, "Restaurant already exists", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
