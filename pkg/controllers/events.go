@@ -42,6 +42,14 @@ func CreateEvent(c *gin.Context) {
 	request.HostID = user.ID
 	request.Type = hp.EventType(hp.EventType(request.Type).String())
 
+	// validate open hours
+	err = hp.OpenHours(request.Time).Validate()
+	if err != nil {
+		response := hp.SetError(err, "Invalid open hours", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
 	_, err = eventCollection.InsertOne(ctx, request)
 	if err != nil {
 		response := hp.SetError(err, "Error inserting into database", funcName)
