@@ -16,8 +16,10 @@ type Restaurant struct {
 	ID        primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
 	OwnerID   primitive.ObjectID  `json:"owner_id,omitempty" bson:"owner_id,omitempty"`
 	Name      string              `json:"name,omitempty" bson:"name" binding:"required"`
-	Address   string              `json:"address,omitempty" bson:"address" binding:"required"`
 	Phone     string              `json:"phone,omitempty" bson:"phone" binding:"required"`
+	Email     string              `json:"email,omitempty" bson:"email" binding:"required"`
+	Address   string              `json:"address,omitempty" bson:"address" binding:"required"`
+	OpenHours [7]OpenHours        `json:"open_hours,omitempty" bson:"open_hours" binding:"required"`
 	Currency  string              `json:"currency,omitempty" bson:"currency" binding:"required"`
 	Verified  bool                `json:"verified,omitempty" bson:"verified"`
 	CreatedAt primitive.Timestamp `json:"created_at,omitempty" bson:"created_at" default:"now()"`
@@ -93,4 +95,24 @@ func GetRestaurantByID(c context.Context, restaurantID primitive.ObjectID) (Rest
 	}
 
 	return restaurant, nil
+}
+
+// Check if Restaurant Exists
+func CheckRestaurantExists(c context.Context, name string) (bool, error) {
+
+	var funcName = ut.GetFunctionName()
+
+	filter := bson.M{"name": name}
+
+	restaurant, err := GetRestaurant(c, filter)
+	if err != nil {
+		SetDebug(err.Error(), funcName)
+		return false, err
+	}
+
+	if restaurant.ID.IsZero() {
+		return false, nil
+	}
+
+	return true, nil
 }

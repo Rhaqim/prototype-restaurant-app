@@ -30,12 +30,13 @@ func (h EventType) String() string {
 
 type Event struct {
 	ID        primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
-	Title     string               `json:"title" binding:"required" bson:"title"`
 	HostID    primitive.ObjectID   `json:"host_id" bson:"host_id"`
+	Venue     primitive.ObjectID   `json:"venue" bson:"venue"`
+	Time      OpenHours            `json:"time" bson:"time"`
+	Title     string               `json:"title" binding:"required" bson:"title"`
 	Invited   []primitive.ObjectID `json:"invited" bson:"invited" default:"[]"`
 	Attendees []primitive.ObjectID `json:"attendees" bson:"attendees" default:"[]"`
 	Declined  []primitive.ObjectID `json:"declined" bson:"declined" default:"[]"`
-	Venue     primitive.ObjectID   `json:"venue" bson:"venue"`
 	Type      EventType            `json:"type" bson:"type"`
 	Budget    float64              `json:"budget" bson:"budget" binding:"number" default:"0"`
 	Bill      float64              `json:"bill" bson:"bill"`
