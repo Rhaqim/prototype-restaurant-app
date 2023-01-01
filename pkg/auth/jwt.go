@@ -21,7 +21,7 @@ var collection *mongo.Collection = config.UserCollection
 type JWTClaim struct {
 	Username string             `json:"username"`
 	Email    string             `json:"email"`
-	UserId   primitive.ObjectID `json:"userId"`
+	UserId   primitive.ObjectID `json:"user_id"`
 	jwt.StandardClaims
 }
 

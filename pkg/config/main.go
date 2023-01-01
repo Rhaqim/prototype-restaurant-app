@@ -19,6 +19,7 @@ const (
 	ORDER       = "orders"
 	PRODUCT     = "products"
 	TRANSACTION = "transactions"
+	WALLET      = "wallets"
 	FRIENDSHIP  = "friendship"
 	COUNTRY     = "country"
 	STATE       = "state"
@@ -34,6 +35,7 @@ var (
 	OrderCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, ORDER)
 	ProductCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, PRODUCT)
 	TransactionsCollection = database.OpenCollection(database.ConnectMongoDB(), DB, TRANSACTION)
+	WalletCollection       = database.OpenCollection(database.ConnectMongoDB(), DB, WALLET)
 	FriendshipCollection   = database.OpenCollection(database.ConnectMongoDB(), DB, FRIENDSHIP)
 	CountryCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, COUNTRY)
 	StateCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, STATE)

@@ -1,5 +1,24 @@
 package helpers
 
+import (
+	"context"
+
+	"github.com/Rhaqim/thedutchapp/pkg/config"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+var walletCollection = config.WalletCollection
+
+type Wallet struct {
+	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	UserID    primitive.ObjectID `json:"user_id" bson:"user_id"`
+	Balance   float64            `json:"balance" bson:"balance"`
+	TxnPin    string             `json:"txn_pin" bson:"txn_pin"`
+	CreatedAt primitive.DateTime `json:"created_at" bson:"created_at"`
+	UpdatedAt primitive.DateTime `json:"updated_at" bson:"updated_at"`
+}
+
 type CreateWalletRequest struct {
 	TxnPin string `json:"txn_pin" bson:"txn_pin" binding:"required,min=4,max=4"`
 }
@@ -45,3 +64,28 @@ type FundWalletResponse struct {
 
 // 	return paystackResponse, nil
 // }
+
+func GetWallet(ctx context.Context, filter bson.M) (Wallet, error) {
+	var wallet Wallet
+
+	err := walletCollection.FindOne(ctx, filter).Decode(&wallet)
+	if err != nil {
+		return Wallet{}, err
+	}
+
+	return wallet, nil
+}
+
+func CheckifWalletExists(ctx context.Context, filter bson.M) (bool, error) {
+	var wallet Wallet
+
+	err := walletCollection.FindOne(ctx, filter).Decode(&wallet)
+	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}

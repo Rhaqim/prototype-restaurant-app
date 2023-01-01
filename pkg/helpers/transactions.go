@@ -43,20 +43,25 @@ type TransactionStatus struct {
 	Status   TxnStatus          `json:"status" bson:"status" binding:"required"`
 }
 
-func VerifyWalletSufficientBalance(user UserResponse, amount float64) bool {
-	return user.Wallet >= amount
+func VerifyWalletSufficientBalance(ctx context.Context, user UserResponse, amount float64) bool {
+	wallet, err := GetWallet(ctx, bson.M{"user_id": user.ID})
+	if err != nil {
+		return false
+	}
+	return wallet.Balance >= amount
 }
 
 func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount float64, txn Transactions) bool {
 	if txn.Status != TxnSuccess {
 		return false
 	}
-	user.Wallet -= amount
 
-	filter := bson.M{"_id": user.ID}
-	update := bson.M{"$set": bson.M{"wallet": user.Wallet}}
+	filter := bson.M{"user_id": user.ID}
+	update := bson.M{"$set": bson.M{
+		"balance": -amount,
+	}}
 
-	updateResult, err := usersCollection.UpdateOne(ctx, filter, update)
+	updateResult, err := walletCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return false
 	}
@@ -67,12 +72,13 @@ func UpdateReceiverTransaction(ctx context.Context, user UserResponse, amount fl
 	if txn.Status != TxnSuccess {
 		return false
 	}
-	user.Wallet += amount
 
-	filter := bson.M{"_id": user.ID}
-	update := bson.M{"$set": bson.M{"wallet": user.Wallet}}
+	filter := bson.M{"user_id": user.ID}
+	update := bson.M{"$set": bson.M{
+		"balance": +amount,
+	}}
 
-	updateResult, err := usersCollection.UpdateOne(ctx, filter, update)
+	updateResult, err := walletCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return false
 	}

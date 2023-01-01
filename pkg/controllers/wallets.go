@@ -6,12 +6,15 @@ import (
 	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/auth"
+	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 )
+
+var walletCollection = config.WalletCollection
 
 func FundWallet(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
@@ -43,12 +46,14 @@ func FundWallet(c *gin.Context) {
 	// 	return
 	// }
 
-	user.Wallet += request.Amount
+	// user.Wallet += request.Amount
 
-	filter := bson.M{"_id": user.ID}
-	update := bson.M{"$set": bson.M{"wallet": user.Wallet}}
+	filter := bson.M{"user_id": user.ID}
+	update := bson.M{"$set": bson.M{
+		"balance": +request.Amount,
+	}}
 
-	_, err = authCollection.UpdateOne(ctx, filter, update)
+	_, err = walletCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		response := hp.SetError(err, "Error updating user", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
@@ -66,7 +71,7 @@ func CreateWallet(c *gin.Context) {
 
 	var funcName = ut.GetFunctionName()
 
-	var request hp.CreateWalletRequest
+	var request hp.Wallet
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		response := hp.SetError(err, "Error binding json", funcName)
@@ -81,43 +86,29 @@ func CreateWallet(c *gin.Context) {
 		return
 	}
 
-	// Check if User has a pin already
-	if user.TxnPin != "" || len(user.TxnPin) > 0 {
-		response := hp.SetError(err, "Pin already exists", funcName)
+	// Check if User has a Wallet already
+	exists, err := hp.CheckifWalletExists(ctx, bson.M{"_id": user.Wallet})
+	if err != nil {
+		response := hp.SetError(err, "Error checking if wallet exists", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
-	// Check if user has a wallet
-	if user.Wallet != 0 {
+	if exists {
 		response := hp.SetError(err, "Wallet already exists", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
-	user.Wallet = 0
-	request.TxnPin, err = auth.HashPassword(request.TxnPin)
-	if err != nil {
-		response := hp.SetError(err, "Error hashing pin", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	filter := bson.M{"_id": user.ID}
-	update := bson.M{
-		"$set": bson.M{
-			"wallet":  user.Wallet,
-			"txn_pin": request.TxnPin,
-		}}
-
-	_, err = authCollection.UpdateOne(ctx, filter, update)
+	// Create a new wallet
+	insertResult, err := walletCollection.InsertOne(ctx, request)
 	if err != nil {
 		response := hp.SetError(err, "Error creating wallet", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
-	response := hp.SetSuccess("Wallet created", user, funcName)
+	response := hp.SetSuccess("Wallet created", insertResult.InsertedID, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -143,22 +134,16 @@ func ChangePin(c *gin.Context) {
 		return
 	}
 
-	// Check if User has a pin already
-	if user.TxnPin == "" || len(user.TxnPin) == 0 {
-		response := hp.SetError(err, "Pin does not exist", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	// Check if user has a wallet
-	if user.Wallet == 0 {
-		response := hp.SetError(err, "Wallet does not exist", funcName)
+	// Get user wallet
+	wallet, err := hp.GetWallet(ctx, bson.M{"_id": user.Wallet})
+	if err != nil {
+		response := hp.SetError(err, "Error getting wallet", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
 	// Check if old pin is correct
-	ok := auth.CheckPasswordHash(request.OldPin, user.TxnPin)
+	ok := auth.CheckPasswordHash(request.OldPin, wallet.TxnPin)
 	if !ok {
 		response := hp.SetError(err, "Old pin is incorrect", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
@@ -172,13 +157,13 @@ func ChangePin(c *gin.Context) {
 		return
 	}
 
-	filter := bson.M{"_id": user.ID}
+	filter := bson.M{"_id": wallet.ID}
 	update := bson.M{
 		"$set": bson.M{
 			"txn_pin": request.NewPin,
 		}}
 
-	_, err = authCollection.UpdateOne(ctx, filter, update)
+	_, err = walletCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		response := hp.SetError(err, "Error creating wallet", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)

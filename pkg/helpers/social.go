@@ -32,7 +32,7 @@ const (
 
 type Friendship struct {
 	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id"`
-	UserID    primitive.ObjectID `json:"userId" bson:"userId" validate:"required"`
+	UserID    primitive.ObjectID `json:"user_id" bson:"user_id" validate:"required"`
 	FriendID  primitive.ObjectID `json:"friendId" bson:"friendId"`
 	Status    FriendshipStatus   `json:"status" bson:"status" default:"0"`
 	CreatedAt time.Time          `json:"createdAt" bson:"createdAt" default:"now()"`
@@ -48,7 +48,7 @@ type FriendshipRequest struct {
 
 type FriendshipAcceptRequest struct {
 	ID       primitive.ObjectID `json:"id,omitempty" bson:"_id"`
-	UserID   primitive.ObjectID `json:"userId" bson:"userId" validate:"required"`
+	UserID   primitive.ObjectID `json:"user_id" bson:"user_id" validate:"required"`
 	FriendID primitive.ObjectID `json:"friendId" bson:"friendId"`
 }
 
@@ -103,7 +103,7 @@ func SendFriendRequest(ctx context.Context, userID UserResponse, friendID primit
 
 	// Create a new friendship request.
 	friendshipRequest := bson.M{
-		"userId":    userID.ID,
+		"user_id":   userID.ID,
 		"friendId":  friendID,
 		"status":    FriendshipStatusPending,
 		"createdAt": time.Now(),
@@ -218,7 +218,7 @@ func BlockUser(ctx context.Context, user UserResponse, friendID primitive.Object
 	}
 
 	// Update the friendship request in the database.
-	var filter = bson.M{"userId": user.ID, "friendId": friendID}
+	var filter = bson.M{"user_id": user.ID, "friendId": friendID}
 	var update = bson.M{"$set": bson.M{"status": FriendshipStatusBlocked, "updatedAt": time.Now()}}
 	_, err := config.FriendshipCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -255,7 +255,7 @@ func UnblockUser(ctx context.Context, user UserResponse, friendID primitive.Obje
 	}
 
 	// Update the friendship request in the database.
-	var filter = bson.M{"userId": user.ID, "friendId": friendID}
+	var filter = bson.M{"user_id": user.ID, "friendId": friendID}
 	// delete the friendship from the database
 	_, err := config.FriendshipCollection.DeleteOne(ctx, filter)
 	if err != nil {

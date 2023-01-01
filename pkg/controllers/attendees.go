@@ -178,8 +178,16 @@ func AcceptInvite(c *gin.Context) {
 		return
 	}
 
+	// Get User Wallet
+	wallet, err := hp.GetWallet(ctx, bson.M{"user_id": user.ID})
+	if err != nil {
+		response := hp.SetError(err, "Error getting wallet", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
 	// Check User has enough budget in wallet
-	if user.Wallet < request.Budget {
+	if wallet.Balance < request.Budget {
 		response := hp.SetError(err, "User does not have enough budget in wallet", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return

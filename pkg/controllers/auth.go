@@ -73,7 +73,6 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	user.Wallet = 0
 	user.Transactions = []hp.Transactions{}
 	user.EmailVerified = false
 	user.CreatedAt = primitive.NewDateTimeFromTime(time.Now())

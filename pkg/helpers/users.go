@@ -30,9 +30,8 @@ type UserStruct struct {
 	Social        SocialNetwork        `bson:"social" json:"social" default:"{}"`
 	Friends       []primitive.ObjectID `bson:"friends" json:"friends" default:"[]"`
 	Location      string               `bson:"location" json:"location"`
-	Wallet        float64              `bson:"wallet" json:"wallet" default:"0"`
+	Wallet        primitive.ObjectID   `bson:"wallet" json:"wallet" default:"null"`
 	Account       BankAccount          `bson:"account" json:"account" default:"{}"`
-	TxnPin        string               `bson:"txn_pin" json:"txn_pin" default:"null"`
 	Transactions  []Transactions       `bson:"transactions" json:"transactions" default:"[]"`
 	RefreshToken  string               `bson:"refresh_token,omitempty" json:"refresh_token,omitempty"`
 	EmailVerified bool                 `bson:"email_confirmed,omitempty" json:"email_confirmed,omitempty" default:"false"`
@@ -61,10 +60,9 @@ type UserResponse struct {
 	Social        interface{}          `bson:"social" json:"social"`
 	Friends       []primitive.ObjectID `bson:"friends" json:"friends"`
 	Location      string               `bson:"location" json:"location"`
-	Wallet        float64              `bson:"wallet" json:"wallet"`
+	Wallet        primitive.ObjectID   `bson:"wallet" json:"wallet"`
 	Account       BankAccount          `bson:"account" json:"account"`
 	Transactions  []Transactions       `bson:"transactions" json:"transactions"`
-	TxnPin        string               `bson:"txn_pin" json:"txn_pin"`
 	RefreshToken  string               `bson:"refresh_token,omitempty" json:"refresh_token,omitempty"`
 	EmailVerified bool                 `bson:"email_confirmed,omitempty" json:"email_confirmed,omitempty" default:"false"`
 	Role          Roles                `bson:"role" json:"role"`

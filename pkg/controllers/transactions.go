@@ -46,7 +46,7 @@ func CreateTransaction(c *gin.Context) {
 		return
 	}
 
-	sufficientBalance := hp.VerifyWalletSufficientBalance(user, request.Amount)
+	sufficientBalance := hp.VerifyWalletSufficientBalance(ctx, user, request.Amount)
 
 	if !sufficientBalance {
 		response := hp.SetError(nil, "Insufficient balance", funcName)
@@ -92,8 +92,17 @@ func UpdateTransactionStatus(c *gin.Context) {
 		return
 	}
 
+	// Get wallet
+	var wallet hp.Wallet
+	err = walletCollection.FindOne(ctx, bson.M{"user_id": user.ID}).Decode(&wallet)
+	if err != nil {
+		response := hp.SetError(err, "Error fetching wallet", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
 	// check if pin is correct
-	pin := auth.CheckPasswordHash(request.TxnPin, user.TxnPin)
+	pin := auth.CheckPasswordHash(request.TxnPin, wallet.TxnPin)
 	if !pin {
 		response := hp.SetError(nil, "Incorrect pin", funcName)
 		c.JSON(http.StatusBadRequest, response)
