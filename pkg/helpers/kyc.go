@@ -32,7 +32,7 @@ type KYC struct {
 	IdentityNumber string             `bson:"identityNumber" json:"identityNumber" binding:"required"`
 	IdentityPhoto  KYCPhoto           `bson:"identityPhoto" json:"identityPhoto" binding:"required"`
 	KYCStatus      KYCStatus          `bson:"kycStatus" json:"kycStatus" default:"unverified"`
-	UpdatedAt      primitive.DateTime `bson:"updatedAt" json:"updatedAt" default:"Now()"`
+	UpdatedAt      primitive.DateTime `bson:"updated_at" json:"updated_at" default:"Now()"`
 }
 
 // ValidateKYC DOB

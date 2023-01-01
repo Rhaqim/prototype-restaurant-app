@@ -18,8 +18,8 @@ type BankAccount struct {
 	AccountNumber string             `json:"account_number"`
 	BankCode      string             `json:"bank_code"`
 	BankName      string             `json:"bank_name"`
-	CreatedAt     primitive.DateTime `bson:"createdAt" json:"createdAt" default:"Now()"`
-	UpdatedAt     primitive.DateTime `bson:"updatedAt" json:"updatedAt"  default:"Now()"`
+	CreatedAt     primitive.DateTime `bson:"created_at" json:"created_at" default:"Now()"`
+	UpdatedAt     primitive.DateTime `bson:"updated_at" json:"updated_at"  default:"Now()"`
 }
 
 type BankTransfer struct {

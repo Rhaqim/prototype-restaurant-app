@@ -32,8 +32,8 @@ type Transactions struct {
 	Amount    float64            `json:"amount" bson:"amount"`
 	Type      TxnType            `json:"type" bson:"type"`
 	Status    TxnStatus          `json:"status" bson:"status"`
-	CreatedAt primitive.DateTime `bson:"createdAt" json:"createdAt" default:"Now()"`
-	UpdatedAt primitive.DateTime `bson:"updatedAt" json:"updatedAt" default:"Now()"`
+	CreatedAt primitive.DateTime `bson:"created_at" json:"created_at" default:"Now()"`
+	UpdatedAt primitive.DateTime `bson:"updated_at" json:"updated_at" default:"Now()"`
 }
 
 type TransactionStatus struct {

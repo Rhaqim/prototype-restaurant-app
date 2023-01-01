@@ -97,7 +97,7 @@ func UpdateRefreshToken(ctx context.Context, id primitive.ObjectID, refreshToken
 	update := bson.M{
 		"$set": bson.M{
 			"refreshToken": refreshToken,
-			"updatedAt":    primitive.NewDateTimeFromTime(time.Now()),
+			"updated_at":   primitive.NewDateTimeFromTime(time.Now()),
 		},
 	}
 	updateResult, err := usersCollection.UpdateOne(ctx, filter, update)

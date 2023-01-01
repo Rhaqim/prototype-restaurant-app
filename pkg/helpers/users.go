@@ -80,8 +80,8 @@ type CreatUser struct {
 	Role          Roles              `json:"role"`
 	RefreshToken  string             `json:"refreshToken,omitempty"`
 	EmailVerified bool               `json:"emailConfirmed,omitempty"`
-	CreatedAt     primitive.DateTime `json:"createdAt"`
-	UpdatedAt     primitive.DateTime `json:"updatedAt"`
+	CreatedAt     primitive.DateTime `json:"created_at"`
+	UpdatedAt     primitive.DateTime `json:"updated_at"`
 }
 
 type GetUserById struct {
@@ -95,8 +95,8 @@ type GetUserByEmailStruct struct {
 type UpdateUserAvatar struct {
 	ID        primitive.ObjectID `json:"id"`
 	Avatar    string             `json:"avatar"`
-	CreatedAt primitive.DateTime `json:"createdAt"`
-	UpdatedAt primitive.DateTime `json:"updatedAt"`
+	CreatedAt primitive.DateTime `json:"created_at"`
+	UpdatedAt primitive.DateTime `json:"updated_at"`
 }
 
 /*

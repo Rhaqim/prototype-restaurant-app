@@ -91,8 +91,8 @@ func CreatNewUser(c *gin.Context) {
 		"role":          user.Role,
 		"refreshToken":  user.RefreshToken,
 		"emailverified": user.EmailVerified,
-		"createdAt":     user.CreatedAt,
-		"updatedAt":     user.UpdatedAt,
+		"created_at":    user.CreatedAt,
+		"updated_at":    user.UpdatedAt,
 	}
 	insertResult, err := usersCollection.InsertOne(ctx, filter)
 	if err != nil {
@@ -200,8 +200,8 @@ func UpdateAvatar(c *gin.Context) {
 
 	update := bson.M{
 		"$set": bson.M{
-			"avatar":    request.Avatar,
-			"updatedAt": request.UpdatedAt,
+			"avatar":     request.Avatar,
+			"updated_at": request.UpdatedAt,
 		},
 	}
 

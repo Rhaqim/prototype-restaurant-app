@@ -134,7 +134,7 @@ func UpdateEvent(c *gin.Context) {
 	// 		"venue":     request.Venue,
 	// 		"type":      request.Type,
 	// 		"bill":      request.Bill,
-	// 		"updatedAt": request.UpdatedAt,
+	// 		"updated_at": request.UpdatedAt,
 	// 	},
 	// }
 

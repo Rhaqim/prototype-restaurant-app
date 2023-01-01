@@ -29,8 +29,8 @@ var SECRET_KEY string = config.JWTSecret
 var REFRESH_SECECT_KEY string = config.JWTRefreshSecret
 
 func GenerateJWT(email string, username string, userid primitive.ObjectID) (token string, refreshToken string, err error) {
-	expirationTime := time.Now().Add(1 * time.Hour)
-	refreshExpirationTime := time.Now().Add(24 * 7 * time.Hour)
+	expirationTime := config.AccessTokenExpireTime
+	refreshExpirationTime := config.RefreshTokenExpireTime
 
 	claims := &JWTClaim{
 		Email:    email,
@@ -135,7 +135,7 @@ func UpdateToken(signedToken string, signedRefreshToken string, email string, us
 	updateObj = append(updateObj, bson.E{Key: "refreshToken", Value: signedRefreshToken})
 
 	updated_at, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-	updateObj = append(updateObj, bson.E{Key: "updatedAt", Value: updated_at})
+	updateObj = append(updateObj, bson.E{Key: "updated_at", Value: updated_at})
 
 	upsert := true
 

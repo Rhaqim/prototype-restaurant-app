@@ -35,15 +35,15 @@ type Friendship struct {
 	UserID    primitive.ObjectID `json:"user_id" bson:"user_id" validate:"required"`
 	FriendID  primitive.ObjectID `json:"friendId" bson:"friendId"`
 	Status    FriendshipStatus   `json:"status" bson:"status" default:"0"`
-	CreatedAt time.Time          `json:"createdAt" bson:"createdAt" default:"time.Now()"`
-	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt" default:"time.Now()"`
+	CreatedAt time.Time          `json:"created_at" bson:"created_at" default:"time.Now()"`
+	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at" default:"time.Now()"`
 }
 
 type FriendshipRequest struct {
 	FriendID  primitive.ObjectID `json:"friendId" bson:"friendId"`
 	Status    FriendshipStatus   `json:"status" bson:"status" default:"0"`
-	CreatedAt time.Time          `json:"createdAt" bson:"createdAt" default:"time.Now()"`
-	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt" default:"time.Now()"`
+	CreatedAt time.Time          `json:"created_at" bson:"created_at" default:"time.Now()"`
+	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at" default:"time.Now()"`
 }
 
 type FriendshipAcceptRequest struct {
@@ -103,11 +103,11 @@ func SendFriendRequest(ctx context.Context, userID UserResponse, friendID primit
 
 	// Create a new friendship request.
 	friendshipRequest := bson.M{
-		"user_id":   userID.ID,
-		"friendId":  friendID,
-		"status":    FriendshipStatusPending,
-		"createdAt": time.Now(),
-		"updatedAt": time.Now(),
+		"user_id":    userID.ID,
+		"friendId":   friendID,
+		"status":     FriendshipStatusPending,
+		"created_at": time.Now(),
+		"updated_at": time.Now(),
 	}
 
 	// Insert the friendship request into the database.
@@ -136,7 +136,7 @@ func AcceptFriendRequest(ctx context.Context, FROM, TO UserResponse, friendshipI
 
 	// Update the friendship request in the database.
 	var filter = bson.M{"_id": friendshipID, "friendId": TO.ID}
-	var update = bson.M{"$set": bson.M{"status": FriendshipStatusAccepted, "updatedAt": time.Now()}}
+	var update = bson.M{"$set": bson.M{"status": FriendshipStatusAccepted, "updated_at": time.Now()}}
 	_, err := config.FriendshipCollection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		return err
@@ -173,7 +173,7 @@ func DeclineFriendRequest(ctx context.Context, FROM, TO UserResponse, friendship
 
 	// Update the friendship request in the database.
 	var filter = bson.M{"_id": friendshipID, "friendId": TO.ID}
-	var update = bson.M{"$set": bson.M{"status": FriendshipStatusDeclined, "updatedAt": time.Now()}}
+	var update = bson.M{"$set": bson.M{"status": FriendshipStatusDeclined, "updated_at": time.Now()}}
 	_, err := config.FriendshipCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
@@ -219,7 +219,7 @@ func BlockUser(ctx context.Context, user UserResponse, friendID primitive.Object
 
 	// Update the friendship request in the database.
 	var filter = bson.M{"user_id": user.ID, "friendId": friendID}
-	var update = bson.M{"$set": bson.M{"status": FriendshipStatusBlocked, "updatedAt": time.Now()}}
+	var update = bson.M{"$set": bson.M{"status": FriendshipStatusBlocked, "updated_at": time.Now()}}
 	_, err := config.FriendshipCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err

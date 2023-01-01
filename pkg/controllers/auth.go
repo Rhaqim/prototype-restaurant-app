@@ -75,8 +75,7 @@ func Signup(c *gin.Context) {
 
 	user.Transactions = []hp.Transactions{}
 	user.EmailVerified = false
-	user.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	user.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	user.CreatedAt, user.UpdatedAt = hp.CreatedAtUpdatedAt()
 
 	password, err := auth.HashAndSalt(user.Password)
 	if err != nil {
@@ -124,7 +123,7 @@ func Signup(c *gin.Context) {
 		"accessToken":  t,
 		"refreshToken": rt,
 		"user":         userResponse,
-		"expiresAt":    time.Now().Add(time.Hour * 24).Unix(),
+		"expires_at":   config.AccessTokenExpireTime.Unix(),
 	}
 
 	response := hp.SetSuccess("User created successfully", data, funcName)
@@ -207,7 +206,7 @@ func SignIn(c *gin.Context) {
 			"accessToken":  t,
 			"refreshToken": rt,
 			"user":         userResponse,
-			"expiresAt":    time.Now().Add(time.Hour * 24).Unix(),
+			"expires_at":   config.AccessTokenExpireTime.Unix(),
 		}
 		response := hp.SetSuccess("User signed in successfully", data, funcName)
 		c.JSON(http.StatusOK, response)
@@ -286,10 +285,10 @@ func RefreshToken(c *gin.Context) {
 	}
 
 	var data = gin.H{
-		"token":     t,
-		"refresh":   rt,
-		"user":      user.Username,
-		"expiresAt": time.Now().Add(time.Hour * 24).Unix(),
+		"token":      t,
+		"refresh":    rt,
+		"user":       user.Username,
+		"expires_at": config.AccessTokenExpireTime.Unix(),
 	}
 	response := hp.SetSuccess("Token refreshed successfully", data, funcName)
 	c.JSON(http.StatusOK, response)
