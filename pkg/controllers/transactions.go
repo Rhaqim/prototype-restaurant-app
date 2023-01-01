@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Rhaqim/thedutchapp/pkg/auth"
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
@@ -87,6 +88,14 @@ func UpdateTransactionStatus(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// check if pin is correct
+	pin := auth.CheckPasswordHash(request.TxnPin, user.TxnPin)
+	if !pin {
+		response := hp.SetError(nil, "Incorrect pin", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}

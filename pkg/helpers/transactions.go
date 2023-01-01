@@ -39,6 +39,7 @@ type Transactions struct {
 type TransactionStatus struct {
 	ID       primitive.ObjectID `json:"id" bson:"_id" binding:"required"`
 	Txn_uuid string             `json:"txn_uuid" bson:"txn_uuid" binding:"required"`
+	TxnPin   string             `json:"txn_pin" bson:"txn_pin" binding:"required"`
 	Status   TxnStatus          `json:"status" bson:"status" binding:"required"`
 }
 

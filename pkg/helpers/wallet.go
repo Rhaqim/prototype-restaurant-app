@@ -1,5 +1,8 @@
 package helpers
 
+type CreateWalletRequest struct {
+	TxnPin string `json:"txn_pin" bson:"txn_pin"`
+}
 type FundWalletRequest struct {
 	Amount float64 `json:"amount" bson:"amount"`
 }

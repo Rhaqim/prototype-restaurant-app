@@ -55,6 +55,7 @@ type UserResponse struct {
 	Wallet        float64              `bson:"wallet" json:"wallet"`
 	Account       BankAccount          `bson:"account" json:"account"`
 	Transactions  []Transactions       `bson:"transactions" json:"transactions"`
+	TxnPin        string               `bson:"txn_pin" json:"txn_pin"`
 	RefreshToken  string               `bson:"refresh_token,omitempty" json:"refresh_token,omitempty"`
 	EmailVerified bool                 `bson:"email_confirmed,omitempty" json:"email_confirmed,omitempty" default:"false"`
 	Role          Roles                `bson:"role" json:"role"`

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Rhaqim/thedutchapp/pkg/auth"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
@@ -55,5 +56,59 @@ func FundWallet(c *gin.Context) {
 	}
 
 	response := hp.SetSuccess("Wallet funded", user, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func CreateWallet(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	var request hp.CreateWalletRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		response := hp.SetError(err, "Error binding json", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	if user.Wallet != 0 {
+		response := hp.SetError(err, "Wallet already exists", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user.Wallet = 0
+	request.TxnPin, err = auth.HashPassword(request.TxnPin)
+	if err != nil {
+		response := hp.SetError(err, "Error hashing pin", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	filter := bson.M{"_id": user.ID}
+	update := bson.M{
+		"$set": bson.M{
+			"wallet":  user.Wallet,
+			"txn_pin": request.TxnPin,
+		}}
+
+	_, err = authCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		response := hp.SetError(err, "Error creating wallet", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("Wallet created", user, funcName)
 	c.JSON(http.StatusOK, response)
 }
