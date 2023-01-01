@@ -44,7 +44,7 @@ func Signup(c *gin.Context) {
 	var user = hp.UserStruct{}
 
 	if err := c.BindJSON(&user); err != nil {
-		response := hp.SetError(err, "fullname, username, email, password are required ", funcName)
+		response := hp.SetError(err, "Error Validating request", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
@@ -199,6 +199,7 @@ func SignIn(c *gin.Context) {
 			Friends:       user.Friends,
 			Wallet:        user.Wallet,
 			Transactions:  user.Transactions,
+			Role:          user.Role,
 			CreatedAt:     user.CreatedAt,
 			UpdatedAt:     user.UpdatedAt,
 		}

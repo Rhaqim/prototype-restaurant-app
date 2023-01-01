@@ -66,6 +66,7 @@ func GinRouter() *gin.Engine {
 		{
 			wallet.POST("/create", views.CreateWallet)
 			wallet.POST("/fund", views.FundWallet)
+			wallet.POST("/pinChange", views.ChangePin)
 		}
 	}
 

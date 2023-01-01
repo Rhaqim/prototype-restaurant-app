@@ -7,7 +7,6 @@ import (
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
-	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -88,40 +87,9 @@ func SetWarning(message string, funcName string) {
 }
 
 // REMOVE PASSWORD FROM USER STRUCT
-var PasswordOpts = options.FindOne().SetProjection(bson.M{"password": 0, "txn_pin": 0})
+var PasswordOpts = options.FindOne().SetProjection(bson.M{"password": 0})
 
 var usersCollection = database.OpenCollection(database.ConnectMongoDB(), config.DB, config.USERS)
-
-// USER VALIDATION EMAIL AND USERNAME
-func CheckIfEmailExists(email string) (bool, error) {
-	var user UserStruct
-	filter := bson.M{"email": email}
-	err := usersCollection.FindOne(context.TODO(), filter).Decode(&user)
-	if err != nil {
-		if err.Error() == "mongo: no documents in result" {
-			return false, nil
-		}
-		SetDebug(err.Error(), ut.GetFunctionName())
-		return false, err
-	}
-	return true, nil
-}
-
-func CheckIfUsernameExists(username string) (bool, error) {
-	var user UserStruct
-	err := usersCollection.FindOne(context.TODO(), bson.M{"username": username}).Decode(&user)
-	if err != nil {
-		if err.Error() == "mongo: no documents in result" {
-			return false, nil
-		}
-		SetDebug(err.Error(), ut.GetFunctionName())
-		return false, err
-	}
-	if user.Username == username {
-		return true, nil
-	}
-	return false, nil
-}
 
 // UPDATE REFRESH TOKEN
 func UpdateRefreshToken(ctx context.Context, id primitive.ObjectID, refreshToken string) error {
@@ -143,7 +111,7 @@ func UpdateRefreshToken(ctx context.Context, id primitive.ObjectID, refreshToken
 // Validate Role, TxnType, TxnStatus enums
 func RoleIsValid(role Roles) bool {
 	switch role {
-	case Admin, User:
+	case Admin, User, Business:
 		return true
 	}
 	return false

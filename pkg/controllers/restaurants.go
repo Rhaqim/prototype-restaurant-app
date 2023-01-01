@@ -42,6 +42,13 @@ func CreateRestaurant(c *gin.Context) {
 		return
 	}
 
+	// Check that User role is Business
+	if user.Role != hp.Business {
+		response := hp.SetError(err, "User is not a Business", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
 	// Modify the request
 	request.ID = primitive.NewObjectID()
 	request.OwnerID = user.ID

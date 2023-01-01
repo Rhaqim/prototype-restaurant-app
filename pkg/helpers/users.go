@@ -20,26 +20,35 @@ const (
 )
 
 type UserStruct struct {
-	ID primitive.ObjectID `bson:"_id" json:"_id,omitempty"`
-
+	ID            primitive.ObjectID   `bson:"_id,omitempty" json:"_id,omitempty"`
 	FirstName     string               `json:"first_name" bson:"first_name" binding:"required"`
 	LastName      string               `json:"last_name" bson:"last_name" binding:"required"`
 	Email         string               `bson:"email" json:"email" binding:"required,email"`
 	Username      string               `bson:"username" json:"username" binding:"required"`
 	Password      string               `bson:"password" json:"password" binding:"required,min=8,max=32,alphanum"`
-	Avatar        interface{}          `bson:"avatar" json:"avatar"`
-	Social        interface{}          `bson:"social" json:"social"`
-	Friends       []primitive.ObjectID `bson:"friends" json:"friends"`
+	Avatar        Avatar               `bson:"avatar" json:"avatar" default:"{}"`
+	Social        SocialNetwork        `bson:"social" json:"social" default:"{}"`
+	Friends       []primitive.ObjectID `bson:"friends" json:"friends" default:"[]"`
 	Location      string               `bson:"location" json:"location"`
-	Wallet        float64              `bson:"wallet" json:"wallet"`
-	Account       BankAccount          `bson:"account" json:"account"`
-	TxnPin        string               `bson:"txn_pin" json:"txn_pin" binding:"required,min=4,max=4,numeric"`
-	Transactions  []Transactions       `bson:"transactions" json:"transactions"`
+	Wallet        float64              `bson:"wallet" json:"wallet" default:"0"`
+	Account       BankAccount          `bson:"account" json:"account" default:"{}"`
+	TxnPin        string               `bson:"txn_pin" json:"txn_pin" default:"null"`
+	Transactions  []Transactions       `bson:"transactions" json:"transactions" default:"[]"`
 	RefreshToken  string               `bson:"refresh_token,omitempty" json:"refresh_token,omitempty"`
 	EmailVerified bool                 `bson:"email_confirmed,omitempty" json:"email_confirmed,omitempty" default:"false"`
 	Role          Roles                `bson:"role" json:"role" default:"user"`
 	CreatedAt     primitive.DateTime   `bson:"created_at" json:"created_at" default:"Now()"`
 	UpdatedAt     primitive.DateTime   `bson:"updated_at" json:"updated_at" default:"Now()"`
+}
+
+type Avatar struct {
+	Alt string `json:"alt,omitempty" bson:"alt,omitempty"`
+	URL string `json:"url,omitempty" bson:"url,omitempty"`
+}
+
+type SocialNetwork struct {
+	Network string `json:"network,omitempty" bson:"network,omitempty"`
+	Link    string `json:"link,omitempty" bson:"link,omitempty"`
 }
 
 type UserResponse struct {

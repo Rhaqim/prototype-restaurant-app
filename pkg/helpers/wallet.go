@@ -1,8 +1,14 @@
 package helpers
 
 type CreateWalletRequest struct {
-	TxnPin string `json:"txn_pin" bson:"txn_pin"`
+	TxnPin string `json:"txn_pin" bson:"txn_pin" binding:"required,min=4,max=4"`
 }
+
+type ChangePinRequest struct {
+	OldPin string `json:"old_pin" bson:"old_pin" binding:"required,min=4,max=4"`
+	NewPin string `json:"new_pin" bson:"new_pin" binding:"required,min=4,max=4"`
+}
+
 type FundWalletRequest struct {
 	Amount float64 `json:"amount" bson:"amount"`
 }
