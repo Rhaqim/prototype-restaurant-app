@@ -34,7 +34,7 @@ type UserStruct struct {
 	Account       BankAccount          `bson:"account" json:"account" default:"{}"`
 	Transactions  []Transactions       `bson:"transactions" json:"transactions" default:"[]"`
 	RefreshToken  string               `bson:"refresh_token,omitempty" json:"refresh_token,omitempty"`
-	EmailVerified bool                 `bson:"email_confirmed,omitempty" json:"email_confirmed,omitempty" default:"false"`
+	EmailVerified bool                 `bson:"email_confirmed" json:"email_confirmed" default:"false"`
 	Role          Roles                `bson:"role" json:"role" default:"user"`
 	CreatedAt     primitive.DateTime   `bson:"created_at" json:"created_at" default:"Now()"`
 	UpdatedAt     primitive.DateTime   `bson:"updated_at" json:"updated_at" default:"Now()"`

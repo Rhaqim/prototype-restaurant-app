@@ -76,6 +76,7 @@ func Signup(c *gin.Context) {
 	user.Transactions = []hp.Transactions{}
 	user.EmailVerified = false
 	user.CreatedAt, user.UpdatedAt = hp.CreatedAtUpdatedAt()
+	user.Account.CreatedAt, user.Account.UpdatedAt = hp.CreatedAtUpdatedAt()
 
 	password, err := auth.HashAndSalt(user.Password)
 	if err != nil {
