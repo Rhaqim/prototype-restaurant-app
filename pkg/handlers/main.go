@@ -64,7 +64,8 @@ func GinRouter() *gin.Engine {
 		/* Wallet Routes */
 		wallet := user.Group("/wallet")
 		{
-			wallet.POST("/fundWallet", views.FundWallet)
+			wallet.POST("/create", views.CreateWallet)
+			wallet.POST("/fund", views.FundWallet)
 		}
 	}
 
