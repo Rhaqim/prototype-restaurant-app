@@ -20,8 +20,8 @@ type Product struct {
 	Category     Categories         `json:"category,omitempty" bson:"category" binding:"required"`
 	Price        float64            `json:"price,omitempty" bson:"price" binding:"required"`
 	Stock        int                `json:"stock,omitempty" bson:"stock" binding:"required"`
-	CreatedAt    primitive.DateTime `json:"created_at,omitempty" bson:"created_at" default:"now()"`
-	UpdatedAt    primitive.DateTime `json:"updated_at,omitempty" bson:"updated_at" default:"now()"`
+	CreatedAt    primitive.DateTime `json:"created_at,omitempty" bson:"created_at" default:"time.Now()"`
+	UpdatedAt    primitive.DateTime `json:"updated_at,omitempty" bson:"updated_at" default:"time.Now()"`
 }
 
 type Products []Product

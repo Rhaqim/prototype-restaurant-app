@@ -14,8 +14,8 @@ type Order struct {
 	CustomerID primitive.ObjectID `json:"customer_id,omitempty" bson:"customer_id,omitempty"`
 	Products   []OrderRequest     `json:"products,omitempty" bson:"products" min:"1" binding:"required"`
 	Bill       float64            `json:"bill,omitempty" bson:"bill" binding:"number" default:"0"`
-	CreatedAt  primitive.DateTime `json:"created_at" bson:"created_at" default:"now()"`
-	UpdatedAt  primitive.DateTime `json:"updated_at" bson:"updated_at" default:"now()"`
+	CreatedAt  primitive.DateTime `json:"created_at" bson:"created_at" default:"time.Now()"`
+	UpdatedAt  primitive.DateTime `json:"updated_at" bson:"updated_at" default:"time.Now()"`
 }
 
 type Orders []Order

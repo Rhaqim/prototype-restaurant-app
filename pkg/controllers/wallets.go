@@ -12,6 +12,7 @@ import (
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var walletCollection = config.WalletCollection
@@ -87,7 +88,7 @@ func CreateWallet(c *gin.Context) {
 	}
 
 	// Check if User has a Wallet already
-	exists, err := hp.CheckifWalletExists(ctx, bson.M{"_id": user.Wallet})
+	exists, err := hp.CheckifWalletExists(ctx, bson.M{"user_id": user.ID})
 	if err != nil {
 		response := hp.SetError(err, "Error checking if wallet exists", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
@@ -96,6 +97,16 @@ func CreateWallet(c *gin.Context) {
 
 	if exists {
 		response := hp.SetError(err, "Wallet already exists", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// modify request
+	request.ID = primitive.NewObjectID()
+	request.UserID = user.ID
+	request.TxnPin, err = auth.HashPassword(request.TxnPin)
+	if err != nil {
+		response := hp.SetError(err, "Error hashing password", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
@@ -135,7 +146,7 @@ func ChangePin(c *gin.Context) {
 	}
 
 	// Get user wallet
-	wallet, err := hp.GetWallet(ctx, bson.M{"_id": user.Wallet})
+	wallet, err := hp.GetWallet(ctx, bson.M{"user_id": user.ID})
 	if err != nil {
 		response := hp.SetError(err, "Error getting wallet", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)

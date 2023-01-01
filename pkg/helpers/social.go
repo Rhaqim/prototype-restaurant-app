@@ -35,15 +35,15 @@ type Friendship struct {
 	UserID    primitive.ObjectID `json:"user_id" bson:"user_id" validate:"required"`
 	FriendID  primitive.ObjectID `json:"friendId" bson:"friendId"`
 	Status    FriendshipStatus   `json:"status" bson:"status" default:"0"`
-	CreatedAt time.Time          `json:"createdAt" bson:"createdAt" default:"now()"`
-	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt" default:"now()"`
+	CreatedAt time.Time          `json:"createdAt" bson:"createdAt" default:"time.Now()"`
+	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt" default:"time.Now()"`
 }
 
 type FriendshipRequest struct {
 	FriendID  primitive.ObjectID `json:"friendId" bson:"friendId"`
 	Status    FriendshipStatus   `json:"status" bson:"status" default:"0"`
-	CreatedAt time.Time          `json:"createdAt" bson:"createdAt" default:"now()"`
-	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt" default:"now()"`
+	CreatedAt time.Time          `json:"createdAt" bson:"createdAt" default:"time.Now()"`
+	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt" default:"time.Now()"`
 }
 
 type FriendshipAcceptRequest struct {
