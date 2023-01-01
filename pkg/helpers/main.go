@@ -88,7 +88,7 @@ func SetWarning(message string, funcName string) {
 }
 
 // REMOVE PASSWORD FROM USER STRUCT
-var PasswordOpts = options.FindOne().SetProjection(bson.M{"password": 0})
+var PasswordOpts = options.FindOne().SetProjection(bson.M{"password": 0, "txn_pin": 0})
 
 var usersCollection = database.OpenCollection(database.ConnectMongoDB(), config.DB, config.USERS)
 

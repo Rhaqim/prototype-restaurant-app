@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 
@@ -54,26 +53,19 @@ func CreateTransaction(c *gin.Context) {
 		return
 	}
 
+	// modify the request
+	request.ID = primitive.NewObjectID()
+	request.FromID = user.ID
 	request.Status = hp.TxnPending
 	request.Txn_uuid = ut.GenerateUUID()
 
-	insertResult, err := config.TransactionsCollection.InsertOne(ctx, request)
+	_, err = config.TransactionsCollection.InsertOne(ctx, request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	transactionResponse := hp.Transactions{
-		ID:       insertResult.InsertedID.(primitive.ObjectID),
-		Txn_uuid: request.Txn_uuid,
-		FromID:   user.ID,
-		ToID:     request.ToID,
-		Amount:   request.Amount,
-		Type:     request.Type,
-		Status:   request.Status,
-	}
-
-	response := hp.SetSuccess("Transaction created successfully", transactionResponse, funcName)
+	response := hp.SetSuccess("Transaction created successfully", request, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -101,7 +93,6 @@ func UpdateTransactionStatus(c *gin.Context) {
 
 	// Check Transaction Type Validity
 	ok := hp.TxnStatusIsValid(request.Status)
-
 	if !ok {
 		response := hp.SetError(nil, "Invalid Transaction Type", funcName)
 		c.JSON(http.StatusBadRequest, response)
@@ -126,7 +117,6 @@ func UpdateTransactionStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	log.Println("updateResult: ", updateResult)
 
 	// Update Wallet Balance
 	var transaction hp.Transactions

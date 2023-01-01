@@ -22,8 +22,8 @@ const (
 type UserStruct struct {
 	ID primitive.ObjectID `bson:"_id" json:"_id,omitempty"`
 
-	FirstName     string               `json:"firstName" bson:"firstName" binding:"required"`
-	LastName      string               `json:"lastName" bson:"lastName" binding:"required"`
+	FirstName     string               `json:"first_name" bson:"first_name" binding:"required"`
+	LastName      string               `json:"last_name" bson:"last_name" binding:"required"`
 	Email         string               `bson:"email" json:"email" binding:"required,email"`
 	Username      string               `bson:"username" json:"username" binding:"required"`
 	Password      string               `bson:"password" json:"password" binding:"required,min=8,max=32,alphanum"`
@@ -33,18 +33,19 @@ type UserStruct struct {
 	Location      string               `bson:"location" json:"location"`
 	Wallet        float64              `bson:"wallet" json:"wallet"`
 	Account       BankAccount          `bson:"account" json:"account"`
+	TxnPin        string               `bson:"txn_pin" json:"txn_pin" binding:"required,min=4,max=4,numeric"`
 	Transactions  []Transactions       `bson:"transactions" json:"transactions"`
-	RefreshToken  string               `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
-	EmailVerified bool                 `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty" default:"false"`
+	RefreshToken  string               `bson:"refresh_token,omitempty" json:"refresh_token,omitempty"`
+	EmailVerified bool                 `bson:"email_confirmed,omitempty" json:"email_confirmed,omitempty" default:"false"`
 	Role          Roles                `bson:"role" json:"role" default:"user"`
-	CreatedAt     primitive.DateTime   `bson:"createdAt" json:"createdAt" default:"Now()"`
-	UpdatedAt     primitive.DateTime   `bson:"updatedAt" json:"updatedAt" default:"Now()"`
+	CreatedAt     primitive.DateTime   `bson:"created_at" json:"created_at" default:"Now()"`
+	UpdatedAt     primitive.DateTime   `bson:"updated_at" json:"updated_at" default:"Now()"`
 }
 
 type UserResponse struct {
 	ID            primitive.ObjectID   `bson:"_id" json:"_id,omitempty"`
-	FirstName     string               `json:"firstName"`
-	LastName      string               `json:"lastName"`
+	FirstName     string               `json:"first_name"`
+	LastName      string               `json:"last_name"`
 	Email         string               `bson:"email" json:"email"`
 	Username      string               `bson:"username" json:"username"`
 	Avatar        interface{}          `bson:"avatar" json:"avatar"`
@@ -54,11 +55,11 @@ type UserResponse struct {
 	Wallet        float64              `bson:"wallet" json:"wallet"`
 	Account       BankAccount          `bson:"account" json:"account"`
 	Transactions  []Transactions       `bson:"transactions" json:"transactions"`
-	RefreshToken  string               `bson:"refreshToken,omitempty" json:"refreshToken,omitempty"`
-	EmailVerified bool                 `bson:"emailConfirmed,omitempty" json:"emailConfirmed,omitempty" default:"false"`
+	RefreshToken  string               `bson:"refresh_token,omitempty" json:"refresh_token,omitempty"`
+	EmailVerified bool                 `bson:"email_confirmed,omitempty" json:"email_confirmed,omitempty" default:"false"`
 	Role          Roles                `bson:"role" json:"role"`
-	CreatedAt     primitive.DateTime   `bson:"createdAt" json:"createdAt"`
-	UpdatedAt     primitive.DateTime   `bson:"updatedAt" json:"updatedAt"`
+	CreatedAt     primitive.DateTime   `bson:"created_at" json:"created_at"`
+	UpdatedAt     primitive.DateTime   `bson:"updated_at" json:"updated_at"`
 }
 
 type CreatUser struct {
