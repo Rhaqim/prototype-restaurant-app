@@ -17,54 +17,6 @@ import (
 
 var walletCollection = config.WalletCollection
 
-func FundWallet(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
-	var funcName = ut.GetFunctionName()
-
-	request := hp.FundWalletRequest{}
-
-	if err := c.ShouldBindJSON(&request); err != nil {
-		response := hp.SetError(err, "Error binding json", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	user, err := hp.GetUserFromToken(c)
-	if err != nil {
-		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	// Await a response from the Paystack API
-	// paystackResponse, err := hp.FundWalletPaystack(request, user)
-	// if err != nil {
-	// 	response := hp.SetError(err, "Error funding wallet", funcName)
-	// 	c.AbortWithStatusJSON(http.StatusBadRequest, response)
-	// 	return
-	// }
-
-	// user.Wallet += request.Amount
-
-	filter := bson.M{"user_id": user.ID}
-	update := bson.M{"$set": bson.M{
-		"balance": +request.Amount,
-	}}
-
-	_, err = walletCollection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		response := hp.SetError(err, "Error updating user", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	response := hp.SetSuccess("Wallet funded", user, funcName)
-	c.JSON(http.StatusOK, response)
-}
-
 func CreateWallet(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
@@ -94,7 +46,6 @@ func CreateWallet(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
-
 	if exists {
 		response := hp.SetError(err, "Wallet already exists", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
@@ -116,6 +67,19 @@ func CreateWallet(c *gin.Context) {
 	insertResult, err := walletCollection.InsertOne(ctx, request)
 	if err != nil {
 		response := hp.SetError(err, "Error creating wallet", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// update user with wallet id
+	filter := bson.M{"_id": user.ID}
+	update := bson.M{"$set": bson.M{
+		"wallet": insertResult.InsertedID,
+	}}
+
+	_, err = authCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		response := hp.SetError(err, "Error updating user", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
@@ -184,5 +148,53 @@ func ChangePin(c *gin.Context) {
 	}
 
 	response := hp.SetSuccess("Pin changed", user, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func FundWallet(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	request := hp.FundWalletRequest{}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		response := hp.SetError(err, "Error binding json", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Await a response from the Paystack API
+	// paystackResponse, err := hp.FundWalletPaystack(request, user)
+	// if err != nil {
+	// 	response := hp.SetError(err, "Error funding wallet", funcName)
+	// 	c.AbortWithStatusJSON(http.StatusBadRequest, response)
+	// 	return
+	// }
+
+	// user.Wallet += request.Amount
+
+	filter := bson.M{"user_id": user.ID}
+	update := bson.M{"$set": bson.M{
+		"balance": +request.Amount,
+	}}
+
+	_, err = walletCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		response := hp.SetError(err, "Error updating user", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("Wallet funded", user, funcName)
 	c.JSON(http.StatusOK, response)
 }
