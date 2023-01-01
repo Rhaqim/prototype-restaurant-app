@@ -110,6 +110,7 @@ func CreateWallet(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
+	request.CreatedAt, request.UpdatedAt = hp.CreatedAtUpdatedAt()
 
 	// Create a new wallet
 	insertResult, err := walletCollection.InsertOne(ctx, request)
@@ -171,7 +172,8 @@ func ChangePin(c *gin.Context) {
 	filter := bson.M{"_id": wallet.ID}
 	update := bson.M{
 		"$set": bson.M{
-			"txn_pin": request.NewPin,
+			"txn_pin":    request.NewPin,
+			"updated_at": time.Now().Format("2006-01-02 15:04:05"),
 		}}
 
 	_, err = walletCollection.UpdateOne(ctx, filter, update)

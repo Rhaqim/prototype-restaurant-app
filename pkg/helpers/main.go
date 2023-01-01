@@ -151,3 +151,9 @@ func UpdateInDB(ctx context.Context, filter bson.M, update bson.M, collection *m
 	}
 	return nil
 }
+
+// CreatedAt and UpdatedAt Helper
+func CreatedAtUpdatedAt() (primitive.DateTime, primitive.DateTime) {
+	now := primitive.NewDateTimeFromTime(time.Now())
+	return now, now
+}
