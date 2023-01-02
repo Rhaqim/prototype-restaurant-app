@@ -110,5 +110,16 @@ func GinRouter() *gin.Engine {
 		// restaurant.DELETE("/deleteRestaurant", views.DeleteRestaurant)
 	}
 
+	/* Product Routes */
+	product := router.Group("/product")
+	// product.GET("/getProductById", views.GetProductByID)
+	// product.GET("/getProductByName", views.GetProductByName)
+	product.Use(TokenGuardMiddleware())
+	{
+		product.POST("/add", views.AddProduct)
+		// product.PUT("/updateProduct", views.UpdateProduct)
+		// product.DELETE("/deleteProduct", views.DeleteProduct)
+	}
+
 	return router
 }

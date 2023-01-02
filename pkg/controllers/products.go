@@ -50,6 +50,7 @@ func AddProduct(c *gin.Context) {
 	request.ID = primitive.NewObjectID()
 	request.SuppliedID = user.ID
 	request.Category = hp.Categories(hp.Categories(request.Category).String())
+	request.CreatedAt, request.UpdatedAt = hp.CreatedAtUpdatedAt()
 
 	insertResult, err := productCollection.InsertOne(ctx, request)
 	if err != nil {

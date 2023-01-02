@@ -53,3 +53,15 @@ func (h OpenHours) OpenBeforeClose() bool {
 	close, _ := time.Parse("15:04", h.Close)
 	return open.Before(close)
 }
+
+// Available times
+func (h OpenHours) AvailableTimes() []string {
+	var times []string
+	open, _ := time.Parse("15:04", h.Open)
+	close, _ := time.Parse("15:04", h.Close)
+	for open.Before(close) {
+		times = append(times, open.Format("15:04"))
+		open = open.Add(time.Minute * 30)
+	}
+	return times
+}

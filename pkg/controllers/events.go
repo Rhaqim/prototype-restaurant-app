@@ -41,6 +41,7 @@ func CreateEvent(c *gin.Context) {
 	request.ID = primitive.NewObjectID()
 	request.HostID = user.ID
 	request.Type = hp.EventType(hp.EventType(request.Type).String())
+	request.CreatedAt, request.UpdatedAt = hp.CreatedAtUpdatedAt()
 
 	// validate open hours
 	err = hp.OpenHours(request.Time).Validate()
