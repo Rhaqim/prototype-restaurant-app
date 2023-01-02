@@ -31,6 +31,12 @@ func SendFriendRequest(c *gin.Context) {
 		return
 	}
 
+	// Check prior request not sent
+	if hp.CheckIfRequestExists(user, request.FriendID) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, hp.SetError(nil, "Friend request already sent", funcName))
+		return
+	}
+
 	// Send Friend Request
 	// Send a friend request to another user.
 	friendRequest, err := hp.SendFriendRequest(ctx, user, request.FriendID)

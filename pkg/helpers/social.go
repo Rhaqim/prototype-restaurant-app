@@ -33,14 +33,14 @@ const (
 type Friendship struct {
 	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id"`
 	UserID    primitive.ObjectID `json:"user_id" bson:"user_id" validate:"required"`
-	FriendID  primitive.ObjectID `json:"friendId" bson:"friendId"`
+	FriendID  primitive.ObjectID `json:"friend_id" bson:"friend_id"`
 	Status    FriendshipStatus   `json:"status" bson:"status" default:"0"`
 	CreatedAt time.Time          `json:"created_at" bson:"created_at" default:"time.Now()"`
 	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at" default:"time.Now()"`
 }
 
 type FriendshipRequest struct {
-	FriendID  primitive.ObjectID `json:"friendId" bson:"friendId"`
+	FriendID  primitive.ObjectID `json:"friend_id" bson:"friend_id"`
 	Status    FriendshipStatus   `json:"status" bson:"status" default:"0"`
 	CreatedAt time.Time          `json:"created_at" bson:"created_at" default:"time.Now()"`
 	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at" default:"time.Now()"`
@@ -49,7 +49,26 @@ type FriendshipRequest struct {
 type FriendshipAcceptRequest struct {
 	ID       primitive.ObjectID `json:"id,omitempty" bson:"_id"`
 	UserID   primitive.ObjectID `json:"user_id" bson:"user_id" validate:"required"`
-	FriendID primitive.ObjectID `json:"friendId" bson:"friendId"`
+	FriendID primitive.ObjectID `json:"friend_id" bson:"friend_id"`
+}
+
+// Check if request has been sent already
+func CheckIfRequestExists(user UserResponse, friendID primitive.ObjectID) bool {
+	var friend Friendship
+	err := config.FriendshipCollection.FindOne(context.TODO(), bson.M{"user_id": user.ID, "friend_id": friendID}).Decode(&friend)
+	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return false
+		}
+		SetDebug(err.Error(), ut.GetFunctionName())
+		return false
+	}
+
+	if friend.Status == FriendshipStatusPending {
+		return true
+	}
+
+	return false
 }
 
 func checkIfFriendExists(user, friend UserResponse) bool {
@@ -104,7 +123,7 @@ func SendFriendRequest(ctx context.Context, userID UserResponse, friendID primit
 	// Create a new friendship request.
 	friendshipRequest := bson.M{
 		"user_id":    userID.ID,
-		"friendId":   friendID,
+		"friend_id":  friendID,
 		"status":     FriendshipStatusPending,
 		"created_at": time.Now(),
 		"updated_at": time.Now(),
@@ -135,7 +154,7 @@ func AcceptFriendRequest(ctx context.Context, FROM, TO UserResponse, friendshipI
 	}
 
 	// Update the friendship request in the database.
-	var filter = bson.M{"_id": friendshipID, "friendId": TO.ID}
+	var filter = bson.M{"_id": friendshipID, "friend_id": TO.ID}
 	var update = bson.M{"$set": bson.M{"status": FriendshipStatusAccepted, "updated_at": time.Now()}}
 	_, err := config.FriendshipCollection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
@@ -172,7 +191,7 @@ func DeclineFriendRequest(ctx context.Context, FROM, TO UserResponse, friendship
 	}
 
 	// Update the friendship request in the database.
-	var filter = bson.M{"_id": friendshipID, "friendId": TO.ID}
+	var filter = bson.M{"_id": friendshipID, "friend_id": TO.ID}
 	var update = bson.M{"$set": bson.M{"status": FriendshipStatusDeclined, "updated_at": time.Now()}}
 	_, err := config.FriendshipCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -186,7 +205,7 @@ func GetSocial(ctx context.Context, userID primitive.ObjectID, status Friendship
 	var friendRequests []FriendshipRequest
 
 	// Find all the friendship requests for the user.
-	cursor, err := config.FriendshipCollection.Find(ctx, bson.M{"friendId": userID, "status": status})
+	cursor, err := config.FriendshipCollection.Find(ctx, bson.M{"friend_id": userID, "status": status})
 	if err != nil {
 		return friendRequests, err
 	}
@@ -218,7 +237,7 @@ func BlockUser(ctx context.Context, user UserResponse, friendID primitive.Object
 	}
 
 	// Update the friendship request in the database.
-	var filter = bson.M{"user_id": user.ID, "friendId": friendID}
+	var filter = bson.M{"user_id": user.ID, "friend_id": friendID}
 	var update = bson.M{"$set": bson.M{"status": FriendshipStatusBlocked, "updated_at": time.Now()}}
 	_, err := config.FriendshipCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -255,7 +274,7 @@ func UnblockUser(ctx context.Context, user UserResponse, friendID primitive.Obje
 	}
 
 	// Update the friendship request in the database.
-	var filter = bson.M{"user_id": user.ID, "friendId": friendID}
+	var filter = bson.M{"user_id": user.ID, "friend_id": friendID}
 	// delete the friendship from the database
 	_, err := config.FriendshipCollection.DeleteOne(ctx, filter)
 	if err != nil {
