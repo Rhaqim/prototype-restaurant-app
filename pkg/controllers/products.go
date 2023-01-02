@@ -46,6 +46,15 @@ func AddProduct(c *gin.Context) {
 		return
 	}
 
+	// Check that product name is unique
+	filter := bson.M{"name": request.Name, "restaurant_id": request.RestaurantID}
+	_, err = hp.GetProduct(ctx, filter)
+	if err == nil {
+		response := hp.SetError(err, "Product name already exists", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
 	// Modify the request
 	request.ID = primitive.NewObjectID()
 	request.SuppliedID = user.ID
