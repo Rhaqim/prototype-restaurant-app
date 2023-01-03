@@ -4,9 +4,12 @@ import (
 	"context"
 	"sync"
 
+	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+var orderCollection = config.OrderCollection
 
 type Order struct {
 	ID         primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
@@ -109,4 +112,59 @@ func UpdateStock(ctx context.Context, request Order, errChan chan error) {
 		wg.Wait()
 		close(errChan)
 	}()
+}
+
+func GetOrders(c context.Context, filter bson.M) (Orders, error) {
+	var orders Orders
+
+	cur, err := orderCollection.Find(c, filter)
+	if err != nil {
+		return orders, err
+	}
+
+	for cur.Next(c) {
+		var order Order
+		err := cur.Decode(&order)
+		if err != nil {
+			return orders, err
+		}
+		orders = append(orders, order)
+	}
+
+	return orders, nil
+}
+
+func GetOrder(c context.Context, filter bson.M) (Order, error) {
+	var order Order
+
+	err := orderCollection.FindOne(c, filter).Decode(&order)
+	if err != nil {
+		return order, err
+	}
+
+	return order, nil
+}
+
+func GetOrdersbyEventID(c context.Context, id primitive.ObjectID) (Orders, error) {
+	var orders Orders
+
+	filter := bson.M{"event_id": id}
+	orders, err := GetOrders(c, filter)
+	if err != nil {
+		return orders, err
+	}
+
+	return orders, nil
+}
+
+func GetOrderbyID(c context.Context, id primitive.ObjectID) (Order, error) {
+	var order Order
+
+	filter := bson.M{"_id": id}
+	order, err := GetOrder(c, filter)
+	if err != nil {
+		return order, err
+	}
+
+	return order, nil
 }

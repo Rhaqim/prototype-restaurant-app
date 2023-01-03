@@ -78,3 +78,43 @@ func GetProductbyID(c context.Context, productID primitive.ObjectID) (Product, e
 	SetInfo(fmt.Sprintf("Product %v found", product.Name), funcName)
 	return product, nil
 }
+
+func GetProductbyName(c context.Context, productName string) (Product, error) {
+	var product Product
+
+	funcName := ut.GetFunctionName()
+
+	filter := bson.M{"name": productName}
+
+	product, err := GetProduct(c, filter)
+	if err != nil {
+		SetDebug(err.Error(), funcName)
+		return product, err
+	}
+
+	SetInfo(fmt.Sprintf("Product %v found", product.Name), funcName)
+	return product, nil
+}
+
+func GetAllProductByRestaurant(c context.Context, restaurantID primitive.ObjectID) (Products, error) {
+	var products Products
+
+	funcName := ut.GetFunctionName()
+
+	filter := bson.M{"restaurant_id": restaurantID}
+
+	cursor, err := productCollection.Find(c, filter)
+	if err != nil {
+		SetDebug(err.Error(), funcName)
+		return products, err
+	}
+
+	for cursor.Next(c) {
+		var product Product
+		cursor.Decode(&product)
+		products = append(products, product)
+	}
+
+	SetInfo(fmt.Sprintf("Found %v products", len(products)), funcName)
+	return products, nil
+}
