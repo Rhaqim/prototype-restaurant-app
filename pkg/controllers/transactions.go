@@ -33,7 +33,7 @@ func CreateTransaction(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -88,7 +88,7 @@ func UpdateTransactionStatus(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.JSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 

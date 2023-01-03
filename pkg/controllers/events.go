@@ -34,7 +34,7 @@ func CreateEvent(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -72,7 +72,7 @@ func GetUserEventsByHost(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -113,7 +113,7 @@ func UpdateEvent(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -165,7 +165,7 @@ func DeleteEvent(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 

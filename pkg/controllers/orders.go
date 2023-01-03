@@ -34,7 +34,7 @@ func CreateOrder(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -85,7 +85,7 @@ func GetOrders(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -119,7 +119,7 @@ func GetOrder(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -154,7 +154,7 @@ func GetUserEventOrders(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 

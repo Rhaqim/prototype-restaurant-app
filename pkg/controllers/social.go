@@ -27,7 +27,7 @@ func SendFriendRequest(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -67,7 +67,7 @@ func AcceptFriendRequest(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -109,7 +109,7 @@ func DeclineFriendRequest(c *gin.Context) {
 	user, err := hp.GetUserFromToken(c)
 	if err != nil {
 		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 		return
 	}
 
