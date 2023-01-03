@@ -12,8 +12,12 @@ import (
 
 var productCollection = config.ProductCollection
 
+// unique id for products
+var ProductUID = "PC-" + ut.GenerateUUID()
+
 type Product struct {
-	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id"`
+	ProductUID   string             `json:"product_uid,omitempty" bson:"product_uid"`
 	SuppliedID   primitive.ObjectID `json:"supplied_id,omitempty" bson:"supplied_id,omitempty"`
 	RestaurantID primitive.ObjectID `json:"restaurant_id,omitempty" bson:"restaurant_id,omitempty"`
 	Name         string             `json:"name,omitempty" bson:"name" binding:"required,min=3,max=50,lowercase"`

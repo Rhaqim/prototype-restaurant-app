@@ -52,6 +52,7 @@ func CreateRestaurant(c *gin.Context) {
 
 	// Modify the request
 	request.ID = primitive.NewObjectID()
+	request.RestaurantUID = hp.RestaurantUID
 	request.OwnerID = user.ID
 	request.Category = hp.RestaurantCategory(hp.RestaurantCategory(request.Category).String())
 	request.CreatedAt, request.UpdatedAt = hp.CreatedAtUpdatedAt()
@@ -104,11 +105,11 @@ func GetRestaurant(c *gin.Context) {
 
 	var funcName = ut.GetFunctionName()
 
-	// Get restaurant id from request params
-	restaurantID := c.Param("id")
+	// Get restaurant id from request query params
+	restaurantID := c.Query("id")
 
-	// Get restaurant name from request params
-	restaurantName := c.Param("name")
+	// Get restaurant name from request query params
+	restaurantName := c.Query("name")
 
 	var filter bson.M
 
@@ -152,11 +153,11 @@ func GetRestaurants(c *gin.Context) {
 
 	var funcName = ut.GetFunctionName()
 
-	// Get restaurant id from request params
-	category := c.Param("category")
+	// Get restaurant id from request query params
+	category := c.Query("category")
 
-	// Get restaurant name from request params
-	country := c.Param("country")
+	// Get restaurant name from request query params
+	country := c.Query("country")
 
 	var filter bson.M
 
@@ -170,7 +171,7 @@ func GetRestaurants(c *gin.Context) {
 	}
 
 	// Get restaurant from db
-	restaurant, err := hp.GetRestaurant(ctx, filter)
+	restaurant, err := hp.GetRestaurants(ctx, filter)
 	if err != nil {
 		response := hp.SetError(err, "Error getting restaurant", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)

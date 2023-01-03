@@ -56,9 +56,9 @@ func CreateTransaction(c *gin.Context) {
 
 	// modify the request
 	request.ID = primitive.NewObjectID()
+	request.TransactionUID = hp.TransactionUID
 	request.FromID = user.ID
 	request.Status = hp.TxnPending
-	request.Txn_uuid = ut.GenerateUUID()
 
 	_, err = config.TransactionsCollection.InsertOne(ctx, request)
 	if err != nil {

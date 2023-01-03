@@ -57,6 +57,7 @@ func AddProduct(c *gin.Context) {
 
 	// Modify the request
 	request.ID = primitive.NewObjectID()
+	request.ProductUID = hp.ProductUID
 	request.SuppliedID = user.ID
 	request.Category = hp.Categories(hp.Categories(request.Category).String())
 	request.CreatedAt, request.UpdatedAt = hp.CreatedAtUpdatedAt()

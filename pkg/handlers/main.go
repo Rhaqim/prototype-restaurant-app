@@ -102,8 +102,8 @@ func GinRouter() *gin.Engine {
 
 	/* Restaurant Routes */
 	restaurant := router.Group("/restaurant")
-	// restaurant.GET("/getRestaurantById", views.GetRestaurantByID)
-	// restaurant.GET("/getRestaurantByName", views.GetRestaurantByName)
+	restaurant.GET("/getRestaurant", views.GetRestaurant)
+	restaurant.GET("/getRestaurants", views.GetRestaurants)
 	restaurant.Use(TokenGuardMiddleware())
 	{
 		restaurant.POST("/create", views.CreateRestaurant)

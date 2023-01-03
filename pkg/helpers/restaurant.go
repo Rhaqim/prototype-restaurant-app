@@ -13,20 +13,24 @@ import (
 
 var restaurantCollection = config.RestaurantCollection
 
+// unique id for restaurants
+var RestaurantUID = "RC-" + ut.GenerateUUID()
+
 type Restaurant struct {
-	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	OwnerID   primitive.ObjectID `json:"owner_id,omitempty" bson:"owner_id,omitempty"`
-	Name      string             `json:"name,omitempty" bson:"name" binding:"required,lowercase"`
-	Phone     string             `json:"phone,omitempty" bson:"phone" binding:"required"`
-	Email     string             `json:"email,omitempty" bson:"email" binding:"required,email"`
-	Address   string             `json:"address,omitempty" bson:"address" binding:"required,lowercase"`
-	Country   string             `json:"country,omitempty" bson:"country" binding:"required,iso3166_1_alpha2"`
-	Category  RestaurantCategory `json:"category,omitempty" bson:"category" binding:"required"`
-	OpenHours [7]OpenHours       `json:"open_hours,omitempty" bson:"open_hours" binding:"required,dive"`
-	Currency  string             `json:"currency,omitempty" bson:"currency" binding:"required"`
-	Verified  bool               `json:"verified,omitempty" bson:"verified"`
-	CreatedAt primitive.DateTime `json:"created_at,omitempty" bson:"created_at" default:"time.Now()"`
-	UpdatedAt primitive.DateTime `json:"updated_at,omitempty" bson:"updated_at" default:"time.Now()"`
+	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	RestaurantUID string             `json:"restaurant_uid,omitempty" bson:"restaurant_uid"`
+	OwnerID       primitive.ObjectID `json:"owner_id,omitempty" bson:"owner_id,omitempty"`
+	Name          string             `json:"name,omitempty" bson:"name" binding:"required"`
+	Phone         string             `json:"phone,omitempty" bson:"phone" binding:"required"`
+	Email         string             `json:"email,omitempty" bson:"email" binding:"required,email"`
+	Address       string             `json:"address,omitempty" bson:"address" binding:"required,lowercase"`
+	Country       string             `json:"country,omitempty" bson:"country" binding:"required,iso3166_1_alpha2"`
+	Category      RestaurantCategory `json:"category,omitempty" bson:"category" binding:"required"`
+	OpenHours     [7]OpenHours       `json:"open_hours,omitempty" bson:"open_hours" binding:"required,dive"`
+	Currency      string             `json:"currency,omitempty" bson:"currency" binding:"required"`
+	Verified      bool               `json:"verified,omitempty" bson:"verified"`
+	CreatedAt     primitive.DateTime `json:"created_at,omitempty" bson:"created_at" default:"time.Now()"`
+	UpdatedAt     primitive.DateTime `json:"updated_at,omitempty" bson:"updated_at" default:"time.Now()"`
 }
 
 type RestaurantCategory string
@@ -41,13 +45,13 @@ const (
 func (rc RestaurantCategory) String() string {
 	switch rc {
 	case Bar:
-		return "Bar"
+		return "bar"
 	case Lounge:
-		return "Lounge"
+		return "lounge"
 	case Cafe:
-		return "Cafe"
+		return "cafe"
 	default:
-		return "Bar"
+		return "bar"
 	}
 }
 
@@ -63,6 +67,27 @@ func GetRestaurant(c context.Context, filter bson.M) (Restaurant, error) {
 	}
 
 	return restaurant, nil
+
+}
+
+func GetRestaurants(c context.Context, filter bson.M) ([]Restaurant, error) {
+
+	var funcName = ut.GetFunctionName()
+	var restaurants []Restaurant
+
+	cursor, err := restaurantCollection.Find(c, filter)
+	if err != nil {
+		SetDebug(err.Error(), funcName)
+		return restaurants, err
+	}
+
+	err = cursor.All(c, &restaurants)
+	if err != nil {
+		SetDebug(err.Error(), funcName)
+		return restaurants, err
+	}
+
+	return restaurants, nil
 
 }
 
