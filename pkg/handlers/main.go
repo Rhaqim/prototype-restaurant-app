@@ -81,6 +81,7 @@ func GinRouter() *gin.Engine {
 		event.DELETE("/deleteEvent/:id", views.DeleteEvent)
 		event.GET("/getEventByHost", views.GetUserEventsByHost)
 
+		/* Order Routes */
 		order := event.Group("/order")
 		{
 			order.POST("create", views.CreateOrder)
@@ -106,8 +107,8 @@ func GinRouter() *gin.Engine {
 	restaurant.Use(TokenGuardMiddleware())
 	{
 		restaurant.POST("/create", views.CreateRestaurant)
-		// restaurant.PUT("/updateRestaurant", views.UpdateRestaurant)
-		// restaurant.DELETE("/deleteRestaurant", views.DeleteRestaurant)
+		// restaurant.PUT("/update", views.UpdateRestaurant)
+		// restaurant.DELETE("/delete", views.DeleteRestaurant)
 	}
 
 	/* Product Routes */
@@ -117,8 +118,8 @@ func GinRouter() *gin.Engine {
 	product.Use(TokenGuardMiddleware())
 	{
 		product.POST("/add", views.AddProduct)
-		product.PUT("/updateProduct", views.UpdateProduct)
-		product.DELETE("/deleteProduct", views.DeleteProduct)
+		product.PUT("/update", views.UpdateProduct)
+		product.DELETE("/delete", views.DeleteProduct)
 	}
 
 	return router
