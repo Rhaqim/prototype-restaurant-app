@@ -16,8 +16,8 @@ type Product struct {
 	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	SuppliedID   primitive.ObjectID `json:"supplied_id,omitempty" bson:"supplied_id,omitempty"`
 	RestaurantID primitive.ObjectID `json:"restaurant_id,omitempty" bson:"restaurant_id,omitempty"`
-	Name         string             `json:"name,omitempty" bson:"name" binding:"required"`
-	Category     Categories         `json:"category,omitempty" bson:"category" binding:"required"`
+	Name         string             `json:"name,omitempty" bson:"name" binding:"required,min=3,max=50,lowercase"`
+	Category     Categories         `json:"category,omitempty" bson:"category" binding:"required,oneof=drink food others,lowercase"`
 	Price        float64            `json:"price,omitempty" bson:"price" binding:"required"`
 	Stock        int                `json:"stock,omitempty" bson:"stock" binding:"required"`
 	CreatedAt    primitive.DateTime `json:"created_at,omitempty" bson:"created_at" default:"time.Now()"`
@@ -102,6 +102,21 @@ func GetAllProductByRestaurant(c context.Context, restaurantID primitive.ObjectI
 	funcName := ut.GetFunctionName()
 
 	filter := bson.M{"restaurant_id": restaurantID}
+
+	products, err := GetProducts(c, filter)
+	if err != nil {
+		SetDebug(err.Error(), funcName)
+		return products, err
+	}
+
+	SetInfo(fmt.Sprintf("Found %v products", len(products)), funcName)
+	return products, nil
+}
+
+func GetProducts(c context.Context, filter bson.M) (Products, error) {
+	var products Products
+
+	funcName := ut.GetFunctionName()
 
 	cursor, err := productCollection.Find(c, filter)
 	if err != nil {

@@ -81,14 +81,42 @@ func GetProducts(c *gin.Context) {
 
 	var products []hp.Product
 
-	cursor, err := productCollection.Find(ctx, bson.M{})
-	if err != nil {
-		response := hp.SetError(err, "Error getting products", funcName)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-		return
+	// Get category from query params
+	category := c.Query("category")
+
+	// Get restaurant_id from query params
+	restaurantID := c.Query("restaurant_id")
+
+	// Get user_id from query params
+	userID := c.Query("user_id")
+
+	var filter bson.M
+
+	switch {
+	case category != "":
+		filter = bson.M{"category": category}
+	case restaurantID != "":
+		restaurantID, err := primitive.ObjectIDFromHex(restaurantID)
+		if err != nil {
+			response := hp.SetError(err, "Invalid restaurant ID", funcName)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+		filter = bson.M{"restaurant_id": restaurantID}
+	case userID != "":
+		userID, err := primitive.ObjectIDFromHex(userID)
+		if err != nil {
+			response := hp.SetError(err, "Invalid user ID", funcName)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+		filter = bson.M{"user_id": userID}
+	default:
+		filter = bson.M{}
 	}
 
-	if err = cursor.All(ctx, &products); err != nil {
+	products, err := hp.GetProducts(ctx, filter)
+	if err != nil {
 		response := hp.SetError(err, "Error getting products", funcName)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
@@ -105,16 +133,40 @@ func GetProduct(c *gin.Context) {
 
 	var funcName = ut.GetFunctionName()
 
-	productID, err := primitive.ObjectIDFromHex(c.Param("id"))
-	if err != nil {
-		response := hp.SetError(err, "Invalid product ID", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
+	// Get name from query params
+	name := c.Query("name")
+
+	// Get ID from query params
+	id := c.Query("id")
+
+	var filter bson.M
+
+	switch {
+	case name != "":
+		filter = bson.M{"name": name}
+	case id != "":
+		id, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			response := hp.SetError(err, "Invalid Product ID", funcName)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+		filter = bson.M{"_id": id}
+	case name != "" && id != "":
+		id, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			response := hp.SetError(err, "Invalid Product ID", funcName)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+		filter = bson.M{"name": name, "_id": id}
+	default:
+		filter = bson.M{}
 	}
 
-	product, err := hp.GetProductbyID(ctx, productID)
+	product, err := hp.GetProduct(ctx, filter)
 	if err != nil {
-		response := hp.SetError(err, "Error getting product", funcName)
+		response := hp.SetError(err, "Error getting products", funcName)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
 	}
