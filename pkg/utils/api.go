@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 )
@@ -86,4 +87,31 @@ func (api *BankApiStruct) TransferFunds() (int, []byte, error) {
 		return 500, nil, err
 	}
 	return resp.StatusCode, body, nil
+}
+
+// Get Latest Currency symbols and names
+func GetCurrencySymbols() (map[string]string, error) {
+	// var funcName = GetFunctionName()
+	var currencySymbols = make(map[string]string)
+	// var currencyList []string
+
+	// Get Currency Symbols
+	resp, err := http.Get("https://api.exchangeratesapi.io/latest")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(body, &currencySymbols)
+	if err != nil {
+		return nil, err
+	}
+	// for k := range currencySymbols {
+	// 	currencyList = append(currencyList, k)
+	// }
+
+	return currencySymbols, nil
 }

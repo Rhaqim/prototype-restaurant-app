@@ -14,17 +14,19 @@ import (
 var restaurantCollection = config.RestaurantCollection
 
 type Restaurant struct {
-	ID        primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
-	OwnerID   primitive.ObjectID  `json:"owner_id,omitempty" bson:"owner_id,omitempty"`
-	Name      string              `json:"name,omitempty" bson:"name" binding:"required"`
-	Phone     string              `json:"phone,omitempty" bson:"phone" binding:"required"`
-	Email     string              `json:"email,omitempty" bson:"email" binding:"required"`
-	Address   string              `json:"address,omitempty" bson:"address" binding:"required"`
-	OpenHours [7]OpenHours        `json:"open_hours,omitempty" bson:"open_hours" binding:"required"`
-	Currency  string              `json:"currency,omitempty" bson:"currency" binding:"required"`
-	Verified  bool                `json:"verified,omitempty" bson:"verified"`
-	CreatedAt primitive.Timestamp `json:"created_at,omitempty" bson:"created_at" default:"time.Now()"`
-	UpdatedAt primitive.Timestamp `json:"updated_at,omitempty" bson:"updated_at" default:"time.Now()"`
+	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	OwnerID   primitive.ObjectID `json:"owner_id,omitempty" bson:"owner_id,omitempty"`
+	Name      string             `json:"name,omitempty" bson:"name" binding:"required,lowercase"`
+	Phone     string             `json:"phone,omitempty" bson:"phone" binding:"required"`
+	Email     string             `json:"email,omitempty" bson:"email" binding:"required,email"`
+	Address   string             `json:"address,omitempty" bson:"address" binding:"required,lowercase"`
+	Country   string             `json:"country,omitempty" bson:"country" binding:"required,iso3166_1_alpha2"`
+	Category  RestaurantCategory `json:"category,omitempty" bson:"category" binding:"required"`
+	OpenHours [7]OpenHours       `json:"open_hours,omitempty" bson:"open_hours" binding:"required,dive"`
+	Currency  string             `json:"currency,omitempty" bson:"currency" binding:"required"`
+	Verified  bool               `json:"verified,omitempty" bson:"verified"`
+	CreatedAt primitive.DateTime `json:"created_at,omitempty" bson:"created_at" default:"time.Now()"`
+	UpdatedAt primitive.DateTime `json:"updated_at,omitempty" bson:"updated_at" default:"time.Now()"`
 }
 
 type RestaurantCategory string
@@ -47,24 +49,6 @@ func (rc RestaurantCategory) String() string {
 	default:
 		return "Bar"
 	}
-}
-
-// Check if the Restaurant Belongs to the Signin User
-func CheckRestaurantBelongsToUser(c context.Context, restaurantID primitive.ObjectID, user UserResponse) (bool, error) {
-	var funcName = ut.GetFunctionName()
-	var restaurant Restaurant
-
-	restaurant, err := GetRestaurantByID(c, restaurantID)
-	if err != nil {
-		SetDebug(err.Error(), funcName)
-		return false, err
-	}
-
-	if restaurant.OwnerID != user.ID {
-		return false, errors.New("Restaurant does not belong to the user")
-	}
-
-	return true, nil
 }
 
 func GetRestaurant(c context.Context, filter bson.M) (Restaurant, error) {
@@ -96,6 +80,24 @@ func GetRestaurantByID(c context.Context, restaurantID primitive.ObjectID) (Rest
 	}
 
 	return restaurant, nil
+}
+
+// Check if the Restaurant Belongs to the Signin User
+func CheckRestaurantBelongsToUser(c context.Context, restaurantID primitive.ObjectID, user UserResponse) (bool, error) {
+	var funcName = ut.GetFunctionName()
+	var restaurant Restaurant
+
+	restaurant, err := GetRestaurantByID(c, restaurantID)
+	if err != nil {
+		SetDebug(err.Error(), funcName)
+		return false, err
+	}
+
+	if restaurant.OwnerID != user.ID {
+		return false, errors.New("Restaurant does not belong to the user")
+	}
+
+	return true, nil
 }
 
 // Check if Restaurant Exists
