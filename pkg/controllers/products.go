@@ -110,7 +110,7 @@ func GetProducts(c *gin.Context) {
 			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
-		filter = bson.M{"user_id": userID}
+		filter = bson.M{"supplied_id": userID}
 	default:
 		filter = bson.M{}
 	}
@@ -152,14 +152,6 @@ func GetProduct(c *gin.Context) {
 			return
 		}
 		filter = bson.M{"_id": id}
-	case name != "" && id != "":
-		id, err := primitive.ObjectIDFromHex(id)
-		if err != nil {
-			response := hp.SetError(err, "Invalid Product ID", funcName)
-			c.AbortWithStatusJSON(http.StatusBadRequest, response)
-			return
-		}
-		filter = bson.M{"name": name, "_id": id}
 	default:
 		filter = bson.M{}
 	}
