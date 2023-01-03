@@ -175,40 +175,6 @@ func GetProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetProductsForRestaurant(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
-	var funcName = ut.GetFunctionName()
-
-	var products []hp.Product
-
-	restaurantID, err := primitive.ObjectIDFromHex(c.Param("id"))
-	if err != nil {
-		response := hp.SetError(err, "Invalid restaurant ID", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	filter := bson.M{"restaurant_id": restaurantID}
-	cursor, err := productCollection.Find(ctx, filter)
-	if err != nil {
-		response := hp.SetError(err, "Error getting products", funcName)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-		return
-	}
-
-	if err = cursor.All(ctx, &products); err != nil {
-		response := hp.SetError(err, "Error getting products", funcName)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-		return
-	}
-
-	var response = hp.SetSuccess("Products retrieved successfully", products, funcName)
-	c.JSON(http.StatusOK, response)
-}
-
 func DeleteProduct(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
@@ -265,6 +231,7 @@ func UpdateProduct(c *gin.Context) {
 	var funcName = ut.GetFunctionName()
 
 	var request hp.Product
+
 	if err := c.ShouldBindJSON(&request); err != nil {
 		response := hp.SetError(err, "Error binding request", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)

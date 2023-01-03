@@ -112,14 +112,13 @@ func GinRouter() *gin.Engine {
 
 	/* Product Routes */
 	product := router.Group("/product")
-	// product.GET("/getProductById", views.GetProductByID)
 	product.GET("/getProduct", views.GetProduct)
 	product.GET("/getProducts", views.GetProducts)
 	product.Use(TokenGuardMiddleware())
 	{
 		product.POST("/add", views.AddProduct)
-		// product.PUT("/updateProduct", views.UpdateProduct)
-		// product.DELETE("/deleteProduct", views.DeleteProduct)
+		product.PUT("/updateProduct", views.UpdateProduct)
+		product.DELETE("/deleteProduct", views.DeleteProduct)
 	}
 
 	return router
