@@ -181,3 +181,126 @@ func GetRestaurants(c *gin.Context) {
 	response := hp.SetSuccess("Restaurant found successfully", restaurant, funcName)
 	c.JSON(http.StatusOK, response)
 }
+
+func UpdateRestaurant(c *gin.Context) {
+	// get restaurant id from request params
+	// validate restaurant id
+	// get restaurant data from request body
+	// validate restaurant data
+	// check if restaurant already exists
+	// update restaurant
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "Error getting user from token", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Get restaurant data from request body
+	var request hp.Restaurant
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		response := hp.SetError(err, "Error binding json", "UpdateRestaurant")
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Modify the request
+	request.UpdatedAt, _ = hp.CreatedAtUpdatedAt()
+
+	// Validate all OpenHours
+	for _, openHour := range request.OpenHours {
+		err := hp.OpenHours(openHour).Validate()
+		if err != nil {
+			response := hp.SetError(err, "Invalid OpenHours", funcName)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+	}
+
+	ok, err := hp.CheckRestaurantBelongsToUser(ctx, request.ID, user)
+	if err != nil {
+		response := hp.SetError(err, "Error checking restaurant belongs to user", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	if !ok {
+		response := hp.SetError(err, "Restaurant does not belong to user", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Update Restaurant
+	_, err = restaurantCollection.UpdateOne(ctx, bson.M{"_id": request.ID, "owner_id": user.ID}, bson.M{"$set": request})
+	if err != nil {
+		response := hp.SetError(err, "Error updating restaurant", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("Restaurant updated successfully", request.ID.Hex(), funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func DeleteRestaurant(c *gin.Context) {
+	// get restaurant id from request params
+	// validate restaurant id
+	// delete restaurant
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "Error getting user from token", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Get restaurant id from request query params
+	restaurantID := c.Query("id")
+
+	// Validate restaurant id
+	id, err := primitive.ObjectIDFromHex(restaurantID)
+	if err != nil {
+		response := hp.SetError(err, "Invalid restaurant id", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Check that restaurant belongs to user
+	ok, err := hp.CheckRestaurantBelongsToUser(ctx, id, user)
+	if err != nil {
+		response := hp.SetError(err, "Error checking restaurant belongs to user", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	if !ok {
+		response := hp.SetError(err, "Restaurant does not belong to user", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Delete restaurant
+	_, err = restaurantCollection.DeleteOne(ctx, bson.M{"_id": id, "owner_id": user.ID})
+	if err != nil {
+		response := hp.SetError(err, "Error deleting restaurant", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("Restaurant deleted successfully", id.Hex(), funcName)
+	c.JSON(http.StatusOK, response)
+}

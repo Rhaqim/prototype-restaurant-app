@@ -107,8 +107,8 @@ func GinRouter() *gin.Engine {
 	restaurant.Use(TokenGuardMiddleware())
 	{
 		restaurant.POST("/create", views.CreateRestaurant)
-		// restaurant.PUT("/update", views.UpdateRestaurant)
-		// restaurant.DELETE("/delete", views.DeleteRestaurant)
+		restaurant.PUT("/update", views.UpdateRestaurant)
+		restaurant.DELETE("/delete", views.DeleteRestaurant)
 	}
 
 	/* Product Routes */
