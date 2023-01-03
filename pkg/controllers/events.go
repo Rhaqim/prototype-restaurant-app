@@ -62,6 +62,107 @@ func CreateEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func GetEvent(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	// Get event id from url
+	id := c.Query("id")
+
+	// Get event title from url
+	title := c.Query("title")
+
+	var filter bson.M
+
+	switch {
+	case id != "":
+		filter = bson.M{"_id": id}
+	case title != "":
+		filter = bson.M{"title": title}
+	default:
+		response := hp.SetError(nil, "No query parameters provided", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	event, err := hp.GetEvent(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error getting event", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := hp.SetSuccess(" event found", event, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func GetEvents(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	// Get event type from url
+	eventType := c.Query("type")
+
+	// Get event Venue from url
+	venue := c.Query("venue")
+
+	// Get event by host id from url
+	hostID := c.Query("host_id")
+
+	// Get event by date from url
+	date := c.Query("date")
+
+	// Get events attended by user from url
+	attended := c.Query("attended")
+
+	var filter bson.M
+
+	switch {
+	case eventType != "":
+		filter = bson.M{"type": eventType}
+	case venue != "":
+		filter = bson.M{"venue": venue}
+	case hostID != "":
+		hostID, err := primitive.ObjectIDFromHex(hostID)
+		if err != nil {
+			response := hp.SetError(err, "Invalid host id", funcName)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+		filter = bson.M{"host_id": hostID}
+	case date != "":
+		filter = bson.M{"created_at": date}
+	case attended != "":
+		user, err := hp.GetUserFromToken(c)
+		if err != nil {
+			response := hp.SetError(err, "User not logged in", funcName)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+		filter = bson.M{"attendees": bson.M{"$in": []string{user.ID.Hex()}}}
+	default:
+		response := hp.SetError(nil, "No query parameters provided", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	events, err := hp.GetEvents(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error getting events", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := hp.SetSuccess(" events found", events, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
 func GetUserEventsByHost(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
@@ -125,19 +226,6 @@ func UpdateEvent(c *gin.Context) {
 	}
 
 	filter := bson.M{"_id": id, "host_id": user.ID}
-
-	// update := bson.M{
-	// 	"$set": bson.M{
-	// 		"title":     request.Title,
-	// 		"invited":   request.Invited,
-	// 		"attendees": request.Attendees,
-	// 		"declined":  request.Declined,
-	// 		"venue":     request.Venue,
-	// 		"type":      request.Type,
-	// 		"bill":      request.Bill,
-	// 		"updated_at": request.UpdatedAt,
-	// 	},
-	// }
 
 	update := bson.M{
 		"$set": request,

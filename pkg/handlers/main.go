@@ -72,7 +72,8 @@ func GinRouter() *gin.Engine {
 
 	/* Event Routes */
 	event := router.Group("/event")
-	// event.GET("/getAllEventsbyHost", views.GetEventByID)
+	event.GET("/getEvent", views.GetEvent)
+	event.GET("/getEvents", views.GetEvents)
 	// event.GET("/getAllEventsAttended", views.GetEventByID)
 	event.Use(TokenGuardMiddleware())
 	{

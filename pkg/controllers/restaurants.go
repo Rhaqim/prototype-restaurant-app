@@ -225,19 +225,6 @@ func UpdateRestaurant(c *gin.Context) {
 		}
 	}
 
-	ok, err := hp.CheckRestaurantBelongsToUser(ctx, request.ID, user)
-	if err != nil {
-		response := hp.SetError(err, "Error checking restaurant belongs to user", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	if !ok {
-		response := hp.SetError(err, "Restaurant does not belong to user", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
 	// Update Restaurant
 	_, err = restaurantCollection.UpdateOne(ctx, bson.M{"_id": request.ID, "owner_id": user.ID}, bson.M{"$set": request})
 	if err != nil {
@@ -275,20 +262,6 @@ func DeleteRestaurant(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(restaurantID)
 	if err != nil {
 		response := hp.SetError(err, "Invalid restaurant id", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	// Check that restaurant belongs to user
-	ok, err := hp.CheckRestaurantBelongsToUser(ctx, id, user)
-	if err != nil {
-		response := hp.SetError(err, "Error checking restaurant belongs to user", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	if !ok {
-		response := hp.SetError(err, "Restaurant does not belong to user", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
