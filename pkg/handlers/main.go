@@ -12,6 +12,7 @@ func GinRouter() *gin.Engine {
 	auth := router.Group("/auth")
 	{
 		auth.POST("/signup", views.Signup)
+		auth.GET("/verifyEmail", views.VerifyEmail)
 		auth.POST("/signin", views.SignIn)
 	}
 	tokenProtected := auth.Group("/protected")

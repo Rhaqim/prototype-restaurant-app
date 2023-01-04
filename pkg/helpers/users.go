@@ -3,6 +3,7 @@ package helpers
 import (
 	"context"
 	"errors"
+	"time"
 
 	em "github.com/Rhaqim/thedutchapp/pkg/email"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
@@ -163,8 +164,11 @@ func GetUserByID(ctx context.Context, userID primitive.ObjectID) UserResponse {
 func GetUserByEmail(ctx context.Context, email string) UserResponse {
 	filter := bson.M{"email": email}
 
+	funcName := ut.GetFunctionName()
+
 	user, err := GetUser(ctx, filter)
 	if err != nil {
+		SetError(err, "error", funcName)
 		return UserResponse{}
 	}
 
@@ -227,9 +231,25 @@ func SendEmailVerificationEmail(ctx context.Context, email string) error {
 	}
 
 	// Send email
-	err := em.SendEmail([]string{email}, "Email Verification", user.EmailVerificationToken)
-	if err != nil {
-		return err
+
+	errChan := make(chan error)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Send the email in a goroutine.
+	go func() {
+		err := em.SendEmail(ctx, []string{email}, "Email Verification", user.EmailVerificationToken)
+		errChan <- err
+	}()
+
+	// Wait for the goroutine to finish.
+	select {
+	case <-ctx.Done():
+		return errors.New(ctx.Err().Error() + " : Email verification email not sent")
+	case err := <-errChan:
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -237,20 +257,17 @@ func SendEmailVerificationEmail(ctx context.Context, email string) error {
 
 // Verify email
 func VerifyEmail(ctx context.Context, email string, token string) error {
-	filter := bson.M{"email": email}
-	update := bson.M{"$set": bson.M{"email_confirmed": true, "email_verification_token": ""}}
-
-	var user UserResponse
-
-	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
-
 	// get user data
-	user = GetUserByEmail(ctx, email)
+	user := GetUserByEmail(ctx, email)
 
 	// check if token is valid
 	if user.EmailVerificationToken != token {
-		return errors.New("Invalid token")
+		return errors.New("invalid verification token")
 	}
+
+	filter := bson.M{"email": email}
+	update := bson.M{"$set": bson.M{"email_confirmed": true, "email_verification_token": ""}}
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
 	if err := usersCollection.FindOneAndUpdate(ctx, filter, update, opts).Decode(&user); err != nil {
 		return err

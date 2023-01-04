@@ -1,6 +1,7 @@
 package email
 
 import (
+	"context"
 	"log"
 	"net/smtp"
 	"os"
@@ -8,7 +9,12 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func SendEmail(to []string, subject string, body string) error {
+func SendEmail(ctx context.Context, to []string, subject string, body string) error {
+
+	if ctx.Err() == context.Canceled {
+		return ctx.Err()
+	}
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file fro email")

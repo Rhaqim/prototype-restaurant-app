@@ -133,6 +133,36 @@ func Signup(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+/*
+Verify email godoc
+*/
+func VerifyEmail(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	token := c.Query("token")
+	email := c.Query("email")
+
+	if token == "" || email == "" {
+		response := hp.SetError(nil, "Token and email are required", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	err := hp.VerifyEmail(ctx, email, token)
+	if err != nil {
+		response := hp.SetError(err, "Error verifying email", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := hp.SetSuccess("Email verified successfully", nil, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
 /* Signin godoc
 @Summary Signin a User
 @Description Signin an Existing user
@@ -172,7 +202,6 @@ func SignIn(c *gin.Context) {
 		return
 	}
 
-	log.Println("User: ", user)
 	if auth.CheckPasswordHash(request.Password, user.Password) {
 
 		t, rt, err := auth.GenerateJWT(user.Email, user.Username, user.ID)
@@ -192,7 +221,12 @@ func SignIn(c *gin.Context) {
 
 		// Check if email is verified
 		if !user.EmailVerified {
-			go hp.SendEmailVerificationEmail(ctx, user.Email)
+			err := hp.SendEmailVerificationEmail(ctx, user.Email)
+			if err != nil {
+				response := hp.SetError(err, "Error sending email verification email", funcName)
+				c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+				return
+			}
 			response := hp.SetError(nil, "Email not verified, please check your email for verification code", funcName)
 			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
