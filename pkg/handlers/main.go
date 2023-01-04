@@ -35,7 +35,7 @@ func GinRouter() *gin.Engine {
 	user.Use(TokenGuardMiddleware())
 	{
 		user.POST("/createUser", views.CreatNewUser)
-		user.PUT("/updateUser", views.UpdateAvatar)
+		user.PUT("/updateUser", views.UpdateUser)
 		user.PUT("/updateKyc", views.UpdateUsersKYC)
 		user.DELETE("/deleteUser", views.DeleteUser)
 

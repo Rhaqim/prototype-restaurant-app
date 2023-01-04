@@ -156,13 +156,13 @@ func GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func UpdateAvatar(c *gin.Context) {
+func UpdateUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
-	request := hp.UserResponse{}
+	request := hp.UserUpdate{}
 
 	funcName := ut.GetFunctionName()
 

@@ -72,6 +72,14 @@ type UserResponse struct {
 	UpdatedAt     primitive.DateTime   `bson:"updated_at" json:"updated_at"`
 }
 
+type UserUpdate struct {
+	Email    string        `bson:"email" json:"email"`
+	Username string        `bson:"username" json:"username"`
+	Avatar   Avatar        `bson:"avatar" json:"avatar"`
+	Social   SocialNetwork `bson:"social" json:"social"`
+	Location string        `bson:"location" json:"location"`
+}
+
 type CreatUser struct {
 	Fullname      string             `json:"fullname"`
 	Username      string             `json:"username"`
@@ -112,7 +120,9 @@ func GetUser(ctx context.Context, filter bson.M) (UserResponse, error) {
 	var user UserResponse
 	funcName := ut.GetFunctionName()
 
-	opts := options.FindOne().SetProjection(bson.M{"password": 0, "refreshToken": 0})
+	opts := options.FindOne().SetProjection(bson.M{
+		"password":     0,
+		"refreshToken": 0})
 
 	if err := usersCollection.FindOne(ctx, filter, opts).Decode(&user); err != nil {
 		SetError(err, "error", funcName)
