@@ -98,7 +98,6 @@ func Signup(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
 	}
-	log.Println("insertResult: ", insertResult)
 
 	t, rt, err := auth.GenerateJWT(user.Email, user.Username, insertResult.InsertedID.(primitive.ObjectID))
 
@@ -114,6 +113,9 @@ func Signup(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
 	}
+
+	// Send email verification link
+	go hp.SendEmailVerificationEmail(ctx, user.Email)
 
 	userResponse := user
 
@@ -185,6 +187,14 @@ func SignIn(c *gin.Context) {
 		if err != nil {
 			response := hp.SetError(err, "Error updating refresh token", funcName)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+			return
+		}
+
+		// Check if email is verified
+		if !user.EmailVerified {
+			go hp.SendEmailVerificationEmail(ctx, user.Email)
+			response := hp.SetError(nil, "Email not verified, please check your email for verification code", funcName)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
 

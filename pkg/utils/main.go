@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"math/rand"
 	"os"
 	"reflect"
 	"runtime"
@@ -89,4 +90,13 @@ func FetchDataFromMongoDB(ctx context.Context, collection *mongo.Collection, fil
 		return err
 	}
 	return nil
+}
+
+func RandomString(length int) string {
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, length)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
