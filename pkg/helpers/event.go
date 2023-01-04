@@ -33,7 +33,8 @@ type Event struct {
 	HostID    primitive.ObjectID   `json:"host_id" bson:"host_id"`
 	Title     string               `json:"title" binding:"required" bson:"title"`
 	Venue     primitive.ObjectID   `json:"venue" bson:"venue" binding:"required"`
-	Time      OpenHours            `json:"time" bson:"time" binding:"required"`
+	Date      CustomDate           `json:"date" bson:"date" binding:"required" time_format:"2006-01-02"`
+	Time      CustomTime           `json:"time" bson:"time" binding:"required" time_format:"15:04"`
 	Invited   []primitive.ObjectID `json:"invited" bson:"invited" default:"[]"`
 	Attendees []primitive.ObjectID `json:"attendees" bson:"attendees" default:"[]"`
 	Declined  []primitive.ObjectID `json:"declined" bson:"declined" default:"[]"`

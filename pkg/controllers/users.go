@@ -106,70 +106,53 @@ func CreatNewUser(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetUserByID(c *gin.Context) {
+func GetUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
-	var user bson.M
-	request := hp.GetUserById{}
-	var response = hp.MongoJsonResponse{}
+	funcName := ut.GetFunctionName()
 
-	if err := c.BindJSON(&request); err != nil {
-		// config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	log.Print("Request ID sent by client:", request.ID)
+	var user hp.UserResponse
 
-	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
-	config.CheckErr(err)
+	// Get ID from Query
+	id := c.Query("id")
 
-	// config.Logs("info", "ID: "+id.Hex())
+	// Get email from Query
+	email := c.Query("email")
 
-	filter := bson.M{"_id": id}
-	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		// config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	// Get username from Query
+	username := c.Query("username")
 
-	response.Type = "success"
-	response.Data = user
-	response.Message = "User found"
+	var filter bson.M
 
-	c.JSON(http.StatusOK, response)
-}
-
-func GetUserByEmail(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
-	var user bson.M
-	request := hp.GetUserByEmailStruct{}
-	var response = hp.MongoJsonResponse{}
-
-	if err := c.BindJSON(&request); err != nil {
-		// config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	log.Print("Request ID sent by client:", request.Email)
-
-	// config.Logs("info", "Email: "+request.Email)
-
-	filter := bson.M{"email": request.Email}
-	if err := usersCollection.FindOne(ctx, filter).Decode(&user); err != nil {
-		// config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	switch {
+	case id != "":
+		id, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			response := hp.SetError(err, "Invalid ID", funcName)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+		filter = bson.M{"_id": id}
+	case email != "":
+		filter = bson.M{"email": email}
+	case username != "":
+		filter = bson.M{"username": username}
+	default:
+		response := hp.SetError(nil, "Invalid Query", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
-	response.Type = "success"
-	response.Data = user
-	response.Message = "User found"
+	user, err := hp.GetUser(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "User not found", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
 
+	response := hp.SetSuccess("User found", user, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -179,41 +162,37 @@ func UpdateAvatar(c *gin.Context) {
 
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
-	request := hp.UpdateUserAvatar{}
-	response := hp.MongoJsonResponse{}
+	request := hp.UserResponse{}
 
-	if err := c.BindJSON(&request); err != nil {
-		// config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	log.Print("Request ID sent by client:", request.ID)
+	funcName := ut.GetFunctionName()
 
-	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
-	config.CheckErr(err)
-
-	// config.Logs("info", "ID: "+id.Hex())
-
-	request.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
-
-	filter := bson.M{"_id": id}
-
-	update := bson.M{
-		"$set": bson.M{
-			"avatar":     request.Avatar,
-			"updated_at": request.UpdatedAt,
-		},
-	}
-
-	updateResult, err := usersCollection.UpdateOne(ctx, filter, update)
+	err := c.BindJSON(&request)
 	if err != nil {
-		// config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "Invalid request", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
-	log.Println("updateResult: ", updateResult)
-	response.Type = "success"
-	response.Message = "User updated"
+
+	user, err := hp.GetUserFromToken(c) // get user from token
+	if err != nil {
+		respons := hp.SetError(err, "User not found", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, respons)
+		return
+	}
+
+	filter := bson.M{"_id": user.ID}
+	update := bson.M{
+		"$set": request,
+	}
+
+	_, err = usersCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		response := hp.SetError(err, "User not found", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("User updated", request, funcName)
 	c.JSON(http.StatusOK, response)
 
 }
@@ -224,34 +203,42 @@ func DeleteUser(c *gin.Context) {
 
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
-	request := hp.GetUserById{}
-	response := hp.MongoJsonResponse{}
+	funcName := ut.GetFunctionName()
 
-	if err := c.BindJSON(&request); err != nil {
-		// config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	_id := c.Query("id")
+
+	// Get ID from Query
+	id, err := primitive.ObjectIDFromHex(_id)
+	if err != nil {
+		response := hp.SetError(err, "Invalid ID", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
-	log.Print("Request ID sent by client:", request.ID)
 
-	id, err := primitive.ObjectIDFromHex(request.ID.Hex())
-	config.CheckErr(err)
+	user, err := hp.GetUserFromToken(c) // get user from token
+	if err != nil {
+		respons := hp.SetError(err, "User not found", funcName)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, respons)
+		return
+	}
 
-	// config.Logs("info", "ID: "+id.Hex())
+	if user.Role != hp.Admin || user.ID != id {
+		respons := hp.SetError(err, "You are not authorized to delete this user", funcName)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, respons)
+		return
+	}
 
 	filter := bson.M{"_id": id}
 
-	updateResult, err := usersCollection.DeleteOne(ctx, filter)
+	deleteResult, err := usersCollection.DeleteOne(ctx, filter)
 	if err != nil {
-		// config.Logs("error", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response := hp.SetError(err, "User not found", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
-	log.Println("updateResult: ", updateResult)
-	response.Type = "success"
-	response.Message = "User updated"
-	c.JSON(http.StatusOK, response)
 
+	response := hp.SetSuccess("User deleted", deleteResult, funcName)
+	c.JSON(http.StatusOK, response)
 }
 
 /* Customer KYC

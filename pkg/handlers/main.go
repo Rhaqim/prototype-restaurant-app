@@ -31,8 +31,7 @@ func GinRouter() *gin.Engine {
 
 	/* User Routes */
 	user := router.Group("/user")
-	user.GET("/getUserById", views.GetUserByID)
-	user.GET("/getUserByEmail", views.GetUserByEmail)
+	user.GET("/getUser", views.GetUser)
 	user.Use(TokenGuardMiddleware())
 	{
 		user.POST("/createUser", views.CreatNewUser)

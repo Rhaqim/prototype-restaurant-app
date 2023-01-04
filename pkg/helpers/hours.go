@@ -84,3 +84,22 @@ func (c *CustomDate) UnmarshalJSON(b []byte) error {
 func (c CustomDate) MarshalJSON() ([]byte, error) {
 	return []byte(c.Time.Format("\"2006-01-02\"")), nil
 }
+
+// Custom time format '15:04' for marshalling and unmarshalling requests
+type CustomTime struct {
+	time.Time
+}
+
+func (c *CustomTime) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), "\"")
+	t, err := time.Parse("15:04", s)
+	if err != nil {
+		return err
+	}
+	c.Time = t
+	return nil
+}
+
+func (c CustomTime) MarshalJSON() ([]byte, error) {
+	return []byte(c.Time.Format("\"15:04\"")), nil
+}
