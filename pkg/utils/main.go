@@ -93,7 +93,7 @@ func FetchDataFromMongoDB(ctx context.Context, collection *mongo.Collection, fil
 }
 
 func RandomString(length int) string {
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	b := make([]rune, length)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]

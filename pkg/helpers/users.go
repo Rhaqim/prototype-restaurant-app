@@ -233,7 +233,7 @@ func SendEmailVerificationEmail(ctx context.Context, email string) error {
 	// Send email
 
 	errChan := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	// Send the email in a goroutine.
@@ -252,6 +252,8 @@ func SendEmailVerificationEmail(ctx context.Context, email string) error {
 		}
 	}
 
+	// Remove token from DB after 5 minutes
+
 	return nil
 }
 
@@ -267,9 +269,21 @@ func VerifyEmail(ctx context.Context, email string, token string) error {
 
 	filter := bson.M{"email": email}
 	update := bson.M{"$set": bson.M{"email_confirmed": true, "email_verification_token": ""}}
-	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
-	if err := usersCollection.FindOneAndUpdate(ctx, filter, update, opts).Decode(&user); err != nil {
+	_, err := usersCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateUser(ctx context.Context, filter bson.M, update bson.M) error {
+	funcName := ut.GetFunctionName()
+
+	_, err := usersCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		SetDebug(err.Error(), funcName)
 		return err
 	}
 
