@@ -86,32 +86,13 @@ func SendEventInvites(c *gin.Context) {
 		return
 	}
 
-	// Add to the attendees collection using go routines
-	var wg sync.WaitGroup
-	wg.Add(len(request.Friends))
-
-	for _, friend := range request.Friends {
-		go func(friend primitive.ObjectID) {
-			defer wg.Done()
-
-			var attendee = hp.EventAttendee{
-				EventID:   request.EventID,
-				Status:    hp.Invited,
-				InvitedBy: user.ID,
-				InvitedAt: primitive.NewDateTimeFromTime(time.Now()),
-			}
-			attendee.UserID = friend
-
-			_, err = attendeeCollection.InsertOne(ctx, attendee)
-			if err != nil {
-				response := hp.SetError(err, "Error inserting attendee", funcName)
-				c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-				return
-			}
-		}(friend)
+	// Send invites to the friends
+	err = hp.SendInviteToEvent(ctx, request.EventID, request.Friends, user)
+	if err != nil {
+		response := hp.SetError(err, "Error sending invites", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
 	}
-
-	wg.Wait()
 
 	response := hp.SetSuccess("Successfully invited friends to event", nil, funcName)
 	c.JSON(http.StatusOK, response)

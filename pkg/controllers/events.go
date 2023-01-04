@@ -58,6 +58,14 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
+	// send invite to invited users
+	err = hp.SendInviteToEvent(ctx, request.ID, request.Invited, user)
+	if err != nil {
+		response := hp.SetError(err, "Error sending invite to event", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
 	response := hp.SetSuccess("Event created", request, funcName)
 	c.JSON(http.StatusOK, response)
 }
@@ -79,6 +87,12 @@ func GetEvent(c *gin.Context) {
 
 	switch {
 	case id != "":
+		id, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			response := hp.SetError(err, "Invalid event id", funcName)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
 		filter = bson.M{"_id": id}
 	case title != "":
 		filter = bson.M{"title": title}

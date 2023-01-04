@@ -1,6 +1,15 @@
 package helpers
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"context"
+	"sync"
+	"time"
+
+	"github.com/Rhaqim/thedutchapp/pkg/config"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+var attendeeCollection = config.AttendeeCollection
 
 type InviteFriendsToEventRequest struct {
 	EventID primitive.ObjectID   `json:"event_id" bson:"event_id"`
@@ -47,21 +56,41 @@ type EventAttendee struct {
 	AttendedAt primitive.DateTime `json:"attended_at" bson:"attended_at"`
 }
 
-func SendInviteToEvent(event Event, friend UserStruct) {
-	// Send invite to friend
-}
+func SendInviteToEvent(ctx context.Context, event_id primitive.ObjectID, friends []primitive.ObjectID, user UserResponse) error {
+	// Add to the attendees collection using go routines
+	var wg sync.WaitGroup
+	wg.Add(len(friends))
 
-func InviteFriendToEvent(event Event, friend UserStruct) {
-	// Create invite
-	// Send invite to friend
-}
+	// channel to send the error to the main thread
+	errChan := make(chan error, len(friends))
 
-func AcceptInviteToEvent(event Event, friend UserStruct) {
-	// Update invite
-	// Send invite to friend
-}
+	for _, friend := range friends {
+		go func(friend primitive.ObjectID) {
+			defer wg.Done()
 
-func DeclineInviteToEvent(event Event, friend UserStruct) {
-	// Update invite
-	// Send invite to friend
+			var attendee = EventAttendee{
+				EventID:   event_id,
+				Status:    Invited,
+				InvitedBy: user.ID,
+				InvitedAt: primitive.NewDateTimeFromTime(time.Now()),
+			}
+			attendee.UserID = friend
+
+			_, err := attendeeCollection.InsertOne(ctx, attendee)
+			if err != nil {
+				errChan <- err
+			}
+		}(friend)
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	for err := range errChan {
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
