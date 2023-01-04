@@ -50,6 +50,13 @@ func CreateRestaurant(c *gin.Context) {
 		return
 	}
 
+	// Check if KYC is complete
+	if !hp.CheckKYCStatus(user) {
+		response := hp.SetError(err, "KYC not complete", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
 	// Modify the request
 	request.ID = primitive.NewObjectID()
 	request.RestaurantUID = hp.RestaurantUID

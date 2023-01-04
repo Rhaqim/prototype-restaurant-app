@@ -283,6 +283,7 @@ func UpdateUsersKYC(c *gin.Context) {
 	}
 
 	request.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	request.IdentityType = hp.IdentityType(hp.IdentityType(request.IdentityType).String())
 
 	// check valid year of birth
 	okDOB := hp.ValidateKYCDOB(request.DOB)

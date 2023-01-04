@@ -39,6 +39,13 @@ func CreateWallet(c *gin.Context) {
 		return
 	}
 
+	// Check if KYC is complete
+	if !hp.CheckKYCStatus(user) {
+		response := hp.SetError(err, "KYC not complete", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
 	// Check if User has a Wallet already
 	exists, err := hp.CheckifWalletExists(ctx, bson.M{"user_id": user.ID})
 	if err != nil {

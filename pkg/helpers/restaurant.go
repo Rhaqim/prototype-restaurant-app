@@ -29,6 +29,7 @@ type Restaurant struct {
 	OpenHours     [7]OpenHours       `json:"open_hours,omitempty" bson:"open_hours" binding:"required,dive"`
 	Currency      string             `json:"currency,omitempty" bson:"currency" binding:"required"`
 	Verified      bool               `json:"verified,omitempty" bson:"verified"`
+	FeePercentage float64            `json:"fee_percentage,omitempty" bson:"fee_percentage"`
 	CreatedAt     primitive.DateTime `json:"created_at,omitempty" bson:"created_at" default:"time.Now()"`
 	UpdatedAt     primitive.DateTime `json:"updated_at,omitempty" bson:"updated_at" default:"time.Now()"`
 }

@@ -38,6 +38,19 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
+	// Check if User has a Wallet already
+	exists, err := hp.CheckifWalletExists(ctx, bson.M{"user_id": user.ID})
+	if err != nil {
+		response := hp.SetError(err, "Error checking if wallet exists", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+	if !exists {
+		response := hp.SetError(err, "User does not have a wallet", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
 	request.ID = primitive.NewObjectID()
 	request.HostID = user.ID
 	request.Type = hp.EventType(hp.EventType(request.Type).String())

@@ -35,6 +35,7 @@ type UserStruct struct {
 	Transactions  []Transactions       `bson:"transactions" json:"transactions" default:"[]"`
 	RefreshToken  string               `bson:"refresh_token,omitempty" json:"refresh_token,omitempty"`
 	EmailVerified bool                 `bson:"email_confirmed" json:"email_confirmed" default:"false"`
+	KYCStatus     KYCStatus            `bson:"kycStatus,omitempty" json:"kycStatus,omitempty" default:"unverified"`
 	Role          Roles                `bson:"role" json:"role" default:"user"`
 	CreatedAt     primitive.DateTime   `bson:"created_at" json:"created_at" default:"Now()"`
 	UpdatedAt     primitive.DateTime   `bson:"updated_at" json:"updated_at" default:"Now()"`
@@ -51,7 +52,7 @@ type SocialNetwork struct {
 }
 
 type UserResponse struct {
-	ID            primitive.ObjectID   `bson:"_id" json:"_id,omitempty"`
+	ID            primitive.ObjectID   `bson:"_id" json:"_id"`
 	FirstName     string               `json:"first_name"`
 	LastName      string               `json:"last_name"`
 	Email         string               `bson:"email" json:"email"`
@@ -63,8 +64,9 @@ type UserResponse struct {
 	Wallet        primitive.ObjectID   `bson:"wallet" json:"wallet"`
 	Account       BankAccount          `bson:"account" json:"account"`
 	Transactions  []Transactions       `bson:"transactions" json:"transactions"`
-	RefreshToken  string               `bson:"refresh_token,omitempty" json:"refresh_token,omitempty"`
-	EmailVerified bool                 `bson:"email_confirmed,omitempty" json:"email_confirmed,omitempty" default:"false"`
+	RefreshToken  string               `bson:"refresh_token" json:"refresh_token"`
+	EmailVerified bool                 `bson:"email_confirmed" json:"email_confirmed"`
+	KYCStatus     KYCStatus            `bson:"kycStatus" json:"kycStatus"`
 	Role          Roles                `bson:"role" json:"role"`
 	CreatedAt     primitive.DateTime   `bson:"created_at" json:"created_at"`
 	UpdatedAt     primitive.DateTime   `bson:"updated_at" json:"updated_at"`
