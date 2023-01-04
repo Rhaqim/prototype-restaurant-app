@@ -6,9 +6,24 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type KYC struct {
+	Phone          string             `bson:"phone" json:"phone" binding:"required,e164"`
+	DOB            CustomDate         `bson:"dob" json:"dob" binding:"required" time_format:"2006-01-02"`
+	Address        string             `bson:"address" json:"address" binding:"required"`
+	City           string             `bson:"city" json:"city" binding:"required"`
+	State          string             `bson:"state" json:"state" binding:"required"`
+	Zip            string             `bson:"zip" json:"zip" binding:"required"`
+	CountryCode    string             `bson:"country_code" json:"country_code" binding:"required,iso3166_1_alpha2"`
+	IdentityType   IdentityType       `bson:"identity_type" json:"identity_type" binding:"required"`
+	IdentityNumber string             `bson:"identity_number" json:"identity_number" binding:"required,min=5,max=20"`
+	IdentityPhoto  KYCPhoto           `bson:"identity_photo" json:"identity_photo" binding:"required"`
+	KYCStatus      KYCStatus          `bson:"kyc_status" json:"kyc_status" default:"unverified"`
+	UpdatedAt      primitive.DateTime `bson:"updated_at" json:"updated_at" default:"Now()"`
+}
+
 type KYCPhoto struct {
-	Front interface{} `json:"front" bson:"front"`
-	Back  interface{} `json:"back" bson:"back"`
+	Front Avatar `json:"front" bson:"front"`
+	Back  Avatar `json:"back" bson:"back"`
 }
 
 type KYCStatus string
@@ -19,23 +34,21 @@ const (
 	Rejected   KYCStatus = "rejected"
 )
 
-type KYC struct {
-	Phone          string             `bson:"phone" json:"phone" binding:"required,e164"`
-	DOB            time.Time          `bson:"dob" json:"dob" binding:"required" time_format:"2006-01-02"`
-	Address        string             `bson:"address" json:"address" binding:"required"`
-	City           primitive.ObjectID `bson:"city" json:"city" binding:"required"`
-	State          primitive.ObjectID `bson:"state" json:"state" binding:"required"`
-	Zip            string             `bson:"zip" json:"zip" binding:"required"`
-	CountryCode    string             `bson:"countryCode" json:"countryCode" binding:"required,iso3166_1_alpha2"`
-	IdentityType   IdentityType       `bson:"identityType" json:"identityType" binding:"required"`
-	IdentityNumber string             `bson:"identityNumber" json:"identityNumber" binding:"required"`
-	IdentityPhoto  KYCPhoto           `bson:"identityPhoto" json:"identityPhoto" binding:"required"`
-	KYCStatus      KYCStatus          `bson:"kycStatus" json:"kycStatus" default:"unverified"`
-	UpdatedAt      primitive.DateTime `bson:"updated_at" json:"updated_at" default:"Now()"`
+func (KS KYCStatus) String() string {
+	switch KS {
+	case Unverified:
+		return "unverified"
+	case Verified:
+		return "verified"
+	case Rejected:
+		return "rejected"
+	default:
+		return "unverified"
+	}
 }
 
 // ValidateKYC DOB
-func ValidateKYCDOB(dob time.Time) bool {
+func ValidateKYCDOB(dob CustomDate) bool {
 	// Check if year is less than 18
 	return dob.Year() < time.Now().Year()-18
 }

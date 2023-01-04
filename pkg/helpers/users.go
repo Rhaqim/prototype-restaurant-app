@@ -57,8 +57,8 @@ type UserResponse struct {
 	LastName      string               `json:"last_name"`
 	Email         string               `bson:"email" json:"email"`
 	Username      string               `bson:"username" json:"username"`
-	Avatar        interface{}          `bson:"avatar" json:"avatar"`
-	Social        interface{}          `bson:"social" json:"social"`
+	Avatar        Avatar               `bson:"avatar" json:"avatar"`
+	Social        SocialNetwork        `bson:"social" json:"social"`
 	Friends       []primitive.ObjectID `bson:"friends" json:"friends"`
 	Location      string               `bson:"location" json:"location"`
 	Wallet        primitive.ObjectID   `bson:"wallet" json:"wallet"`

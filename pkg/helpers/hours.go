@@ -65,3 +65,22 @@ func (h OpenHours) AvailableTimes() []string {
 	}
 	return times
 }
+
+// Custom date format '2020-01-01' for marshalling and unmarshalling requests
+type CustomDate struct {
+	time.Time
+}
+
+func (c *CustomDate) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), "\"")
+	t, err := time.Parse("2006-01-02", s)
+	if err != nil {
+		return err
+	}
+	c.Time = t
+	return nil
+}
+
+func (c CustomDate) MarshalJSON() ([]byte, error) {
+	return []byte(c.Time.Format("\"2006-01-02\"")), nil
+}

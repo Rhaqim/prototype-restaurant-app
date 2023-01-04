@@ -283,6 +283,7 @@ func UpdateUsersKYC(c *gin.Context) {
 	}
 
 	request.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	request.KYCStatus = hp.KYCStatus(hp.KYCStatus(request.KYCStatus).String())
 	request.IdentityType = hp.IdentityType(hp.IdentityType(request.IdentityType).String())
 
 	// check valid year of birth
@@ -299,13 +300,15 @@ func UpdateUsersKYC(c *gin.Context) {
 		"$set": request,
 	}
 
-	updateResult, err := usersCollection.UpdateOne(ctx, filter, update)
+	_, err = usersCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		// config.Logs("error", err.Error())
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	log.Println("updateResult: ", updateResult)
+
+	// Send request to KYC service
+
 	response := hp.SetSuccess("success", "User updated", funcName)
 	c.JSON(http.StatusOK, response)
 
