@@ -31,8 +31,6 @@ func SendEmail(ctx context.Context, to []string, subject string, body string) er
 	// Set up authentication information.
 	host, port, user, pass, from := EmailHost, EmailPort, EmailUser, EmailPassword, EmailFrom
 
-	log.Printf("Credentials \n from: %s, user: %s, host: %s, pass: %s, port: %s", from, user, host, pass, port)
-
 	auth := smtp.PlainAuth("", user, pass, host)
 
 	// Set the "Content-Type" header to "text/html".

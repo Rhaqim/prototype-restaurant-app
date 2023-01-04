@@ -157,3 +157,13 @@ func CreatedAtUpdatedAt() (primitive.DateTime, primitive.DateTime) {
 	now := primitive.NewDateTimeFromTime(time.Now())
 	return now, now
 }
+
+// Work in progress
+func (mr *MongoJsonResponse) Error(funcName string) *MongoJsonResponse {
+	config.Logs("info", mr.Message, funcName)
+	return &MongoJsonResponse{
+		Type:    Error,
+		Message: mr.Message,
+		Date:    time.Now(),
+	}
+}

@@ -231,7 +231,6 @@ func SendEmailVerificationEmail(ctx context.Context, email string) error {
 	}
 
 	// Send email
-
 	errChan := make(chan error)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -251,8 +250,6 @@ func SendEmailVerificationEmail(ctx context.Context, email string) error {
 			return err
 		}
 	}
-
-	// Remove token from DB after 5 minutes
 
 	return nil
 }
@@ -284,6 +281,18 @@ func UpdateUser(ctx context.Context, filter bson.M, update bson.M) error {
 	_, err := usersCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		SetDebug(err.Error(), funcName)
+		return err
+	}
+
+	return nil
+}
+
+func RemoveVerificationCode(ctx context.Context, email string) error {
+	filter := bson.M{"email": email}
+	update := bson.M{"$set": bson.M{"email_verification_token": ""}}
+
+	err := UpdateUser(ctx, filter, update)
+	if err != nil {
 		return err
 	}
 

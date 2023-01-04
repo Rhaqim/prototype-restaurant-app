@@ -227,8 +227,19 @@ func SignIn(c *gin.Context) {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 				return
 			}
+
+			// Remove verification code from database after 5 minutes
+			go func() {
+				time.Sleep(5 * time.Minute)
+				c := context.Background()
+				err := hp.RemoveVerificationCode(c, user.Email)
+				if err != nil {
+					hp.SetDebug("Error removing verification code: "+err.Error(), funcName)
+				}
+			}()
+
 			response := hp.SetError(nil, "Email not verified, please check your email for verification code", funcName)
-			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
