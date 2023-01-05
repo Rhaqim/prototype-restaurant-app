@@ -53,6 +53,20 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
+	// Check if Wallet balance is sufficient for Budget
+	wallet, err := hp.GetWallet(ctx, bson.M{"_id": user.Wallet})
+	if err != nil {
+		response := hp.SetError(err, "Error getting wallet balance", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	if wallet.Balance < request.Budget {
+		response := hp.SetError(err, "Insufficient balance to create Event", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
 	request.ID = primitive.NewObjectID()
 	request.HostID = user.ID
 	request.Type = hp.EventType(hp.EventType(request.Type).String())

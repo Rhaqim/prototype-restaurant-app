@@ -33,7 +33,7 @@ var (
 func SendNotification(user_ID primitive.ObjectID, message []byte) {
 	userID := user_ID.Hex()
 	config.Logs("info",
-		"Sending notification to user: "+user_ID.Hex()+"\n"+
+		"\n Sending notification to user: "+user_ID.Hex()+"\n"+
 			"Message: "+string(message)+"\n"+
 			"Number of connections: "+fmt.Sprintf("%d", len(Connections[userID]))+"\n",
 		"pkg/notifications/main.go")
@@ -95,6 +95,7 @@ func WsHandler(c *gin.Context) {
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
+			config.Logs("error", "Error reading message from client: "+err.Error()+"", "pkg/notifications/main.go")
 			break
 		}
 	}

@@ -39,8 +39,8 @@ type Event struct {
 	Attendees []primitive.ObjectID `json:"attendees" bson:"attendees" default:"[]"`
 	Declined  []primitive.ObjectID `json:"declined" bson:"declined" default:"[]"`
 	Type      EventType            `json:"type" bson:"type"`
-	Budget    float64              `json:"budget" bson:"budget" binding:"number" default:"0"`
-	Bill      float64              `json:"bill" bson:"bill" binding:"number" default:"0"`
+	Budget    float64              `json:"budget" bson:"budget" binding:"required,number"`
+	Bill      float64              `json:"bill,omitempty" bson:"bill,omitempty" default:"0"`
 	CreatedAt primitive.DateTime   `bson:"created_at" json:"created_at" default:"Now()"`
 	UpdatedAt primitive.DateTime   `bson:"updated_at" json:"updated_at" default:"Now()"`
 }
