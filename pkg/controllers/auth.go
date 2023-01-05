@@ -115,7 +115,7 @@ func Signup(c *gin.Context) {
 	}
 
 	// Send email verification link
-	go hp.SendEmailVerificationEmail(ctx, user.Email)
+	go hp.SendVerificationEmail(ctx, user.Email)
 
 	userResponse := user
 
@@ -221,7 +221,7 @@ func SignIn(c *gin.Context) {
 
 		// Check if email is verified
 		if !user.EmailVerified {
-			err := hp.SendEmailVerificationEmail(ctx, user.Email)
+			err := hp.SendVerificationEmail(ctx, user.Email)
 			if err != nil {
 				response := hp.SetError(err, "Error sending email verification email", funcName)
 				c.AbortWithStatusJSON(http.StatusInternalServerError, response)

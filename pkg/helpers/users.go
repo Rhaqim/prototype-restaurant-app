@@ -3,7 +3,6 @@ package helpers
 import (
 	"context"
 	"errors"
-	"time"
 
 	em "github.com/Rhaqim/thedutchapp/pkg/email"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
@@ -219,7 +218,7 @@ func GenerateEmailVerificationToken(email string) string {
 }
 
 // Send email verification email
-func SendEmailVerificationEmail(ctx context.Context, email string) error {
+func SendVerificationEmail(ctx context.Context, email string) error {
 	// Get user data after updating email verification token
 	filter := bson.M{"email": email}
 	update := bson.M{"$set": bson.M{"email_verification_token": GenerateEmailVerificationToken(email)}}
@@ -231,24 +230,28 @@ func SendEmailVerificationEmail(ctx context.Context, email string) error {
 	}
 
 	// Send email
-	errChan := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	r := em.NewRequest([]string{email}, "Email Verification", user.EmailVerificationToken)
 
-	// Send the email in a goroutine.
-	go func() {
-		err := em.SendEmail(ctx, []string{email}, "Email Verification", user.EmailVerificationToken)
-		errChan <- err
-	}()
+	template := struct {
+		Title string
+		Body  string
+	}{
+		Title: "Email Verification",
+		Body:  user.EmailVerificationToken,
+	}
 
-	// Wait for the goroutine to finish.
-	select {
-	case <-ctx.Done():
-		return errors.New(ctx.Err().Error() + " : Email verification email not sent")
-	case err := <-errChan:
-		if err != nil {
-			return err
-		}
+	err := r.ParseTemplate("email-verification.html", template)
+	if err != nil {
+		return err
+	}
+
+	ok, err := r.SendEmail()
+	if err != nil {
+		return err
+	}
+
+	if !ok {
+		return errors.New("email not sent")
 	}
 
 	return nil
