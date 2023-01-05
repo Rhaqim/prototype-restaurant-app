@@ -2,12 +2,14 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
+	nf "github.com/Rhaqim/thedutchapp/pkg/notifications"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -70,6 +72,36 @@ func CreateEvent(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
+
+	// NOTIFICATION
+	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": request.Venue})
+	if err != nil {
+		response := hp.SetError(err, "Error getting venue", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// send notification to invited users and venue
+	for _, invited := range request.Invited {
+		// send notification to invited users
+		msg := []byte(
+			user.Username +
+				" invited you to " + request.Title +
+				" at " + venue.Name +
+				" on " + request.Date.Format("02-01-2006") +
+				" at " + request.Time.Format("15:04"),
+		)
+		go nf.SendNotification(invited, msg)
+	}
+
+	msg := []byte(
+		user.Username +
+			" has created an event at " + venue.Name +
+			" on " + request.Date.Format("02-01-2006") +
+			" at " + request.Time.Format("15:04") +
+			" capacity: " + fmt.Sprint(len(request.Invited)),
+	)
+	go nf.SendNotification(venue.OwnerID, msg)
 
 	response := hp.SetSuccess("Event created", request, funcName)
 	c.JSON(http.StatusOK, response)
