@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
+	"github.com/Rhaqim/thedutchapp/pkg/helpers"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -63,7 +64,15 @@ func WsHandler(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	userID := c.Query("userID")
+	user, err := helpers.GetUserFromToken(c)
+	if err != nil {
+		config.Logs("error", "Error getting user from token: "+err.Error()+"", "pkg/notifications/main.go")
+		return
+	}
+
+	userID := user.ID.Hex()
+
+	config.Logs("info", "New connection for user: "+user.Username+"", "pkg/notifications/main.go")
 
 	// Add the connection to the list of Connections for the user
 	ConnectionsLock.Lock()

@@ -93,7 +93,7 @@ func AcceptFriendRequest(c *gin.Context) {
 	}
 
 	// Send Notification
-	msg := []byte("Your friend request to: " + from.Username + " has been accepted!")
+	msg := []byte("Your friend request to: " + user.Username + " has been accepted!")
 	go nf.SendNotification(from.ID, msg)
 
 	c.JSON(http.StatusOK, hp.SetSuccess("Friend request accepted", nil, funcName))

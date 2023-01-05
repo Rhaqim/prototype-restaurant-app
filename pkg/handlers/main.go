@@ -10,7 +10,7 @@ func GinRouter() *gin.Engine {
 	router := gin.Default()
 
 	// Websocket Notification Handler
-	router.GET("/ws", nf.WsHandler)
+	// router.GET("/ws", nf.WsHandler)
 
 	/* Auth Routes */
 	auth := router.Group("/auth")
@@ -23,7 +23,7 @@ func GinRouter() *gin.Engine {
 	tokenProtected.Use(TokenGuardMiddleware())
 	{
 		tokenProtected.GET("/signout", views.Signout)
-
+		tokenProtected.GET("/ws", nf.WsHandler)
 	}
 
 	refreshTokenProtected := auth.Group("/protected")
