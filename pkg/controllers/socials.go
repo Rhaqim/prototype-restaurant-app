@@ -92,6 +92,10 @@ func AcceptFriendRequest(c *gin.Context) {
 		return
 	}
 
+	// Send Notification
+	msg := []byte("Your friend request to: " + from.Username + " has been accepted!")
+	go nf.SendNotification(from.ID, msg)
+
 	c.JSON(http.StatusOK, hp.SetSuccess("Friend request accepted", nil, funcName))
 }
 
@@ -133,6 +137,10 @@ func DeclineFriendRequest(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Failed to decline friend request", funcName))
 		return
 	}
+
+	// Send Notification
+	msg := []byte("Your friend request to: " + from.Username + " has been declined!")
+	go nf.SendNotification(from.ID, msg)
 
 	c.JSON(http.StatusOK, hp.SetSuccess("Friend request declined", nil, funcName))
 }
@@ -222,6 +230,12 @@ func BlockUser(c *gin.Context) {
 		return
 	}
 
+	blocked := hp.GetUserByID(ctx, request.FriendID)
+
+	// Send Notification
+	msg := []byte("You have blocked: " + blocked.Username)
+	go nf.SendNotification(user.ID, msg)
+
 	c.JSON(http.StatusOK, hp.SetSuccess("User blocked", nil, funcName))
 }
 
@@ -255,6 +269,12 @@ func UnblockUser(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Failed to unblock user", funcName))
 		return
 	}
+
+	blocked := hp.GetUserByID(ctx, request.FriendID)
+
+	// Send Notification
+	msg := []byte("You have unblocked: " + blocked.Username)
+	go nf.SendNotification(user.ID, msg)
 
 	c.JSON(http.StatusOK, hp.SetSuccess("User unblocked", nil, funcName))
 }
