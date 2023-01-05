@@ -2,11 +2,15 @@ package handlers
 
 import (
 	views "github.com/Rhaqim/thedutchapp/pkg/controllers"
+	nf "github.com/Rhaqim/thedutchapp/pkg/notifications"
 	"github.com/gin-gonic/gin"
 )
 
 func GinRouter() *gin.Engine {
 	router := gin.Default()
+
+	// Websocket Notification Handler
+	router.GET("/ws", nf.WsHandler)
 
 	/* Auth Routes */
 	auth := router.Group("/auth")

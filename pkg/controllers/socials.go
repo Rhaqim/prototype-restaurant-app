@@ -6,6 +6,7 @@ import (
 	"time"
 
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
+	nf "github.com/Rhaqim/thedutchapp/pkg/notifications"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -44,6 +45,10 @@ func SendFriendRequest(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Failed to send friend request", funcName))
 		return
 	}
+
+	// Notify the user that a friend request has been sent.
+	var msg = []byte("You have a new friend request! from: " + user.Username)
+	go nf.SendNotification(request.FriendID, msg)
 
 	c.JSON(http.StatusOK, hp.SetSuccess("Friend request sent", friendRequest, funcName))
 }
