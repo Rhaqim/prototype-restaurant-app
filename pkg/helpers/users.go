@@ -214,15 +214,15 @@ func CheckIfEmailVerificationExists(ctx context.Context, email string) (bool, er
 
 // Email Verification
 // Generate random string as token for email verification
-func GenerateEmailVerificationToken() string {
-	return ut.RandomString(6)
+func GenerateEmailVerificationToken(email string) string {
+	return ut.RandomString(6, email)
 }
 
 // Send email verification email
 func SendEmailVerificationEmail(ctx context.Context, email string) error {
-	// Get user data
+	// Get user data after updating email verification token
 	filter := bson.M{"email": email}
-	update := bson.M{"$set": bson.M{"email_verification_token": GenerateEmailVerificationToken()}}
+	update := bson.M{"$set": bson.M{"email_verification_token": GenerateEmailVerificationToken(email)}}
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
 	var user UserResponse

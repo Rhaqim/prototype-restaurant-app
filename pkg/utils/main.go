@@ -92,16 +92,20 @@ func FetchDataFromMongoDB(ctx context.Context, collection *mongo.Collection, fil
 	return nil
 }
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+// Generating random string with time and key as seed
+func RandomString(length int, key string) string {
+	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-var seededRand *rand.Rand = rand.New(
-	rand.NewSource(time.Now().UnixNano()))
+	var seededRand *rand.Rand = rand.New(
+		rand.NewSource(time.Now().UnixNano() * int64(len(key))))
 
-func RandomString(length int) string {
 	var letters = []byte(letterBytes)
+
 	b := make([]byte, length)
+
 	for i := range b {
 		b[i] = letters[seededRand.Intn(len(letters))]
 	}
+
 	return string(b)
 }
