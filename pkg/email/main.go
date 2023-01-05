@@ -7,6 +7,7 @@ import (
 	"net/smtp"
 	"os"
 
+	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/joho/godotenv"
 )
 
@@ -27,6 +28,8 @@ func NewRequest(to []string, subject, body string) *Request {
 }
 
 func (r *Request) SendEmail() (bool, error) {
+
+	config.Logs("info", "Sending email to: "+r.to[0]+"", "pkg/email/main.go")
 
 	err := godotenv.Load()
 	if err != nil {
