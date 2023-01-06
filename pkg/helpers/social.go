@@ -30,6 +30,7 @@ const (
 	FriendshipStatusBlocked
 )
 
+// Model for the friendship collection
 type Friendship struct {
 	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id"`
 	UserID    primitive.ObjectID `json:"user_id" bson:"user_id" validate:"required"`
@@ -39,6 +40,9 @@ type Friendship struct {
 	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at" default:"time.Now()"`
 }
 
+// FriendshipRequest is the request to send a friendship request
+// to another user.
+// Sets the status to pending by default.
 type FriendshipRequest struct {
 	FriendID  primitive.ObjectID `json:"friend_id" bson:"friend_id"`
 	Status    FriendshipStatus   `json:"status" bson:"status" default:"0"`
@@ -46,20 +50,34 @@ type FriendshipRequest struct {
 	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at" default:"time.Now()"`
 }
 
+// FriendshipAcceptRequest is the request to accept a friendship request.
 type FriendshipAcceptRequest struct {
 	ID       primitive.ObjectID `json:"id,omitempty" bson:"_id"`
 	UserID   primitive.ObjectID `json:"user_id" bson:"user_id" validate:"required"`
 	FriendID primitive.ObjectID `json:"friend_id" bson:"friend_id"`
 }
 
+// Get Friendship from database
+func GetFriendship(ctx context.Context, filter bson.M) (Friendship, error) {
+	var friendship Friendship
+	err := config.FriendshipCollection.FindOne(ctx, filter).Decode(&friendship)
+	if err != nil {
+		return Friendship{}, err
+	}
+	return friendship, nil
+}
+
 // Check if request has been sent already
-func CheckIfRequestExists(user UserResponse, friendID primitive.ObjectID) bool {
-	var friend Friendship
-	err := config.FriendshipCollection.FindOne(context.TODO(), bson.M{"user_id": user.ID, "friend_id": friendID}).Decode(&friend)
+// Returns true if request has been sent
+func CheckIfRequestExists(ctx context.Context, user UserResponse, friendID primitive.ObjectID) bool {
+	filter := bson.M{"user_id": user.ID, "friend_id": friendID}
+
+	friend, err := GetFriendship(ctx, filter)
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			return false
 		}
+
 		SetDebug(err.Error(), ut.GetFunctionName())
 		return false
 	}
@@ -71,6 +89,9 @@ func CheckIfRequestExists(user UserResponse, friendID primitive.ObjectID) bool {
 	return false
 }
 
+// Check if User is friends with another user
+// by checking if the friendID is in the user's friends array
+// Returns true if friendship exists
 func checkIfFriendExists(user, friend UserResponse) bool {
 	for _, person := range user.Friends {
 		if person == friend.ID {
@@ -80,9 +101,16 @@ func checkIfFriendExists(user, friend UserResponse) bool {
 	return false
 }
 
-func VerifyFriends(user UserResponse, friendID primitive.ObjectID) bool {
-	var friend UserResponse
-	err := config.UserCollection.FindOne(context.TODO(), bson.M{"_id": friendID}).Decode(&friend)
+// Verify if friendship exists
+// Checks if friendship exists in both users
+// by checking if the friendID is in the user's friends array
+// and if the user's ID is in the friend's friends array.
+// Returns true if friendship exists
+func VerifyFriends(ctx context.Context, user UserResponse, friendID primitive.ObjectID) bool {
+
+	filter := bson.M{"_id": friendID}
+
+	friend, err := GetUser(ctx, filter)
 	if err != nil {
 		SetDebug(err.Error(), ut.GetFunctionName())
 		return false
@@ -114,7 +142,7 @@ func SendFriendRequest(ctx context.Context, userID UserResponse, friendID primit
 	}
 
 	// Check if the friendship already exists.
-	friendship := VerifyFriends(userID, friendID)
+	friendship := VerifyFriends(ctx, userID, friendID)
 	// If the friendship already exists, return a message.
 	if friendship {
 		return Friendship{}, errors.New("Friendship already exists")
@@ -147,7 +175,7 @@ func SendFriendRequest(ctx context.Context, userID UserResponse, friendID primit
 // Accept a friend request from another user.
 func AcceptFriendRequest(ctx context.Context, FROM, TO UserResponse, friendshipID primitive.ObjectID) error {
 	// Check if the friendship already exists.
-	friendship := VerifyFriends(TO, FROM.ID)
+	friendship := VerifyFriends(ctx, TO, FROM.ID)
 	// If the friendship already exists, return a message.
 	if friendship {
 		return errors.New("Friendship already exists")
@@ -184,7 +212,7 @@ func AcceptFriendRequest(ctx context.Context, FROM, TO UserResponse, friendshipI
 
 func DeclineFriendRequest(ctx context.Context, FROM, TO UserResponse, friendshipID primitive.ObjectID) error {
 	// Check if the friendship already exists.
-	friendship := VerifyFriends(TO, FROM.ID)
+	friendship := VerifyFriends(ctx, TO, FROM.ID)
 	// If the friendship already exists, return a message.
 	if friendship {
 		return errors.New("Friendship already exists")
@@ -228,9 +256,14 @@ func GetSocial(ctx context.Context, userID primitive.ObjectID, status Friendship
 	return friendRequests, nil
 }
 
+// Block User
+// Updates the friendship status to blocked.
+// Removes the friend from the user's friends list.
+// Removes the user from the friend's friends list.
 func BlockUser(ctx context.Context, user UserResponse, friendID primitive.ObjectID) error {
 	// Check if the friendship already exists.
-	friendship := VerifyFriends(user, friendID)
+	friendship := VerifyFriends(ctx, user, friendID)
+
 	// If the friendship already exists, return a message.
 	if !friendship {
 		return errors.New("Friendship does not exist")
@@ -265,20 +298,24 @@ func BlockUser(ctx context.Context, user UserResponse, friendID primitive.Object
 	return nil
 }
 
+// Unblock User
+// Checks if the friendship exists.
+// If the friendship exists, delete the friendship from the database.
 func UnblockUser(ctx context.Context, user UserResponse, friendID primitive.ObjectID) error {
 	// Check if the friendship already exists.
-	friendship := VerifyFriends(user, friendID)
+	friendship := VerifyFriends(ctx, user, friendID)
 	// If the friendship already exists, return a message.
 	if !friendship {
-		return errors.New("Friendship does not exist")
-	}
 
-	// Update the friendship request in the database.
-	var filter = bson.M{"user_id": user.ID, "friend_id": friendID}
-	// delete the friendship from the database
-	_, err := config.FriendshipCollection.DeleteOne(ctx, filter)
-	if err != nil {
-		return err
+		// Update the friendship request in the database.
+		// Filter the friendship by the user's ID, friend's ID, and the status of blocked.
+		var filter = bson.M{"user_id": user.ID, "friend_id": friendID, "status": FriendshipStatusBlocked}
+
+		// delete the friendship from the database
+		_, err := config.FriendshipCollection.DeleteOne(ctx, filter)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

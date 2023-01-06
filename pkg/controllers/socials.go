@@ -33,7 +33,7 @@ func SendFriendRequest(c *gin.Context) {
 	}
 
 	// Check prior request not sent
-	if hp.CheckIfRequestExists(user, request.FriendID) {
+	if hp.CheckIfRequestExists(ctx, user, request.FriendID) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, hp.SetError(nil, "Friend request already sent", funcName))
 		return
 	}
