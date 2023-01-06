@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// JSON RESPONSE TO USERS
+// JSON response types for the user
 type JsonResponseType string
 
 const (
@@ -21,6 +21,11 @@ const (
 	Success JsonResponseType = "success"
 )
 
+// JSON RESPONSE STRUCT
+// All responses to the user will be in this format
+// The type is either error or success
+// The data is the data that is returned to the user
+// The message is the message that is returned to the user
 type MongoJsonResponse struct {
 	Type    JsonResponseType `json:"type"`
 	Data    interface{}      `json:"data"`
@@ -28,6 +33,7 @@ type MongoJsonResponse struct {
 	Date    time.Time        `json:"date"`
 }
 
+// Error codes for edge cases
 type Codes string // ERROR CODES
 
 const (
@@ -37,10 +43,14 @@ const (
 	AlreadyCompleted  Codes = "already_completed"
 )
 
-func SetError(err error, message string, funcName string) *MongoJsonResponse {
+// SET ERROR
+// Uses the struct MongoJsonResponse
+// Accepts an error, a message and the function name
+// Returns the struct MongoJsonResponse
+func SetError(err error, message string, funcName string) MongoJsonResponse {
 	if err != nil {
 		config.Logs("error", err.Error()+" "+message, funcName)
-		return &MongoJsonResponse{
+		return MongoJsonResponse{
 			Type:    Error,
 			Message: message + ", " + err.Error(),
 			Date:    time.Now(),
@@ -48,27 +58,33 @@ func SetError(err error, message string, funcName string) *MongoJsonResponse {
 	}
 
 	config.Logs("error", message, funcName)
-	return &MongoJsonResponse{
+	return MongoJsonResponse{
 		Type:    Error,
 		Message: message,
 		Date:    time.Now(),
 	}
 }
 
+// SET INFO
 func SetInfo(message interface{}, funcName string) {
 	config.Logs("info", message, funcName)
 }
 
-func SetSuccess(message string, data interface{}, funcName string) *MongoJsonResponse {
+// SET SUCCESS
+// Uses the struct MongoJsonResponse
+// Accepts a message, the data and the function name
+// Returns the struct MongoJsonResponse
+func SetSuccess(message string, data interface{}, funcName string) MongoJsonResponse {
 	config.Logs("info", message, funcName)
 	if data == nil {
-		return &MongoJsonResponse{
+		return MongoJsonResponse{
 			Type:    Success,
 			Message: message,
 			Date:    time.Now(),
 		}
 	}
-	return &MongoJsonResponse{
+	config.Logs("info", message, funcName)
+	return MongoJsonResponse{
 		Type:    Success,
 		Data:    data,
 		Message: message,
@@ -76,11 +92,13 @@ func SetSuccess(message string, data interface{}, funcName string) *MongoJsonRes
 	}
 }
 
+// SET DEBUG
 func SetDebug(message string, funcName string) {
 	config.Logs("debug", message, funcName)
 	// panic("debug")
 }
 
+// SET WARNING
 func SetWarning(message string, funcName string) {
 	config.Logs("warning", message, funcName)
 	log.Fatal(message)
