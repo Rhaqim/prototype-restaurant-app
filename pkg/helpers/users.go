@@ -39,7 +39,7 @@ type UserStruct struct {
 	RefreshToken           string               `bson:"refresh_token,omitempty" json:"refresh_token,omitempty"`
 	EmailVerified          bool                 `bson:"email_confirmed" json:"email_confirmed" default:"false"`
 	EmailVerificationToken string               `bson:"email_verification_token,omitempty" json:"email_verification_token,omitempty"`
-	KYCStatus              KYCStatus            `bson:"kycStatus,omitempty" json:"kycStatus,omitempty" default:"unverified"`
+	KYCStatus              KYCStatus            `bson:"kyc_status,omitempty" json:"kyc_status,omitempty" default:"unverified"`
 	Role                   Roles                `bson:"role" json:"role" default:"user"`
 	CreatedAt              primitive.DateTime   `bson:"created_at" json:"created_at" default:"Now()"`
 	UpdatedAt              primitive.DateTime   `bson:"updated_at" json:"updated_at" default:"Now()"`
@@ -71,7 +71,7 @@ type UserResponse struct {
 	RefreshToken           string               `bson:"refresh_token" json:"refresh_token"`
 	EmailVerified          bool                 `bson:"email_confirmed" json:"email_confirmed"`
 	EmailVerificationToken string               `bson:"email_verification_token,omitempty" json:"email_verification_token,omitempty"`
-	KYCStatus              KYCStatus            `bson:"kycStatus" json:"kycStatus"`
+	KYCStatus              KYCStatus            `bson:"kyc_status" json:"kyc_status"`
 	Role                   Roles                `bson:"role" json:"role"`
 	CreatedAt              primitive.DateTime   `bson:"created_at" json:"created_at"`
 	UpdatedAt              primitive.DateTime   `bson:"updated_at" json:"updated_at"`

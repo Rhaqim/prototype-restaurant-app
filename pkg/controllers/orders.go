@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -98,10 +99,10 @@ func CreateOrder(c *gin.Context) {
 	}
 
 	// Get products from order
-	var productNames []string
-	for _, product := range request.Products {
+	productNames := make(map[string]int)
+	for _, v := range request.Products {
 		// Get product from database
-		filter := bson.M{"_id": product.ProductID}
+		filter := bson.M{"_id": v.ProductID}
 		product, err := hp.GetProduct(ctx, filter)
 		if err != nil {
 			response := hp.SetError(err, "Error getting product", funcName)
@@ -109,13 +110,13 @@ func CreateOrder(c *gin.Context) {
 			return
 		}
 
-		productNames = append(productNames, product.Name)
+		productNames[product.Name] = v.Quantity
 	}
 
 	var message string
 
-	for _, product := range productNames {
-		message += product + ", "
+	for k, v := range productNames {
+		message += fmt.Sprintf("%s x%d, ", k, v)
 	}
 
 	msg := []byte("New order created: " + user.Username + " ordered " +
