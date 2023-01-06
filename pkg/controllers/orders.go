@@ -8,6 +8,7 @@ import (
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
+	nf "github.com/Rhaqim/thedutchapp/pkg/notifications"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -44,32 +45,87 @@ func CreateOrder(c *gin.Context) {
 	request.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
 
 	// Update Stock
-	errChan := make(chan error)
-	go hp.UpdateStock(ctx, request, errChan)
+	stockErrChan := make(chan error)
+	go hp.UpdateStock(ctx, request, stockErrChan)
 
 	// Update Bill
 	billErrChan := make(chan error)
 	totalChan := make(chan float64)
 	go hp.UpdateBill(ctx, request, billErrChan, totalChan)
 
-	for err := range errChan {
+	// Check for errors in UpdateStock goroutine
+	for err := range stockErrChan {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Error updating stock", funcName))
 		return
 	}
 
+	// Check for errors in UpdateBill goroutine
 	for err := range billErrChan {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, hp.SetError(err, "Error updating bill", funcName))
 		return
 	}
 
+	// Get total bill for all products from UpdateBill goroutine
+	// and add it to the order bill
 	request.Bill = <-totalChan
 
+	// Add order to database
 	insertResult, err := orderCollection.InsertOne(ctx, request)
 	if err != nil {
 		response := hp.SetError(err, "Error creating order", funcName)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
 	}
+
+	// NOTIFICATION
+
+	// Get event group id from event id
+	filter := bson.M{"_id": request.EventID}
+	event, err := hp.GetEvent(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error getting event", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Get Venue Owner from venue id
+	filter = bson.M{"_id": event.Venue}
+	venue, err := hp.GetRestaurant(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error getting venue", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Get products from order
+	var productNames []string
+	for _, product := range request.Products {
+		// Get product from database
+		filter := bson.M{"_id": product.ProductID}
+		product, err := hp.GetProduct(ctx, filter)
+		if err != nil {
+			response := hp.SetError(err, "Error getting product", funcName)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+			return
+		}
+
+		productNames = append(productNames, product.Name)
+	}
+
+	var message string
+
+	for _, product := range productNames {
+		message += product + ", "
+	}
+
+	msg := []byte("New order created: " + user.Username + " ordered " +
+		message + "for " + event.Title + " on " + request.CreatedAt.Time().Format("02-01-2006 15:04:05"))
+
+	// Send Notification to Venue regarding new order
+	go nf.SendNotification(venue.OwnerID, msg)
+
+	// Send Notification to Event group regarding new order
+	go nf.SendNotification(event.ID, msg)
 
 	response := hp.SetSuccess("Order created", insertResult, funcName)
 	c.JSON(http.StatusOK, response)
