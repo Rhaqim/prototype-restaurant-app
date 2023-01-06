@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// USER STRUCT for Signing In
 type SignIn struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" binding:"required"`

@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Type for Roles assigned to users
 type Roles string
 
 const (
@@ -20,6 +21,7 @@ const (
 	Business Roles = "business"
 )
 
+// USER STRUCT all users
 type UserStruct struct {
 	ID                     primitive.ObjectID   `bson:"_id,omitempty" json:"_id,omitempty"`
 	FirstName              string               `json:"first_name" bson:"first_name" binding:"required"`
@@ -218,6 +220,11 @@ func GenerateEmailVerificationToken(email string) string {
 }
 
 // Send email verification email
+// Update email verification token in database
+// Send email
+// Return error
+// Accepts context and email
+// TODO: Add email template
 func SendVerificationEmail(ctx context.Context, email string) error {
 	// Get user data after updating email verification token
 	filter := bson.M{"email": email}

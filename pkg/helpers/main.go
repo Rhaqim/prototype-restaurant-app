@@ -108,13 +108,18 @@ func UpdateRefreshToken(ctx context.Context, id primitive.ObjectID, refreshToken
 	return nil
 }
 
-// Validate Role, TxnType, TxnStatus enums
-func RoleIsValid(role Roles) bool {
-	switch role {
-	case Admin, User, Business:
-		return true
+// String returns the string representation of the Roles
+func (r Roles) String() string {
+	switch r {
+	case Admin:
+		return "admin"
+	case User:
+		return "user"
+	case Business:
+		return "business"
+	default:
+		return "user"
 	}
-	return false
 }
 
 func TxnTypeIsValid(TT TxnType) bool {
@@ -125,6 +130,17 @@ func TxnTypeIsValid(TT TxnType) bool {
 	return false
 }
 
+func (tt TxnType) String() string {
+	switch tt {
+	case Debit:
+		return "debit"
+	case Credit:
+		return "credit"
+	default:
+		return "debit"
+	}
+}
+
 func TxnStatusIsValid(TS TxnStatus) bool {
 	switch TS {
 	case TxnSuccess, TxnPending, TxnFail:
@@ -133,9 +149,21 @@ func TxnStatusIsValid(TS TxnStatus) bool {
 	return false
 }
 
+func (ts TxnStatus) String() string {
+	switch ts {
+	case TxnSuccess:
+		return "success"
+	case TxnPending:
+		return "pending"
+	case TxnFail:
+		return "fail"
+	default:
+		return "pending"
+	}
+}
+
 // Get from DB
-func GetFromDB(ctx context.Context, filter bson.M, collection *mongo.Collection) (bson.M, error) {
-	var result bson.M
+func GetFromDB(ctx context.Context, filter bson.M, collection *mongo.Collection, result interface{}) (interface{}, error) {
 	err := collection.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
 		return nil, err

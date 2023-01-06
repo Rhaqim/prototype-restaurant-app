@@ -13,6 +13,8 @@ import (
 )
 
 // Websocket Notification Handler
+// This handler is used to upgrade the HTTP connection to a WebSocket connection
+// and add the connection to the Connections map
 var (
 	Upgrader = websocket.Upgrader{
 		// Allow Connections from any origin
@@ -30,6 +32,12 @@ var (
 	ConnectionsLock sync.RWMutex
 )
 
+// SendNotification sends a notification to a user
+// This function is called by the event handlers to send a notification to a user
+// It takes the user ID and the message to send
+// It gets the connections for the user from the Connections map
+// It loops over the connections and sends the message to each connection
+// If the connection is no longer usable, it is removed from the Connections map
 func SendNotification(user_ID primitive.ObjectID, message []byte) {
 	userID := user_ID.Hex()
 	config.Logs("info",
@@ -38,6 +46,7 @@ func SendNotification(user_ID primitive.ObjectID, message []byte) {
 			"Number of connections: "+fmt.Sprintf("%d", len(Connections[userID]))+"\n",
 		"pkg/notifications/main.go")
 
+	// Get the connections for the user
 	ConnectionsLock.RLock()
 	conns, ok := Connections[userID]
 	ConnectionsLock.RUnlock()
@@ -46,6 +55,7 @@ func SendNotification(user_ID primitive.ObjectID, message []byte) {
 		return
 	}
 
+	// Loop over the connections and send the message
 	for _, conn := range conns {
 		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
 			// Remove the connection if it is no longer usable
@@ -54,6 +64,14 @@ func SendNotification(user_ID primitive.ObjectID, message []byte) {
 	}
 }
 
+// WsHandler is the WebSocket handler
+// It upgrades the HTTP connection to a WebSocket connection
+// It adds the connection to the Connections map
+// It removes the connection when it is closed
+// It uses the connection to receive messages from the client
+// It is called by the router when a client connects to the WebSocket endpoint
+// It takes the Gin context as an argument
+// It reads the message from SendNotification and sends it to the client
 func WsHandler(c *gin.Context) {
 	// Upgrade the HTTP connection to a WebSocket connection
 	conn, err := Upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -64,6 +82,7 @@ func WsHandler(c *gin.Context) {
 	}
 	defer conn.Close()
 
+	// Get the user from the token
 	user, err := helpers.GetUserFromToken(c)
 	if err != nil {
 		config.Logs("error", "Error getting user from token: "+err.Error()+"", "pkg/notifications/main.go")

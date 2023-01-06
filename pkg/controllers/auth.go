@@ -21,18 +21,16 @@ import (
 var authCollection = config.UserCollection
 
 /*
-	Signup godoc
+	Signup
 
-@Summary Create a new account
-@Description Creates a new user account
-@Tags auth
-@Accept  json
-@Produce  json
-@Param account body hp.UserStruct true "UserStruct"
-@Success 200 {object} hp.UserStruct
-@Failure 400 {object} hp.Error
-@Failure 500 {object} hp.Error
-@Router /auth/signup [post]
+Creates a new user
+Checks if email and username already exists
+Hashes password
+Checks if the role is valid otherwise assigns it to user
+Generates a JWT access token and refresh token
+Stores the refresh token in the database
+Sends a verification code to the email
+Sends the access token and refresh token in the response
 */
 func Signup(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
@@ -73,11 +71,14 @@ func Signup(c *gin.Context) {
 		return
 	}
 
+	// Set default values
 	user.Transactions = []hp.Transactions{}
+	user.Role = hp.Roles(hp.Roles(user.Role).String())
 	user.EmailVerified = false
 	user.CreatedAt, user.UpdatedAt = hp.CreatedAtUpdatedAt()
 	user.Account.CreatedAt, user.Account.UpdatedAt = hp.CreatedAtUpdatedAt()
 
+	// Hash password
 	password, err := auth.HashAndSalt(user.Password)
 	if err != nil {
 		response := hp.SetError(err, "Error hashing password", funcName)
@@ -86,12 +87,7 @@ func Signup(c *gin.Context) {
 	}
 	user.Password = password
 
-	ok := hp.RoleIsValid(user.Role)
-
-	if !ok {
-		user.Role = "user"
-	}
-
+	// Add User to database
 	insertResult, err := authCollection.InsertOne(ctx, user)
 	if err != nil {
 		response := hp.SetError(err, "Error creating user", funcName)
@@ -99,6 +95,7 @@ func Signup(c *gin.Context) {
 		return
 	}
 
+	// Generate JWT
 	t, rt, err := auth.GenerateJWT(user.Email, user.Username, insertResult.InsertedID.(primitive.ObjectID))
 
 	if err != nil {
@@ -107,6 +104,7 @@ func Signup(c *gin.Context) {
 		return
 	}
 
+	// Store refresh token in database
 	err = hp.UpdateRefreshToken(ctx, insertResult.InsertedID.(primitive.ObjectID), rt)
 	if err != nil {
 		response := hp.SetError(err, "Error updating refresh token", funcName)
@@ -148,7 +146,10 @@ func Signup(c *gin.Context) {
 }
 
 /*
-Verify email godoc
+	Verify email
+
+Gets the token and email from the query
+Verifies the email with the token sent to the email
 */
 func VerifyEmail(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
@@ -177,17 +178,17 @@ func VerifyEmail(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-/* Signin godoc
-@Summary Signin a User
-@Description Signin an Existing user
-@Tags auth
-@Accept  json
-@Produce  json
-@Param account body hp.SingIn true "SignIn"
-@Success 200 {object} hp.UserStruct
-@Failure 400 {object} hp.Error
-@Failure 500 {object} hp.Error
-@Router /auth/signup [post]
+/*
+	Signin
+Signs in a user
+Uses the username and password to sign in a user
+Gets the user from the database
+Checks the password with the one in the database
+Generates a JWT and refresh token
+Sends the JWT and refresh token to the client
+Stores the refresh token in the database
+Checks if the user has verified their email otherwise sends a verification email
+Returns the user data and the JWT and refresh token
 */
 
 func SignIn(c *gin.Context) {

@@ -72,14 +72,9 @@ func CreatNewUser(c *gin.Context) {
 
 	user.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 	user.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	user.Role = hp.Roles(hp.Roles(user.Role).String())
 	password, err := auth.HashAndSalt(user.Password)
 	config.CheckErr(err)
-
-	ok := hp.RoleIsValid(user.Role)
-
-	if !ok {
-		user.Role = "user"
-	}
 
 	filter := bson.M{
 		"fullname":      user.Fullname,
