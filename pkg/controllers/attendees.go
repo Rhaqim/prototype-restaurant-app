@@ -294,6 +294,19 @@ func AcceptInvite(c *gin.Context) {
 	*/
 	wg.Wait()
 
+	// Send notification to event owner
+	// Get the event owner
+	eventOwner, err := hp.GetUser(ctx, bson.M{"_id": event.HostID})
+	if err != nil {
+		response := hp.SetError(err, "Error getting event owner", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Send notification to event owner
+	msg := []byte(user.Username + " has accepted your invite to " + event.Title)
+	go nf.SendNotification(eventOwner.ID, msg)
+
 	response := hp.SetSuccess("Successfully accepted invite", nil, funcName)
 	c.JSON(http.StatusOK, response)
 }
@@ -410,6 +423,19 @@ func DeclineInvite(c *gin.Context) {
 	}()
 
 	wg.Wait()
+
+	// Send notification to event owner
+	// Get the event owner
+	eventOwner, err := hp.GetUser(ctx, bson.M{"_id": event.HostID})
+	if err != nil {
+		response := hp.SetError(err, "Error getting event owner", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Send notification to event owner
+	msg := []byte(user.Username + " has declined your invite to " + event.Title)
+	go nf.SendNotification(eventOwner.ID, msg)
 
 	response := hp.SetSuccess("Successfully declined invite", nil, funcName)
 	c.JSON(http.StatusOK, response)
