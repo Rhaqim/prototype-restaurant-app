@@ -13,18 +13,22 @@ type SignIn struct {
 	Password string `json:"password" binding:"required"`
 }
 
+// USER STRUCT for Signing Out
 type SignOut struct {
 	Username string `json:"username"`
 }
 
+// USER STRUCT for sending refresh token
 type RefreshToken struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+// USER STRUCT for sending email to reset password
 type ForgotPassword struct {
 	Email string `json:"email"`
 }
 
+// USER STRUCT for resetting password
 type ResetPassword struct {
 	RefreshToken string `json:"refresh_token"`
 	OldPassword  string `json:"old_password"`
@@ -32,6 +36,10 @@ type ResetPassword struct {
 }
 
 // USER VALIDATION EMAIL AND USERNAME
+
+// CheckIfEmailExists checks if email exists in the database
+// Accepts email string
+// returns true if email exists
 func CheckIfEmailExists(email string) (bool, error) {
 	var user UserStruct
 	filter := bson.M{"email": email}
@@ -46,6 +54,9 @@ func CheckIfEmailExists(email string) (bool, error) {
 	return true, nil
 }
 
+// CheckIfUsernameExists checks if username exists in the database
+// Accepts username string
+// returns true if username exists
 func CheckIfUsernameExists(username string) (bool, error) {
 	var user UserStruct
 	err := usersCollection.FindOne(context.TODO(), bson.M{"username": username}).Decode(&user)
