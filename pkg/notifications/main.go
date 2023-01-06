@@ -32,38 +32,6 @@ var (
 	ConnectionsLock sync.RWMutex
 )
 
-// SendNotification sends a notification to a user
-// This function is called by the event handlers to send a notification to a user
-// It takes the user ID and the message to send
-// It gets the connections for the user from the Connections map
-// It loops over the connections and sends the message to each connection
-// If the connection is no longer usable, it is removed from the Connections map
-func SendNotification(user_ID primitive.ObjectID, message []byte) {
-	userID := user_ID.Hex()
-	config.Logs("info",
-		"\n Sending notification to user: "+user_ID.Hex()+"\n"+
-			"Message: "+string(message)+"\n"+
-			"Number of connections: "+fmt.Sprintf("%d", len(Connections[userID]))+"\n",
-		"pkg/notifications/main.go")
-
-	// Get the connections for the user
-	ConnectionsLock.RLock()
-	conns, ok := Connections[userID]
-	ConnectionsLock.RUnlock()
-	if !ok {
-		config.Logs("info", "No connections for user: "+userID+"", "pkg/notifications/main.go")
-		return
-	}
-
-	// Loop over the connections and send the message
-	for _, conn := range conns {
-		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
-			// Remove the connection if it is no longer usable
-			conn.Close()
-		}
-	}
-}
-
 // WsHandler is the WebSocket handler
 // It upgrades the HTTP connection to a WebSocket connection
 // It adds the connection to the Connections map
@@ -116,6 +84,66 @@ func WsHandler(c *gin.Context) {
 		if err != nil {
 			config.Logs("error", "Error reading message from client: "+err.Error()+"", "pkg/notifications/main.go")
 			break
+		}
+	}
+}
+
+// SendNotification sends a notification to a user
+// This function is called by the event handlers to send a notification to a user
+// It takes the user ID and the message to send
+// It gets the connections for the user from the Connections map
+// It loops over the connections and sends the message to each connection
+// If the connection is no longer usable, it is removed from the Connections map
+func SendNotification(user_ID primitive.ObjectID, message []byte) {
+	userID := user_ID.Hex()
+	config.Logs("info",
+		"\n Sending notification to user: "+user_ID.Hex()+"\n"+
+			"Message: "+string(message)+"\n"+
+			"Number of connections: "+fmt.Sprintf("%d", len(Connections[userID]))+"\n",
+		"pkg/notifications/main.go")
+
+	// Get the connections for the user
+	ConnectionsLock.RLock()
+	conns, ok := Connections[userID]
+	ConnectionsLock.RUnlock()
+	if !ok {
+		config.Logs("info", "No connections for user: "+userID+"", "pkg/notifications/main.go")
+		return
+	}
+
+	// Loop over the connections and send the message
+	for _, conn := range conns {
+		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
+			// Remove the connection if it is no longer usable
+			conn.Close()
+		}
+	}
+}
+
+// BroadcastNotification sends a notification to all users
+// This function is called by the event handlers to send a notification to all users
+// It takes the message to send
+// It gets the connections for all users from the Connections map
+// It loops over the connections and sends the message to each connection
+// If the connection is no longer usable, it is removed from the Connections map
+func BroadcastNotification(message []byte) {
+	config.Logs("info",
+		"\n Sending notification to all users\n"+
+			"Message: "+string(message)+"\n",
+		"pkg/notifications/main.go")
+
+	// Get the connections for all users
+	ConnectionsLock.RLock()
+	conns := Connections
+	ConnectionsLock.RUnlock()
+
+	// Loop over the connections and send the message
+	for _, conns := range conns {
+		for _, conn := range conns {
+			if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
+				// Remove the connection if it is no longer usable
+				conn.Close()
+			}
 		}
 	}
 }
