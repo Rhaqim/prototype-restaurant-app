@@ -38,7 +38,7 @@ func CreateTransaction(c *gin.Context) {
 	}
 
 	// Transaction Verification
-	friends := hp.VerifyFriends(user, request.ToID)
+	friends := hp.VerifyFriends(ctx, user, request.ToID)
 
 	if !friends {
 		response := hp.SetError(nil, "You are not friends with this user", funcName)

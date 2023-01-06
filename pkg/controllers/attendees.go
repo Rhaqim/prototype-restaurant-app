@@ -3,12 +3,14 @@ package controllers
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
+	nf "github.com/Rhaqim/thedutchapp/pkg/notifications"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,6 +19,15 @@ import (
 
 var attendeeCollection = config.AttendeeCollection
 
+// SendEventInvites sends invites to friends for an event
+// Gets the event from the database
+// Checks if the user is the host of the event
+// Checks if user is friends with the friends
+// Checks if the friends are already invited
+// Updates the event with the new invites
+// Sends the invites to the friends
+// Sends a notification to the friends
+// Sends a notification to Venue with updated event details
 func SendEventInvites(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
@@ -57,7 +68,7 @@ func SendEventInvites(c *gin.Context) {
 
 	// Verify friendship
 	for _, friend := range request.Friends {
-		if !hp.VerifyFriends(user, friend) {
+		if !hp.VerifyFriends(ctx, user, friend) {
 			response := hp.SetError(err, "Friendship not verified: "+friend.Hex(), funcName)
 			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
@@ -94,10 +105,49 @@ func SendEventInvites(c *gin.Context) {
 		return
 	}
 
+	// NOTIFICATION
+	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": event.Venue})
+	if err != nil {
+		response := hp.SetError(err, "Error getting venue", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// send notification to invited users and venue
+	for _, invited := range request.Friends {
+		// send notification to invited users
+		msg := []byte(
+			user.Username +
+				" invited you to " + event.Title +
+				" at " + venue.Name +
+				" on " + event.Date.Format("02-01-2006") +
+				" at " + event.Time.Format("15:04"),
+		)
+		go nf.SendNotification(invited, msg)
+	}
+
+	msg := []byte(
+		user.Username +
+			" has updated the event " + event.Title +
+			" at " + venue.Name +
+			" on " + event.Date.Format("02-01-2006") +
+			" at " + event.Time.Format("15:04") +
+			" with new invites" +
+			" Capacity: " + strconv.Itoa(len(event.Invited)),
+	)
+	go nf.SendNotification(venue.OwnerID, msg)
+
 	response := hp.SetSuccess("Successfully invited friends to event", nil, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
+// AcceptInvite accepts an invite to an event
+// Checks if the user is logged in
+// Checks if the user is invited to the event
+// Checks if the user is already attending the event
+// Check if User has enough money to match budget set
+// Updates the event with the new attendee
+// Updates the attendee Collection with status attending
 func AcceptInvite(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
@@ -145,8 +195,8 @@ func AcceptInvite(c *gin.Context) {
 	}
 
 	// Check if the user has already accepted the invite
-	var attendee hp.EventAttendee
-	err = attendeeCollection.FindOne(ctx, bson.M{"event_id": request.EventID, "user_id": user.ID}).Decode(&attendee)
+	filter := bson.M{"event_id": request.EventID, "user_id": user.ID}
+	attendee, err := hp.GetAttendee(ctx, filter)
 	if err != nil {
 		response := hp.SetError(err, "Error getting attendee", funcName)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
@@ -248,6 +298,11 @@ func AcceptInvite(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// DeclineInvite declines an invite to an event
+// Checks if the user is logged in
+// Checks if the user is invited to the event
+// Checks if the user has already declined the invite
+// Updates the attendee and event with go routines
 func DeclineInvite(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
