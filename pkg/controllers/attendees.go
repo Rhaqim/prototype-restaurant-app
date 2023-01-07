@@ -114,26 +114,40 @@ func SendEventInvites(c *gin.Context) {
 	}
 
 	// send notification to invited users and venue
-	for _, invited := range request.Friends {
-		// send notification to invited users
-		msg := []byte(
-			user.Username +
-				" invited you to " + event.Title +
-				" at " + venue.Name +
-				" on " + event.Date.Format("02-01-2006") +
-				" at " + event.Time.Format("15:04"),
-		)
-		go nf.SendNotification(invited, msg)
-	}
-
-	msg := []byte(
+	msgInvite := []byte(config.Invite_ +
 		user.Username +
-			" has updated the event " + event.Title +
-			" at " + venue.Name +
-			" on " + event.Date.Format("02-01-2006") +
-			" at " + event.Time.Format("15:04") +
-			" with new invites" +
-			" Capacity: " + strconv.Itoa(len(event.Invited)),
+		" invited you to " + event.Title +
+		" at " + venue.Name +
+		" on " + event.Date.Format("02-01-2006") +
+		" at " + event.Time.Format("15:04"),
+	)
+
+	notifyInvite := nf.NewNotification(
+		request.Friends,
+		msgInvite,
+	)
+	go notifyInvite.SendNotification(ctx)
+
+	// for _, invited := range request.Friends {
+	// 	// send notification to invited users
+	// 	msg := []byte(
+	// 		user.Username +
+	// 			" invited you to " + event.Title +
+	// 			" at " + venue.Name +
+	// 			" on " + event.Date.Format("02-01-2006") +
+	// 			" at " + event.Time.Format("15:04"),
+	// 	)
+	// 	go nf.SendNotification(invited, msg)
+	// }
+
+	msg := []byte(config.Reservation_ +
+		user.Username +
+		" has updated the event " + event.Title +
+		" at " + venue.Name +
+		" on " + event.Date.Format("02-01-2006") +
+		" at " + event.Time.Format("15:04") +
+		" with new invites" +
+		" Capacity: " + strconv.Itoa(len(event.Invited)),
 	)
 	go nf.SendNotification(venue.OwnerID, msg)
 
@@ -304,7 +318,7 @@ func AcceptInvite(c *gin.Context) {
 	}
 
 	// Send notification to event owner
-	msg := []byte(user.Username + " has accepted your invite to " + event.Title)
+	msg := []byte(config.Notification_ + user.Username + " has accepted your invite to " + event.Title)
 	go nf.SendNotification(eventOwner.ID, msg)
 
 	response := hp.SetSuccess("Successfully accepted invite", nil, funcName)
@@ -434,7 +448,7 @@ func DeclineInvite(c *gin.Context) {
 	}
 
 	// Send notification to event owner
-	msg := []byte(user.Username + " has declined your invite to " + event.Title)
+	msg := []byte(config.Notification_ + user.Username + " has declined your invite to " + event.Title)
 	go nf.SendNotification(eventOwner.ID, msg)
 
 	response := hp.SetSuccess("Successfully declined invite", nil, funcName)

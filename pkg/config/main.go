@@ -151,3 +151,14 @@ func Colorise(message string, log LogType) string {
 		return ut.Colorise("green", message)
 	}
 }
+
+// Types of messages sent over Websocket
+const (
+	Chat_         = "chat: "
+	Invite_       = "invite: "
+	Notification_ = "notification: "
+	Order_        = "order: "
+	Product_      = "product: "
+	Reservation_  = "reservation: "
+	Transaction_  = "transaction: "
+)

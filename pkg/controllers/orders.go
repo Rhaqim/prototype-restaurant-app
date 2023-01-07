@@ -119,14 +119,21 @@ func CreateOrder(c *gin.Context) {
 		message += fmt.Sprintf("%s x%d, ", k, v)
 	}
 
-	msg := []byte("New order created: " + user.Username + " ordered " +
-		message + "for " + event.Title + " on " + request.CreatedAt.Time().Format("02-01-2006 15:04:05"))
+	msg := []byte(config.Order_ +
+		user.Username +
+		" ordered " + message +
+		"for " + event.Title +
+		" on " + request.CreatedAt.Time().Format("02-01-2006 15:04:05"))
 
 	// Send Notification to Venue regarding new order
 	go nf.SendNotification(venue.OwnerID, msg)
 
 	// Send Notification to Event group regarding new order
-	go nf.SendNotification(event.ID, msg)
+	notifyGroup := nf.NewNotification(
+		event.Attendees,
+		msg,
+	)
+	go notifyGroup.SendNotification(ctx)
 
 	response := hp.SetSuccess("Order created", insertResult, funcName)
 	c.JSON(http.StatusOK, response)

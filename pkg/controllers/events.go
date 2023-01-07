@@ -96,12 +96,12 @@ func CreateEvent(c *gin.Context) {
 	}
 
 	// send notification to invited users
-	msgInvited := []byte(
+	msgInvited := []byte(config.Invite_ +
 		user.Username +
-			" invited you to " + request.Title +
-			" at " + venue.Name +
-			" on " + request.Date.Format("02-01-2006") +
-			" at " + request.Time.Format("15:04"),
+		" invited you to " + request.Title +
+		" at " + venue.Name +
+		" on " + request.Date.Format("02-01-2006") +
+		" at " + request.Time.Format("15:04"),
 	)
 
 	notifyInvited := nf.NewNotification(
@@ -111,12 +111,12 @@ func CreateEvent(c *gin.Context) {
 	go notifyInvited.SendNotification(ctx)
 
 	// send notification to venue owner
-	msgVenue := []byte(
+	msgVenue := []byte(config.Reservation_ +
 		user.Username +
-			" has created an event at " + venue.Name +
-			" on " + request.Date.Format("02-01-2006") +
-			" at " + request.Time.Format("15:04") +
-			" capacity: " + fmt.Sprint(len(request.Invited)),
+		" has created an event at " + venue.Name +
+		" on " + request.Date.Format("02-01-2006") +
+		" at " + request.Time.Format("15:04") +
+		" capacity: " + fmt.Sprint(len(request.Invited)),
 	)
 	go nf.SendNotification(venue.OwnerID, msgVenue)
 
