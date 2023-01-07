@@ -108,11 +108,13 @@ func SendNotification(user_ID primitive.ObjectID, message []byte) {
 	// convert the user ID to a string
 	userID := user_ID.Hex()
 
-	hp.SetInfo(
-		"\n Sending notification to user: "+user_ID.Hex()+"\n"+
-			"Message: "+string(message)+"\n"+
-			"Number of connections: "+fmt.Sprintf("%d", len(Connections[userID]))+"\n",
-		funcName)
+	if len(Connections[userID]) > 0 {
+		hp.SetInfo(
+			"\n Sending notification to user: "+user_ID.Hex()+"\n"+
+				"Message: "+string(message)+"\n"+
+				"Number of connections: "+fmt.Sprintf("%d", len(Connections[userID]))+"\n",
+			funcName)
+	}
 
 	// Get the connections for the user
 	ConnectionsLock.RLock()
