@@ -129,6 +129,13 @@ func CreateOrder(c *gin.Context) {
 	go nf.SendNotification(venue.OwnerID, msg)
 
 	// Send Notification to Event group regarding new order
+	// remove user from attendees so they don't get notified
+	// about their own order
+	for i, v := range event.Attendees {
+		if v == user.ID {
+			event.Attendees = append(event.Attendees[:i], event.Attendees[i+1:]...)
+		}
+	}
 	notifyGroup := nf.NewNotification(
 		event.Attendees,
 		msg,
