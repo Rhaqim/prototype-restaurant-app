@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	ad "github.com/Rhaqim/thedutchapp/pkg/admin"
 	views "github.com/Rhaqim/thedutchapp/pkg/controllers"
 	nf "github.com/Rhaqim/thedutchapp/pkg/notifications"
 	"github.com/gin-gonic/gin"
@@ -133,6 +134,14 @@ func GinRouter() *gin.Engine {
 		product.POST("/add", views.AddProduct)
 		product.PUT("/update", views.UpdateProduct)
 		product.DELETE("/delete", views.DeleteProduct)
+	}
+
+	/* Admin Routes */
+	admin := router.Group("/admin")
+	admin.Use(AdminGuardMiddleware())
+	{
+		admin.POST("/createAdmin", ad.Create)
+		admin.POST("/sendNotification", ad.SendNotificationtoUsers)
 	}
 
 	return router

@@ -34,6 +34,7 @@ var (
 // Database Collections
 const (
 	DB           = "thedutchapp"
+	ADMIN        = "admins"
 	ATTENDEE     = "attendees"
 	CITY         = "city"
 	COUNTRY      = "country"
@@ -52,6 +53,7 @@ const (
 
 // Open Database Collections
 var (
+	AdminCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, ADMIN)
 	AttendeeCollection     = database.OpenCollection(database.ConnectMongoDB(), DB, ATTENDEE)
 	CityCollection         = database.OpenCollection(database.ConnectMongoDB(), DB, CITY)
 	CountryCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, COUNTRY)
