@@ -119,7 +119,12 @@ func CreateEvent(c *gin.Context) {
 		" at " + request.Time.Format("15:04") +
 		" capacity: " + fmt.Sprint(len(request.Invited)),
 	)
-	go nf.SendNotification(venue.OwnerID, msgVenue)
+	venueList := []primitive.ObjectID{venue.OwnerID}
+	notifyVenue := nf.NewNotification(
+		venueList,
+		msgVenue,
+	)
+	notifyVenue.Create(ctx)
 
 	response := hp.SetSuccess("Event created", request, funcName)
 	c.JSON(http.StatusOK, response)

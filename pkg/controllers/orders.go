@@ -126,7 +126,13 @@ func CreateOrder(c *gin.Context) {
 		" on " + request.CreatedAt.Time().Format("02-01-2006 15:04:05"))
 
 	// Send Notification to Venue regarding new order
-	go nf.SendNotification(venue.OwnerID, msg)
+	venueList := []primitive.ObjectID{venue.OwnerID}
+
+	notifyVenue := nf.NewNotification(
+		venueList,
+		msg,
+	)
+	notifyVenue.Create(ctx)
 
 	// Send Notification to Event group regarding new order
 	// remove user from attendees so they don't get notified
