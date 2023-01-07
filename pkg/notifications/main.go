@@ -170,6 +170,7 @@ type Notifications struct {
 	ID           primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
 	UserIDs      []primitive.ObjectID `json:"user_ids,omitempty" bson:"user_ids,omitempty"`
 	Notification []byte               `json:"notification,omitempty" bson:"notification,omitempty"`
+	IntededFor   string               `json:"intended_for,omitempty" bson:"intended_for,omitempty" default:"all"` // all, user, group, channel
 	Seen         bool                 `json:"seen,omitempty" bson:"seen,omitempty" binding:"bool" default:"false"`
 	Time         time.Time            `json:"time,omitempty" bson:"time,omitempty"`
 }
@@ -188,6 +189,7 @@ func NewNotification(userIDs []primitive.ObjectID, notification []byte) *Notific
 	return &Notifications{
 		ID:           primitive.NewObjectID(),
 		UserIDs:      userIDs,
+		IntededFor:   "user",
 		Notification: notification,
 		Seen:         false,
 		Time:         time.Now(),
@@ -206,6 +208,39 @@ func (n *Notifications) Create(ctx context.Context) error {
 	n.Seen = false
 
 	// Insert the notification into the database
+	_, err := notificationCollection.InsertOne(ctx, n)
+	if err != nil {
+		config.Logs("error", "Error inserting notification: "+err.Error()+"", funcName)
+		return err
+	}
+
+	return nil
+}
+
+// ToIntendedUsers sends a notification to the intended users
+// It takes the context and intended users Role
+// it saves the notification to the database
+// replaces the userIDs field null
+func (n *Notifications) ToIntendedUsers(ctx context.Context, role hp.Roles) error {
+	funcName := ut.GetFunctionName()
+
+	n.SendNotification()
+
+	// Changes users to empty array
+	n.UserIDs = []primitive.ObjectID{}
+
+	switch role {
+	case hp.Admin:
+		n.IntededFor = "admin"
+	case hp.User:
+		n.IntededFor = "user"
+	case hp.Business:
+		n.IntededFor = "business"
+	default:
+		n.IntededFor = "all"
+	}
+
+	// Save the notification to the database
 	_, err := notificationCollection.InsertOne(ctx, n)
 	if err != nil {
 		config.Logs("error", "Error inserting notification: "+err.Error()+"", funcName)

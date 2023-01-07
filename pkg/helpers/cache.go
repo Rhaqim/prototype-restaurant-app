@@ -3,8 +3,8 @@ package helpers
 import (
 	"context"
 
+	db "github.com/Rhaqim/thedutchapp/pkg/cache"
 	"github.com/Rhaqim/thedutchapp/pkg/config"
-	db "github.com/Rhaqim/thedutchapp/pkg/database"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -12,7 +12,7 @@ import (
 // Fetches all users with filter and stores them in redis cache
 // Accepts a context, filter and cache key
 // Returns an error
-func SetUsersCache(ctx context.Context, filter bson.M, key config.CacheKey) error {
+func SetUserIDsCache(ctx context.Context, filter bson.M, key config.CacheKey) error {
 	funcName := ut.GetFunctionName()
 
 	SetInfo("Fetching users", funcName)
@@ -24,10 +24,15 @@ func SetUsersCache(ctx context.Context, filter bson.M, key config.CacheKey) erro
 		return err
 	}
 
-	// Store users in redis cache
+	var userIDs []string
+	for _, user := range users {
+		userIDs = append(userIDs, user.ID.Hex())
+	}
+
+	// Store userIDs in redis cache
 	redis := db.NewCache(
 		key.String(),
-		users,
+		userIDs,
 	)
 
 	err = redis.Set()
@@ -42,7 +47,7 @@ func SetUsersCache(ctx context.Context, filter bson.M, key config.CacheKey) erro
 // Fetches from Redis cache and returns all users
 // Accepts a context and cache key
 // Returns a slice of users and an error
-func GetUsersCache(key config.CacheKey) (interface{}, error) {
+func GetUserIDsFromCache(ctx context.Context, filter bson.M, key config.CacheKey) ([]string, error) {
 	funcName := ut.GetFunctionName()
 
 	SetInfo("Fetching users from cache", funcName)
@@ -53,8 +58,23 @@ func GetUsersCache(key config.CacheKey) (interface{}, error) {
 		nil,
 	)
 
-	users, err := redis.Get()
+	users, err := redis.GetList()
 	if err != nil {
+		// Check if error is due to no data in cache with key
+		if err.Error() == "redis: key does not exist" {
+			SetInfo("No data in cache with key", funcName)
+
+			// Set users in cache
+			err = SetUserIDsCache(ctx, filter, key)
+			if err != nil {
+				SetError(err, "Error setting users in cache", funcName)
+				return nil, err
+			}
+
+			// Get users from cache
+			return GetUserIDsFromCache(ctx, nil, key)
+		}
+
 		SetError(err, "Error getting users from cache", funcName)
 		return nil, err
 	}

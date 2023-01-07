@@ -1,4 +1,4 @@
-package database
+package cache
 
 import (
 	"context"
@@ -55,6 +55,7 @@ func NewCache(key string, value interface{}) *Cache {
 
 // Set sets a key-value pair in the cache
 func (c *Cache) Set() error {
+	defer c.client.Close()
 	err := c.client.Set(context.Background(), c.Key, c.Value, 0).Err()
 	if err != nil {
 		return err
@@ -65,9 +66,21 @@ func (c *Cache) Set() error {
 
 // Get gets a value from the cache
 func (c *Cache) Get() (interface{}, error) {
+	defer c.client.Close()
 	val, err := c.client.Get(context.Background(), c.Key).Result()
 	if err != nil {
 		return "", err
+	}
+
+	return val, nil
+}
+
+// Get List gets a list from the cache
+func (c *Cache) GetList() ([]string, error) {
+	defer c.client.Close()
+	val, err := c.client.LRange(context.Background(), c.Key, 0, -1).Result()
+	if err != nil {
+		return nil, err
 	}
 
 	return val, nil
