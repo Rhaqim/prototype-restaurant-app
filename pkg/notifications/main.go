@@ -1,16 +1,22 @@
 package notifications
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
-	"github.com/Rhaqim/thedutchapp/pkg/helpers"
+	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
+	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+var notificationCollection = config.NotificationCollection
 
 // Websocket Notification Handler
 // This handler is used to upgrade the HTTP connection to a WebSocket connection
@@ -41,25 +47,27 @@ var (
 // It takes the Gin context as an argument
 // It reads the message from SendNotification and sends it to the client
 func WsHandler(c *gin.Context) {
+	funcName := ut.GetFunctionName()
+
 	// Upgrade the HTTP connection to a WebSocket connection
 	conn, err := Upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		// Handle error
-		config.Logs("error", "Error upgrading HTTP connection to WebSocket connection: "+err.Error()+"", "pkg/notifications/main.go")
+		hp.SetError(err, "Error upgrading HTTP connection to WebSocket connection", funcName)
 		return
 	}
 	defer conn.Close()
 
 	// Get the user from the token
-	user, err := helpers.GetUserFromToken(c)
+	user, err := hp.GetUserFromToken(c)
 	if err != nil {
-		config.Logs("error", "Error getting user from token: "+err.Error()+"", "pkg/notifications/main.go")
+		hp.SetError(err, "Error getting user from token", funcName)
 		return
 	}
 
 	userID := user.ID.Hex()
 
-	config.Logs("info", "New connection for user: "+user.Username+"", "pkg/notifications/main.go")
+	hp.SetInfo("New connection for user: "+user.Username+"", funcName)
 
 	// Add the connection to the list of Connections for the user
 	ConnectionsLock.Lock()
@@ -82,7 +90,7 @@ func WsHandler(c *gin.Context) {
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
-			config.Logs("error", "Error reading message from client: "+err.Error()+"", "pkg/notifications/main.go")
+			hp.SetError(err, "Error reading message from client", funcName)
 			break
 		}
 	}
@@ -95,19 +103,23 @@ func WsHandler(c *gin.Context) {
 // It loops over the connections and sends the message to each connection
 // If the connection is no longer usable, it is removed from the Connections map
 func SendNotification(user_ID primitive.ObjectID, message []byte) {
+	funcName := ut.GetFunctionName()
+
+	// convert the user ID to a string
 	userID := user_ID.Hex()
-	config.Logs("info",
+
+	hp.SetInfo(
 		"\n Sending notification to user: "+user_ID.Hex()+"\n"+
 			"Message: "+string(message)+"\n"+
 			"Number of connections: "+fmt.Sprintf("%d", len(Connections[userID]))+"\n",
-		"pkg/notifications/main.go")
+		funcName)
 
 	// Get the connections for the user
 	ConnectionsLock.RLock()
 	conns, ok := Connections[userID]
 	ConnectionsLock.RUnlock()
 	if !ok {
-		config.Logs("info", "No connections for user: "+userID+"", "pkg/notifications/main.go")
+		hp.SetInfo("No connections for user: "+userID+"", funcName)
 		return
 	}
 
@@ -127,10 +139,12 @@ func SendNotification(user_ID primitive.ObjectID, message []byte) {
 // It loops over the connections and sends the message to each connection
 // If the connection is no longer usable, it is removed from the Connections map
 func BroadcastNotification(message []byte) {
-	config.Logs("info",
+	funcName := ut.GetFunctionName()
+
+	hp.SetInfo(
 		"\n Sending notification to all users\n"+
 			"Message: "+string(message)+"\n",
-		"pkg/notifications/main.go")
+		funcName)
 
 	// Get the connections for all users
 	ConnectionsLock.RLock()
@@ -146,4 +160,114 @@ func BroadcastNotification(message []byte) {
 			}
 		}
 	}
+}
+
+// Notifications is a model struct for notifications
+// It is used to store notifications in the database
+// It is used to send notifications to the client
+// It contains the user ID, the notification message, the time the notification was created and whether it has been seen
+type Notifications struct {
+	ID           primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
+	UserIDs      []primitive.ObjectID `json:"user_ids,omitempty" bson:"user_ids,omitempty"`
+	Notification []byte               `json:"notification,omitempty" bson:"notification,omitempty"`
+	Seen         bool                 `json:"seen,omitempty" bson:"seen,omitempty"`
+	Time         time.Time            `json:"time,omitempty" bson:"time,omitempty"`
+}
+
+// NewNotification creates a new notification
+// It takes the user ID and the notification message
+// It returns a pointer to the notification
+func NewNotification(userIDs []primitive.ObjectID, notification []byte) *Notifications {
+	return &Notifications{
+		ID:           primitive.NewObjectID(),
+		UserIDs:      userIDs,
+		Notification: notification,
+		Seen:         false,
+		Time:         time.Now(),
+	}
+}
+
+// Create inserts the notification into the database
+// It takes the context
+// It returns an error if there is one
+func (n *Notifications) Save(ctx context.Context) error {
+	funcName := ut.GetFunctionName()
+
+	// Insert the notification into the database
+	_, err := notificationCollection.InsertOne(ctx, n)
+	if err != nil {
+		config.Logs("error", "Error inserting notification: "+err.Error()+"", funcName)
+		return err
+	}
+
+	return nil
+}
+
+// SendNotification sends the notification to all the users listed in the UserIDs field
+// It Uses the SendNotification function to send the notification to the users
+// it is called by the event handlers
+// It takes the context
+// It saves the notification to the database
+func (n *Notifications) SendNotification(ctx context.Context) {
+	funcName := ut.GetFunctionName()
+
+	hp.SetInfo("Sending notification to users", funcName)
+
+	for _, userID := range n.UserIDs {
+		// Get the user's WebSocket connections
+		go SendNotification(userID, []byte(n.Notification))
+	}
+
+	// Save the notification to the database
+	err := n.Save(ctx)
+	if err != nil {
+		hp.SetWarning("Error saving notification to databasee: "+err.Error()+"", funcName)
+	}
+}
+
+// BroadcastNotification sends the notification to all users
+// It Uses the BroadcastNotification function to send the notification to all users
+// it is called by the event handlers
+// It takes the context
+// It saves the notification to the database
+func (n *Notifications) BroadcastNotification(ctx context.Context) {
+	funcName := ut.GetFunctionName()
+
+	hp.SetInfo("Sending notification to all users", funcName)
+
+	go BroadcastNotification([]byte(n.Notification))
+
+	// Save the notification to the database
+	err := n.Save(ctx)
+	if err != nil {
+		hp.SetWarning("Error saving notification to databasee: "+err.Error()+"", funcName)
+	}
+}
+
+// GetNotifications returns all notifications that match the filter
+// It takes a context and a filter as arguments
+// It returns a slice of Notifications and an error
+func GetNotifications(ctx context.Context, filter bson.M) ([]Notifications, error) {
+	funcName := ut.GetFunctionName()
+
+	var notifications []Notifications
+
+	cur, err := notificationCollection.Find(ctx, filter)
+	if err != nil {
+		hp.SetError(err, "Error finding notifications", funcName)
+		return nil, err
+	}
+
+	for cur.Next(ctx) {
+		var notification Notifications
+		err := cur.Decode(&notification)
+		if err != nil {
+			hp.SetError(err, "Error decoding notification", funcName)
+			return nil, err
+		}
+
+		notifications = append(notifications, notification)
+	}
+
+	return notifications, nil
 }

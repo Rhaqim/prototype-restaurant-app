@@ -95,27 +95,30 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
-	// send notification to invited users and venue
-	for _, invited := range request.Invited {
-		// send notification to invited users
-		msg := []byte(
-			user.Username +
-				" invited you to " + request.Title +
-				" at " + venue.Name +
-				" on " + request.Date.Format("02-01-2006") +
-				" at " + request.Time.Format("15:04"),
-		)
-		go nf.SendNotification(invited, msg)
-	}
+	// send notification to invited users
+	msgInvited := []byte(
+		user.Username +
+			" invited you to " + request.Title +
+			" at " + venue.Name +
+			" on " + request.Date.Format("02-01-2006") +
+			" at " + request.Time.Format("15:04"),
+	)
 
-	msg := []byte(
+	notifyInvited := nf.NewNotification(
+		request.Invited,
+		msgInvited,
+	)
+	go notifyInvited.SendNotification(ctx)
+
+	// send notification to venue owner
+	msgVenue := []byte(
 		user.Username +
 			" has created an event at " + venue.Name +
 			" on " + request.Date.Format("02-01-2006") +
 			" at " + request.Time.Format("15:04") +
 			" capacity: " + fmt.Sprint(len(request.Invited)),
 	)
-	go nf.SendNotification(venue.OwnerID, msg)
+	go nf.SendNotification(venue.OwnerID, msgVenue)
 
 	response := hp.SetSuccess("Event created", request, funcName)
 	c.JSON(http.StatusOK, response)

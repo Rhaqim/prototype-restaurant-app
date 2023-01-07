@@ -33,37 +33,39 @@ var (
 
 // Database Collections
 const (
-	DB          = "thedutchapp"
-	USERS       = "users"
-	SESSION     = "sessions"
-	RESTAURAUNT = "restaurants"
-	EVENT       = "events"
-	ATTENDEE    = "attendees"
-	ORDER       = "orders"
-	PRODUCT     = "products"
-	TRANSACTION = "transactions"
-	WALLET      = "wallets"
-	FRIENDSHIP  = "friendship"
-	COUNTRY     = "country"
-	STATE       = "state"
-	CITY        = "city"
+	DB           = "thedutchapp"
+	ATTENDEE     = "attendees"
+	CITY         = "city"
+	COUNTRY      = "country"
+	EVENT        = "events"
+	FRIENDSHIP   = "friendship"
+	NOTIFICATION = "notifications"
+	ORDER        = "orders"
+	PRODUCT      = "products"
+	RESTAURAUNT  = "restaurants"
+	SESSION      = "sessions"
+	STATE        = "state"
+	TRANSACTION  = "transactions"
+	USERS        = "users"
+	WALLET       = "wallets"
 )
 
 // Open Database Collections
 var (
-	UserCollection         = database.OpenCollection(database.ConnectMongoDB(), DB, USERS)
-	SessionCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, SESSION)
-	RestaurantCollection   = database.OpenCollection(database.ConnectMongoDB(), DB, RESTAURAUNT)
-	EventCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, EVENT)
 	AttendeeCollection     = database.OpenCollection(database.ConnectMongoDB(), DB, ATTENDEE)
+	CityCollection         = database.OpenCollection(database.ConnectMongoDB(), DB, CITY)
+	CountryCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, COUNTRY)
+	EventCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, EVENT)
+	FriendshipCollection   = database.OpenCollection(database.ConnectMongoDB(), DB, FRIENDSHIP)
+	NotificationCollection = database.OpenCollection(database.ConnectMongoDB(), DB, NOTIFICATION)
 	OrderCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, ORDER)
 	ProductCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, PRODUCT)
-	TransactionsCollection = database.OpenCollection(database.ConnectMongoDB(), DB, TRANSACTION)
-	WalletCollection       = database.OpenCollection(database.ConnectMongoDB(), DB, WALLET)
-	FriendshipCollection   = database.OpenCollection(database.ConnectMongoDB(), DB, FRIENDSHIP)
-	CountryCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, COUNTRY)
+	RestaurantCollection   = database.OpenCollection(database.ConnectMongoDB(), DB, RESTAURAUNT)
+	SessionCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, SESSION)
 	StateCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, STATE)
-	CityCollection         = database.OpenCollection(database.ConnectMongoDB(), DB, CITY)
+	TransactionsCollection = database.OpenCollection(database.ConnectMongoDB(), DB, TRANSACTION)
+	UserCollection         = database.OpenCollection(database.ConnectMongoDB(), DB, USERS)
+	WalletCollection       = database.OpenCollection(database.ConnectMongoDB(), DB, WALLET)
 )
 
 // Log Messages
