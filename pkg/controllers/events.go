@@ -70,6 +70,8 @@ func CreateEvent(c *gin.Context) {
 	request.HostID = user.ID
 	request.Type = hp.EventType(hp.EventType(request.Type).String())
 	request.CreatedAt, request.UpdatedAt = hp.CreatedAtUpdatedAt()
+	// Add Host to Attendees
+	request.Attendees = append(request.Attendees, user.ID)
 
 	_, err = eventCollection.InsertOne(ctx, request)
 	if err != nil {

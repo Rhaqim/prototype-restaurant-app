@@ -170,8 +170,15 @@ type Notifications struct {
 	ID           primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
 	UserIDs      []primitive.ObjectID `json:"user_ids,omitempty" bson:"user_ids,omitempty"`
 	Notification []byte               `json:"notification,omitempty" bson:"notification,omitempty"`
-	Seen         bool                 `json:"seen,omitempty" bson:"seen,omitempty"`
+	Seen         bool                 `json:"seen,omitempty" bson:"seen,omitempty" binding:"bool" default:"false"`
 	Time         time.Time            `json:"time,omitempty" bson:"time,omitempty"`
+}
+
+type NotificationResponse struct {
+	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Notification string             `json:"notification,omitempty" bson:"notification,omitempty"`
+	Seen         bool               `json:"seen,omitempty" bson:"seen,omitempty"`
+	Time         time.Time          `json:"time,omitempty" bson:"time,omitempty"`
 }
 
 // NewNotification creates a new notification
@@ -195,6 +202,8 @@ func (n *Notifications) Create(ctx context.Context) error {
 
 	// Send the notification to the users
 	n.SendNotification()
+
+	n.Seen = false
 
 	// Insert the notification into the database
 	_, err := notificationCollection.InsertOne(ctx, n)
@@ -267,10 +276,12 @@ func GetNotifications(ctx context.Context, filter bson.M) ([]Notifications, erro
 // Checks if userID present in the UserIDs field
 // It takes a context and a user ID as arguments
 // It returns a slice of Notifications and an error
-func GetNotificationsByUser(ctx context.Context, userID primitive.ObjectID) ([]Notifications, error) {
+func GetNotificationsByUser(ctx context.Context, user hp.UserResponse) ([]Notifications, error) {
 	funcName := ut.GetFunctionName()
 
-	hp.SetInfo("Getting notifications for user: "+userID.Hex()+"", funcName)
+	userID := user.ID
+
+	hp.SetInfo("Getting notifications for user: "+user.Username+"", funcName)
 
 	// Check if id present is userIDs field
 	filter := bson.M{

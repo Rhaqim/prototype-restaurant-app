@@ -28,11 +28,22 @@ func GetNotifications(c *gin.Context) {
 		return
 	}
 
-	notifications, err := nf.GetNotificationsByUser(ctx, user.ID)
+	notifs, err := nf.GetNotificationsByUser(ctx, user)
 	if err != nil {
 		response := hp.SetError(err, "Error getting notifications", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
+	}
+
+	// convert the []byte to string
+	notifications := make([]nf.NotificationResponse, len(notifs))
+	for i, notif := range notifs {
+		notifications[i] = nf.NotificationResponse{
+			ID:           notif.ID,
+			Notification: string(notif.Notification),
+			Seen:         notif.Seen,
+			Time:         notif.Time,
+		}
 	}
 
 	c.JSON(http.StatusOK, notifications)
