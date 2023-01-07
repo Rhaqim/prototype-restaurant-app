@@ -167,3 +167,15 @@ const (
 const (
 	ContextTimeout = 15 * time.Second
 )
+
+// Redis Keys
+type CacheKey string
+
+const (
+	UserRole     CacheKey = "user_role:user"
+	BusinessRole CacheKey = "user_role:business"
+)
+
+func (ck CacheKey) String() string {
+	return string(ck)
+}

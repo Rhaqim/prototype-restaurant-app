@@ -201,6 +201,28 @@ func GetUserFromToken(c *gin.Context) (UserResponse, error) {
 	return user, nil
 }
 
+func GetUsers(ctx context.Context, filter bson.M) ([]UserResponse, error) {
+	var users []UserResponse
+	funcName := ut.GetFunctionName()
+
+	opts := options.Find().SetProjection(bson.M{
+		"password":     0,
+		"refreshToken": 0})
+
+	cursor, err := usersCollection.Find(ctx, filter, opts)
+	if err != nil {
+		SetError(err, "error", funcName)
+		return nil, err
+	}
+
+	if err = cursor.All(ctx, &users); err != nil {
+		SetError(err, "error", funcName)
+		return nil, err
+	}
+
+	return users, nil
+}
+
 // Check if Email is verified
 func CheckIfEmailVerificationExists(ctx context.Context, email string) (bool, error) {
 	var user UserResponse
