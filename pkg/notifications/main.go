@@ -190,8 +190,10 @@ func NewNotification(userIDs []primitive.ObjectID, notification []byte) *Notific
 // Create inserts the notification into the database
 // It takes the context
 // It returns an error if there is one
-func (n *Notifications) Save(ctx context.Context) error {
+func (n *Notifications) Create(ctx context.Context) error {
 	funcName := ut.GetFunctionName()
+
+	n.SendNotification()
 
 	// Insert the notification into the database
 	_, err := notificationCollection.InsertOne(ctx, n)
@@ -208,7 +210,7 @@ func (n *Notifications) Save(ctx context.Context) error {
 // it is called by the event handlers
 // It takes the context
 // It saves the notification to the database
-func (n *Notifications) SendNotification(ctx context.Context) {
+func (n *Notifications) SendNotification() {
 	funcName := ut.GetFunctionName()
 
 	hp.SetInfo("Sending notification to users", funcName)
@@ -217,12 +219,6 @@ func (n *Notifications) SendNotification(ctx context.Context) {
 		// Get the user's WebSocket connections
 		go SendNotification(userID, []byte(n.Notification))
 	}
-
-	// Save the notification to the database
-	err := n.Save(ctx)
-	if err != nil {
-		hp.SetWarning("Error saving notification to databasee: "+err.Error()+"", funcName)
-	}
 }
 
 // BroadcastNotification sends the notification to all users
@@ -230,18 +226,12 @@ func (n *Notifications) SendNotification(ctx context.Context) {
 // it is called by the event handlers
 // It takes the context
 // It saves the notification to the database
-func (n *Notifications) BroadcastNotification(ctx context.Context) {
+func (n *Notifications) BroadcastNotification() {
 	funcName := ut.GetFunctionName()
 
 	hp.SetInfo("Sending notification to all users", funcName)
 
 	go BroadcastNotification([]byte(n.Notification))
-
-	// Save the notification to the database
-	err := n.Save(ctx)
-	if err != nil {
-		hp.SetWarning("Error saving notification to databasee: "+err.Error()+"", funcName)
-	}
 }
 
 // GetNotifications returns all notifications that match the filter

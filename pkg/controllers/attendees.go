@@ -29,7 +29,7 @@ var attendeeCollection = config.AttendeeCollection
 // Sends a notification to the friends
 // Sends a notification to Venue with updated event details
 func SendEventInvites(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
@@ -126,7 +126,7 @@ func SendEventInvites(c *gin.Context) {
 		request.Friends,
 		msgInvite,
 	)
-	go notifyInvite.SendNotification(ctx)
+	go notifyInvite.Create(ctx)
 
 	// for _, invited := range request.Friends {
 	// 	// send notification to invited users
@@ -163,7 +163,7 @@ func SendEventInvites(c *gin.Context) {
 // Updates the event with the new attendee
 // Updates the attendee Collection with status attending
 func AcceptInvite(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
@@ -331,7 +331,7 @@ func AcceptInvite(c *gin.Context) {
 // Checks if the user has already declined the invite
 // Updates the attendee and event with go routines
 func DeclineInvite(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
 

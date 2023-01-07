@@ -162,3 +162,8 @@ const (
 	Reservation_  = "reservation: "
 	Transaction_  = "transaction: "
 )
+
+// Context Timeout
+const (
+	ContextTimeout = 15 * time.Second
+)
