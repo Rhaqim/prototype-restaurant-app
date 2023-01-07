@@ -288,12 +288,65 @@ func GetNotificationsByUser(ctx context.Context, userID primitive.ObjectID) ([]N
 	return notifications, nil
 }
 
+// GetNotificationByID returns a notification by its ID
+// It takes a context and a notification ID as arguments
+// It returns a Notifications struct and an error
+func GetNotificationByID(ctx context.Context, notificationID primitive.ObjectID) (Notifications, error) {
+	funcName := ut.GetFunctionName()
+
+	hp.SetInfo("Getting notification: "+notificationID.Hex()+"", funcName)
+
+	var notification Notifications
+
+	filter := bson.M{
+		"_id": notificationID,
+	}
+	err := notificationCollection.FindOne(ctx, filter).Decode(&notification)
+	if err != nil {
+		hp.SetError(err, "Error getting notification: "+notificationID.Hex()+"", funcName)
+		return Notifications{}, err
+	}
+
+	return notification, nil
+}
+
+// Helper to update a notification
+// It takes a context, a filter and an update as arguments
+// It returns an error if there is one
 func UpdateNotification(ctx context.Context, filter bson.M, update bson.M) error {
 	funcName := ut.GetFunctionName()
 
 	_, err := notificationCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		hp.SetError(err, "Error updating notification", funcName)
+		return err
+	}
+
+	return nil
+}
+
+// UpdateNotificationStatus marks a notification as seen if it is not seen
+// and marks it as unseen if it is seen
+// It takes a context and a notification ID as arguments
+// It returns an error if there is one
+func UpdateNotificationStatus(ctx context.Context, notificationID primitive.ObjectID) error {
+	funcName := ut.GetFunctionName()
+
+	hp.SetInfo("Updating notification status for notification: "+notificationID.Hex()+"", funcName)
+
+	// Get the notification
+	notification, err := GetNotificationByID(ctx, notificationID)
+	if err != nil {
+		hp.SetError(err, "Error getting notification", funcName)
+		return err
+	}
+
+	// Check if notification is seen
+	filter := bson.M{"_id": notificationID}
+	update := bson.M{"$set": bson.M{"seen": !notification.Seen}}
+	err = UpdateNotification(ctx, filter, update)
+	if err != nil {
+		hp.SetError(err, "Error updating notification status", funcName)
 		return err
 	}
 

@@ -78,11 +78,7 @@ func GinRouter() *gin.Engine {
 		notification := user.Group("/notification")
 		{
 			notification.GET("/get", views.GetNotifications)
-			// notification.GET("/getUnread", views.GetUnread)
-			// notification.GET("/getRead", views.GetRead)
-			// notification.POST("/markAsRead", views.MarkAsRead)
-			// notification.POST("/markAsUnread", views.MarkAsUnread)
-			// notification.POST("/markAllAsRead", views.MarkAllAsRead)
+			notification.POST("/markAs", views.UpdateNotificationStatus)
 		}
 	}
 
