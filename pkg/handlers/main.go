@@ -138,9 +138,9 @@ func GinRouter() *gin.Engine {
 
 	/* Admin Routes */
 	admin := router.Group("/admin")
+	admin.POST("/createAdmin", ad.Create)
 	admin.Use(AdminGuardMiddleware())
 	{
-		admin.POST("/createAdmin", ad.Create)
 		admin.POST("/sendNotification", ad.SendNotificationtoUsers)
 	}
 

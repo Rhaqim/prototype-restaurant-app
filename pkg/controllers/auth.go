@@ -235,27 +235,29 @@ func SignIn(c *gin.Context) {
 		}
 
 		// Check if email is verified
-		if !user.EmailVerified {
-			err := hp.SendVerificationEmail(ctx, user.Email)
-			if err != nil {
-				response := hp.SetError(err, "Error sending email verification email", funcName)
-				c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		if user.Role != hp.Admin {
+			if !user.EmailVerified {
+				err := hp.SendVerificationEmail(ctx, user.Email)
+				if err != nil {
+					response := hp.SetError(err, "Error sending email verification email", funcName)
+					c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+					return
+				}
+
+				// Remove verification code from database after 5 minutes
+				go func() {
+					time.Sleep(5 * time.Minute)
+					c := context.Background()
+					err := hp.RemoveVerificationCode(c, user.Email)
+					if err != nil {
+						hp.SetDebug("Error removing verification code: "+err.Error(), funcName)
+					}
+				}()
+
+				response := hp.SetError(nil, "Email not verified, please check your email for verification code", funcName)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 				return
 			}
-
-			// Remove verification code from database after 5 minutes
-			go func() {
-				time.Sleep(5 * time.Minute)
-				c := context.Background()
-				err := hp.RemoveVerificationCode(c, user.Email)
-				if err != nil {
-					hp.SetDebug("Error removing verification code: "+err.Error(), funcName)
-				}
-			}()
-
-			response := hp.SetError(nil, "Email not verified, please check your email for verification code", funcName)
-			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
-			return
 		}
 
 		userResponse := hp.UserResponse{
