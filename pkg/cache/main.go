@@ -107,3 +107,5 @@ func (c *Cache) Delete() error {
 
 	return nil
 }
+
+const ErrCacheNotFound = redis.Nil

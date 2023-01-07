@@ -35,6 +35,16 @@ func GetNotifications(c *gin.Context) {
 		return
 	}
 
+	generalNotifs, err := nf.GetNotificationByGroupID(ctx, user.Role)
+	if err != nil {
+		response := hp.SetError(err, "Error getting notifications", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Add General notifications to user notifications
+	notifs = append(notifs, generalNotifs...)
+
 	// convert the []byte to string
 	notifications := make([]nf.NotificationResponse, len(notifs))
 	for i, notif := range notifs {

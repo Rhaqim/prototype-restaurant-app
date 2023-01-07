@@ -121,7 +121,9 @@ func SendNotification(user_ID primitive.ObjectID, message []byte) {
 	conns, ok := Connections[userID]
 	ConnectionsLock.RUnlock()
 	if !ok {
-		hp.SetInfo("No connections for user: "+userID+"", funcName)
+		if len(Connections[userID]) < 2 {
+			hp.SetInfo("No connections for user: "+userID+"", funcName)
+		}
 		return
 	}
 
@@ -356,6 +358,36 @@ func GetNotificationByID(ctx context.Context, notificationID primitive.ObjectID)
 	}
 
 	return notification, nil
+}
+
+func GetNotificationByGroupID(ctx context.Context, group hp.Roles) ([]Notifications, error) {
+	funcName := ut.GetFunctionName()
+
+	hp.SetInfo("Getting notifications for group: "+group+"", funcName)
+
+	var notifications []Notifications
+
+	filter := bson.M{
+		"intended_for": group,
+	}
+	cur, err := notificationCollection.Find(ctx, filter)
+	if err != nil {
+		hp.SetError(err, "Error finding notifications", funcName)
+		return nil, err
+	}
+
+	for cur.Next(ctx) {
+		var notification Notifications
+		err := cur.Decode(&notification)
+		if err != nil {
+			hp.SetError(err, "Error decoding notification", funcName)
+			return nil, err
+		}
+
+		notifications = append(notifications, notification)
+	}
+
+	return notifications, nil
 }
 
 // Helper to update a notification

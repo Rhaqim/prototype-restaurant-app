@@ -69,17 +69,23 @@ func GetUserIDsFromCache(ctx context.Context, filter bson.M, key config.CacheKey
 		nil,
 	)
 
-	// Set users in cache
-	err := SetUserIDsCache(ctx, filter, key)
-	if err != nil {
-		SetError(err, "Error setting users in cache", funcName)
-		return nil, err
-	}
-
 	users, err := redis.GetList()
 	if err != nil {
-		SetError(err, "Error getting users from cache", funcName)
-		return nil, err
+		// If error, fetch from database
+		SetError(err, "Error getting users from cache fetching from Database", funcName)
+
+		users, err := GetUsers(ctx, filter)
+		if err != nil {
+			SetError(err, "Error getting users", funcName)
+			return nil, err
+		}
+
+		var userIDs []string
+		for _, user := range users {
+			userIDs = append(userIDs, user.ID.Hex())
+		}
+
+		return userIDs, nil
 	}
 
 	// check if users is empty
