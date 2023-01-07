@@ -24,6 +24,7 @@ func GinRouter() *gin.Engine {
 	{
 		tokenProtected.GET("/signout", views.Signout)
 		tokenProtected.GET("/ws", nf.WsHandler)
+
 	}
 
 	refreshTokenProtected := auth.Group("/protected")
@@ -71,6 +72,17 @@ func GinRouter() *gin.Engine {
 			wallet.POST("/create", views.CreateWallet)
 			wallet.POST("/fund", views.FundWallet)
 			wallet.POST("/pinChange", views.ChangePin)
+		}
+
+		/* Notification Routes */
+		notification := user.Group("/notification")
+		{
+			notification.GET("/get", views.GetNotifications)
+			// notification.GET("/getUnread", views.GetUnread)
+			// notification.GET("/getRead", views.GetRead)
+			// notification.POST("/markAsRead", views.MarkAsRead)
+			// notification.POST("/markAsUnread", views.MarkAsUnread)
+			// notification.POST("/markAllAsRead", views.MarkAllAsRead)
 		}
 	}
 

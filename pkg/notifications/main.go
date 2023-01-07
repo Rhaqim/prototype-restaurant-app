@@ -193,6 +193,7 @@ func NewNotification(userIDs []primitive.ObjectID, notification []byte) *Notific
 func (n *Notifications) Create(ctx context.Context) error {
 	funcName := ut.GetFunctionName()
 
+	// Send the notification to the users
 	n.SendNotification()
 
 	// Insert the notification into the database
@@ -260,4 +261,41 @@ func GetNotifications(ctx context.Context, filter bson.M) ([]Notifications, erro
 	}
 
 	return notifications, nil
+}
+
+// GetNotificationsByUser returns all notifications for a user
+// Checks if userID present in the UserIDs field
+// It takes a context and a user ID as arguments
+// It returns a slice of Notifications and an error
+func GetNotificationsByUser(ctx context.Context, userID primitive.ObjectID) ([]Notifications, error) {
+	funcName := ut.GetFunctionName()
+
+	hp.SetInfo("Getting notifications for user: "+userID.Hex()+"", funcName)
+
+	// Check if id present is userIDs field
+	filter := bson.M{
+		"user_ids": bson.M{
+			"$in": []primitive.ObjectID{userID},
+		},
+	}
+
+	notifications, err := GetNotifications(ctx, filter)
+	if err != nil {
+		hp.SetError(err, "Error getting notifications for user: "+userID.Hex()+"", funcName)
+		return nil, err
+	}
+
+	return notifications, nil
+}
+
+func UpdateNotification(ctx context.Context, filter bson.M, update bson.M) error {
+	funcName := ut.GetFunctionName()
+
+	_, err := notificationCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		hp.SetError(err, "Error updating notification", funcName)
+		return err
+	}
+
+	return nil
 }
