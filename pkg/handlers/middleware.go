@@ -102,8 +102,13 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 
 func AdminGuardMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user, _ := c.Get("user")
-		if user.(hp.UserResponse).Role != hp.Admin {
+		user, _ := hp.GetUserFromToken(c)
+
+		hp.SetInfo("User: "+user.Email+
+			"User Role: "+user.Role.String(),
+			ut.GetFunctionName())
+
+		if user.Role != hp.Admin {
 			response := hp.SetError(nil, "You are not authorized to access this resource!", ut.GetFunctionName())
 			c.JSON(http.StatusUnauthorized, response)
 			c.Abort()

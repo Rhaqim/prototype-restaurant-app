@@ -77,11 +77,33 @@ func (c *Cache) Get() (interface{}, error) {
 
 // Get List gets a list from the cache
 func (c *Cache) GetList() ([]string, error) {
-	defer c.client.Close()
+	// defer c.client.Close()
 	val, err := c.client.LRange(context.Background(), c.Key, 0, -1).Result()
 	if err != nil {
 		return nil, err
 	}
 
 	return val, nil
+}
+
+// Set List sets a list in the cache
+func (c *Cache) SetList() error {
+	// defer c.client.Close()
+	err := c.client.LPush(context.Background(), c.Key, c.Value).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Delete deletes a key-value pair from the cache
+func (c *Cache) Delete() error {
+	// defer c.client.Close()
+	err := c.client.Del(context.Background(), c.Key).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

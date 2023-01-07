@@ -90,7 +90,7 @@ func WsHandler(c *gin.Context) {
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
-			hp.SetError(err, "Error reading message from client", funcName)
+			hp.SetDebug("Error reading message from client: "+err.Error(), funcName)
 			break
 		}
 	}

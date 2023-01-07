@@ -109,3 +109,8 @@ func RandomString(length int, key string) string {
 
 	return string(b)
 }
+
+func ToJSON(i interface{}) string {
+	json, _ := json.Marshal(i)
+	return string(json)
+}

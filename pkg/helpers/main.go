@@ -118,11 +118,11 @@ func UpdateRefreshToken(ctx context.Context, id primitive.ObjectID, refreshToken
 			"updated_at":   primitive.NewDateTimeFromTime(time.Now()),
 		},
 	}
-	updateResult, err := usersCollection.UpdateOne(ctx, filter, update)
+	_, err := usersCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
-	log.Println("updateResult: ", updateResult)
+
 	return nil
 }
 

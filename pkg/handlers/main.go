@@ -138,10 +138,13 @@ func GinRouter() *gin.Engine {
 
 	/* Admin Routes */
 	admin := router.Group("/admin")
+	admin.Use(TokenGuardMiddleware())
 	admin.POST("/createAdmin", ad.Create)
-	admin.Use(AdminGuardMiddleware())
+
+	protected := admin.Group("/protected")
+	protected.Use(AdminGuardMiddleware())
 	{
-		admin.POST("/sendNotification", ad.SendNotificationtoUsers)
+		protected.POST("/sendNotification", ad.SendNotificationtoUsers)
 	}
 
 	return router
