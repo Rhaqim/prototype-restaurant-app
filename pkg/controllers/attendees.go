@@ -240,7 +240,9 @@ func AcceptInvite(c *gin.Context) {
 
 	// Update the attendee and event with go routines
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
+
+	errChan := make(chan error, 3)
 
 	go func() {
 		defer wg.Done()
@@ -258,8 +260,7 @@ func AcceptInvite(c *gin.Context) {
 
 		_, err = attendeeCollection.UpdateOne(ctx, filter, update)
 		if err != nil {
-			response := hp.SetError(err, "Error updating attendee", funcName)
-			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+			errChan <- err
 			return
 		}
 	}()
@@ -279,34 +280,30 @@ func AcceptInvite(c *gin.Context) {
 
 		_, err = eventCollection.UpdateOne(ctx, filter, update)
 		if err != nil {
-			response := hp.SetError(err, "Error updating event", funcName)
-			c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+			errChan <- err
 			return
 		}
 	}()
 
-	/*
-		go func() {
-			// deduct budget from user's wallet
-			defer wg.Done()
+	// Lock budget from the wallet
+	go func() {
+		defer wg.Done()
 
-			filter := bson.M{"_id": user.ID}
-			update := bson.M{
-				"$inc": bson.M{
-					"wallet": -request.Budget,
-				},
-			}
+		err := hp.LockBudget(ctx, wallet, request.Budget, event.ID)
+		if err != nil {
+			errChan <- err
+			return
+		}
+	}()
 
-			_, err = authCollection.UpdateOne(ctx, filter, update)
-			if err != nil {
-				response := hp.SetError(err, "Error updating user", funcName)
-				c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-				return
-			}
-
-		}()
-	*/
 	wg.Wait()
+	close(errChan)
+
+	for err := range errChan {
+		response := hp.SetError(err, "Error updating attendee or event", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
 
 	// Send notification to event owner
 	// Get the event owner

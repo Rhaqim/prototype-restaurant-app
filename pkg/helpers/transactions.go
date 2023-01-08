@@ -75,6 +75,12 @@ func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount floa
 		return false
 	}
 
+	// Get Money from the budget
+	budgetAmount := UnlockBudget(ctx, txn.ToID, user)
+
+	amount = amount - budgetAmount
+
+	// Update the wallet to get the rest from the wallet or return the rest to the wallet
 	filter := bson.M{"user_id": user.ID}
 	update := bson.M{"$inc": bson.M{
 		"balance": -amount,

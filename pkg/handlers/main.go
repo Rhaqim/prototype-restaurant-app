@@ -51,6 +51,7 @@ func GinRouter() *gin.Engine {
 		{
 			transactions.POST("/createTransaction", views.CreateTransaction)
 			transactions.PUT("/updateTransaction", views.UpdateTransactionStatus)
+			transactions.POST("/paybill", views.PayBill)
 			transactions.GET("/getTransactions", views.GetTransactions)
 		}
 

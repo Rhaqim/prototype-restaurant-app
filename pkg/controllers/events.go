@@ -98,6 +98,14 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
+	// LOCK BUDGET
+	err = hp.LockBudget(ctx, wallet, request.Budget, request.ID)
+	if err != nil {
+		response := hp.SetError(err, "Error locking budget", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
 	// NOTIFICATION
 	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": request.Venue})
 	if err != nil {

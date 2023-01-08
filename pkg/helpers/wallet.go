@@ -141,9 +141,9 @@ func LockBudget(ctx context.Context, wallet Wallet, amount float64, PurposeID pr
 }
 
 // UnlockBudget unlocks the amount to be either transferred to wallet or refunded to user
-func UnlockBudget(ctx context.Context, event Event, user UserResponse) float64 {
+func UnlockBudget(ctx context.Context, event_id primitive.ObjectID, user UserResponse) float64 {
 	// Get budget for the event
-	budget, err := GetBudget(ctx, bson.M{"purpose_id": event.ID, "user_id": user.ID})
+	budget, err := GetBudget(ctx, bson.M{"purpose_id": event_id, "user_id": user.ID})
 	if err != nil {
 		return 0
 	}
