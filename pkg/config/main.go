@@ -65,7 +65,7 @@ var (
 	RestaurantCollection   = database.OpenCollection(database.ConnectMongoDB(), DB, RESTAURAUNT)
 	SessionCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, SESSION)
 	StateCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, STATE)
-	TransactionsCollection = database.OpenCollection(database.ConnectMongoDB(), DB, TRANSACTION)
+	TransactionCollection  = database.OpenCollection(database.ConnectMongoDB(), DB, TRANSACTION)
 	UserCollection         = database.OpenCollection(database.ConnectMongoDB(), DB, USERS)
 	WalletCollection       = database.OpenCollection(database.ConnectMongoDB(), DB, WALLET)
 )

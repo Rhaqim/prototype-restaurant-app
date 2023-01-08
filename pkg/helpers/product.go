@@ -20,10 +20,10 @@ type Product struct {
 	ProductUID   string             `json:"product_uid,omitempty" bson:"product_uid"`
 	SuppliedID   primitive.ObjectID `json:"supplied_id,omitempty" bson:"supplied_id,omitempty"`
 	RestaurantID primitive.ObjectID `json:"restaurant_id,omitempty" bson:"restaurant_id,omitempty"`
-	Name         string             `json:"name,omitempty" bson:"name" binding:"required,min=3,max=50,lowercase"`
+	Name         string             `json:"name" bson:"name" binding:"required,min=3,max=50,lowercase"`
 	Category     Categories         `json:"category,omitempty" bson:"category" binding:"required,oneof=drink food others,lowercase"`
-	Price        float64            `json:"price,omitempty" bson:"price" binding:"required"`
-	Stock        int                `json:"stock,omitempty" bson:"stock" binding:"required"`
+	Price        float64            `json:"price" bson:"price" binding:"required"`
+	Stock        uint64             `json:"stock" bson:"stock" binding:"required"`
 	CreatedAt    primitive.DateTime `json:"created_at,omitempty" bson:"created_at" default:"time.Now()"`
 	UpdatedAt    primitive.DateTime `json:"updated_at,omitempty" bson:"updated_at" default:"time.Now()"`
 }

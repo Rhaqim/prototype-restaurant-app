@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"go.mongodb.org/mongo-driver/bson"
@@ -28,21 +29,44 @@ func (h EventType) String() string {
 	}
 }
 
+type EventStatus string
+
+const (
+	Upcoming EventStatus = "upcoming"
+	Ongoing  EventStatus = "ongoing"
+	Finished EventStatus = "finished"
+)
+
+func (h EventStatus) String() string {
+	switch h {
+	case Upcoming:
+		return "upcoming"
+	case Ongoing:
+		return "ongoing"
+	case Finished:
+		return "finished"
+	default:
+		return "upcoming"
+	}
+}
+
 type Event struct {
-	ID        primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
-	HostID    primitive.ObjectID   `json:"host_id" bson:"host_id"`
-	Title     string               `json:"title" binding:"required" bson:"title"`
-	Venue     primitive.ObjectID   `json:"venue" bson:"venue" binding:"required"`
-	Date      CustomDate           `json:"date" bson:"date" binding:"required" time_format:"2006-01-02"`
-	Time      CustomTime           `json:"time" bson:"time" binding:"required" time_format:"15:04"`
-	Invited   []primitive.ObjectID `json:"invited" bson:"invited" default:"[]"`
-	Attendees []primitive.ObjectID `json:"attendees" bson:"attendees" default:"[]"`
-	Declined  []primitive.ObjectID `json:"declined" bson:"declined" default:"[]"`
-	Type      EventType            `json:"type" bson:"type"`
-	Budget    float64              `json:"budget" bson:"budget" binding:"required,number"`
-	Bill      float64              `json:"bill,omitempty" bson:"bill,omitempty" default:"0"`
-	CreatedAt primitive.DateTime   `bson:"created_at" json:"created_at" default:"Now()"`
-	UpdatedAt primitive.DateTime   `bson:"updated_at" json:"updated_at" default:"Now()"`
+	ID             primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
+	HostID         primitive.ObjectID   `json:"host_id" bson:"host_id"`
+	Title          string               `json:"title" binding:"required" bson:"title"`
+	Venue          primitive.ObjectID   `json:"venue" bson:"venue" binding:"required"`
+	Date           CustomDate           `json:"date" bson:"date" binding:"required" time_format:"2006-01-02"`
+	Time           CustomTime           `json:"time" bson:"time" binding:"required" time_format:"15:04"`
+	Invited        []primitive.ObjectID `json:"invited" bson:"invited" default:"[]"`
+	Attendees      []primitive.ObjectID `json:"attendees" bson:"attendees" default:"[]"`
+	Declined       []primitive.ObjectID `json:"declined" bson:"declined" default:"[]"`
+	Type           EventType            `json:"type" bson:"type"`
+	EventStatus    EventStatus          `json:"event_status" bson:"event_status"`
+	SpecialRequest string               `json:"special_request,omitempty" bson:"special_request,omitempty"`
+	Budget         float64              `json:"budget" bson:"budget" binding:"required,number"`
+	Bill           float64              `json:"bill,omitempty" bson:"bill,omitempty" default:"0"`
+	CreatedAt      primitive.DateTime   `bson:"created_at" json:"created_at" default:"Now()"`
+	UpdatedAt      primitive.DateTime   `bson:"updated_at" json:"updated_at" default:"Now()"`
 }
 
 func GetEvent(ctx context.Context, filter bson.M) (Event, error) {
@@ -99,6 +123,25 @@ func UpdateEvent(ctx context.Context, filter bson.M, update bson.M) (Event, erro
 func DeleteEvent(ctx context.Context, filter bson.M) (Event, error) {
 	var event Event
 	err := eventCollection.FindOneAndDelete(ctx, filter).Decode(&event)
+	if err != nil {
+		return event, err
+	}
+
+	return event, nil
+}
+
+// Check if Date and Time of event equal to Now()
+// If true, change event status to ongoing
+// After 24 hours, change event status to finished
+func CheckEventStatus(ctx context.Context, event Event) (Event, error) {
+
+	if event.Date.Equal(time.Now()) && event.Time.Equal(time.Now()) {
+		event.EventStatus = Ongoing
+	} else if event.Date.Equal(time.Now().AddDate(0, 0, 1)) && event.Time.Equal(time.Now().AddDate(0, 0, 1)) {
+		event.EventStatus = Finished
+	}
+
+	_, err := UpdateEvent(ctx, bson.M{"_id": event.ID}, bson.M{"$set": bson.M{"event_status": event.EventStatus}})
 	if err != nil {
 		return event, err
 	}

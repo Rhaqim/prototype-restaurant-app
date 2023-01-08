@@ -69,6 +69,7 @@ func CreateEvent(c *gin.Context) {
 	request.ID = primitive.NewObjectID()
 	request.HostID = user.ID
 	request.Type = hp.EventType(hp.EventType(request.Type).String())
+	request.EventStatus = hp.Upcoming
 	request.CreatedAt, request.UpdatedAt = hp.CreatedAtUpdatedAt()
 	// Add Host to Attendees
 	request.Attendees = append(request.Attendees, user.ID)
@@ -117,7 +118,8 @@ func CreateEvent(c *gin.Context) {
 		" has created an event at " + venue.Name +
 		" on " + request.Date.Format("02-01-2006") +
 		" at " + request.Time.Format("15:04") +
-		" capacity: " + fmt.Sprint(len(request.Invited)),
+		" capacity: " + fmt.Sprint(len(request.Invited)+1) +
+		" Special request: " + request.SpecialRequest,
 	)
 	venueList := []primitive.ObjectID{venue.OwnerID}
 	notifyVenue := nf.NewNotification(

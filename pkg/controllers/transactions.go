@@ -59,7 +59,7 @@ func CreateTransaction(c *gin.Context) {
 	request.FromID = user.ID
 	request.Status = hp.TxnPending
 
-	_, err = config.TransactionsCollection.InsertOne(ctx, request)
+	_, err = config.TransactionCollection.InsertOne(ctx, request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -128,7 +128,7 @@ func UpdateTransactionStatus(c *gin.Context) {
 		},
 	}
 
-	updateResult, err := config.TransactionsCollection.UpdateOne(ctx, filter, update)
+	updateResult, err := config.TransactionCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		response := hp.SetError(err, "Error updating transaction status", funcName)
 		c.JSON(http.StatusBadRequest, response)
@@ -137,7 +137,7 @@ func UpdateTransactionStatus(c *gin.Context) {
 
 	// Update Wallet Balance
 	var transaction hp.Transactions
-	err = config.TransactionsCollection.FindOne(ctx, filter).Decode(&transaction)
+	err = config.TransactionCollection.FindOne(ctx, filter).Decode(&transaction)
 	if err != nil {
 		response := hp.SetError(err, "Error fetching transaction", funcName)
 		c.JSON(http.StatusBadRequest, response)
@@ -185,7 +185,7 @@ func GetTransactions(c *gin.Context) {
 
 	var transactions []hp.Transactions
 
-	cursor, err := config.TransactionsCollection.Find(ctx, filter)
+	cursor, err := config.TransactionCollection.Find(ctx, filter)
 	if err != nil {
 		response := hp.SetError(err, "Error fetching transactions", funcName)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
