@@ -76,7 +76,7 @@ func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount floa
 	}
 
 	filter := bson.M{"user_id": user.ID}
-	update := bson.M{"$set": bson.M{
+	update := bson.M{"$inc": bson.M{
 		"balance": -amount,
 	}}
 
@@ -93,7 +93,7 @@ func UpdateReceiverTransaction(ctx context.Context, user UserResponse, amount fl
 	}
 
 	filter := bson.M{"user_id": user.ID}
-	update := bson.M{"$set": bson.M{
+	update := bson.M{"$inc": bson.M{
 		"balance": +amount,
 	}}
 
@@ -180,4 +180,10 @@ func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transact
 	}
 
 	return txn, nil
+}
+
+/* Event Transaction */
+type EventBillPayment struct {
+	EventID primitive.ObjectID `json:"event_id" bson:"event_id" binding:"required"`
+	TxnPin  string             `json:"txn_pin" bson:"txn_pin" binding:"required"`
 }

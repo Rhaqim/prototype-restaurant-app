@@ -82,6 +82,14 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
+	// LockBudget
+	err = hp.LockBudget(ctx, wallet, request.Budget, request.ID)
+	if err != nil {
+		response := hp.SetError(err, "Error locking budget", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
 	// send invite to invited users
 	err = hp.SendInviteToEvent(ctx, request.ID, request.Invited, user)
 	if err != nil {

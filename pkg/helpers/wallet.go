@@ -89,3 +89,70 @@ func CheckifWalletExists(ctx context.Context, filter bson.M) (bool, error) {
 
 	return true, nil
 }
+
+/* Budget */
+var budgetCollection = config.BudgetCollection
+
+type Budget struct {
+	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id"`
+	UserID    primitive.ObjectID `json:"user_id" bson:"user_id" binding:"required"`
+	PurposeID primitive.ObjectID `json:"purpose_id" bson:"purpose_id" binding:"required"`
+	Amount    float64            `json:"amount" bson:"amount" binding:"required"`
+}
+
+func GetBudget(ctx context.Context, filter bson.M) (Budget, error) {
+	var budget Budget
+
+	err := budgetCollection.FindOne(ctx, filter).Decode(&budget)
+	if err != nil {
+		return Budget{}, err
+	}
+
+	return budget, nil
+}
+
+// TODO: Logic to lock amount soecified as budget for an expense
+// LockBudget and UnlockBudget
+// LockBudget locks the amount specified as budget for an expense
+// UnlockBudget unlocks the amount to be either transferred to wallet or refunded to user
+func LockBudget(ctx context.Context, wallet Wallet, amount float64, PurposeID primitive.ObjectID) error {
+	// Subtract amount from wallet balance
+	wallet.Balance = wallet.Balance - amount
+
+	_, err := walletCollection.UpdateOne(ctx, bson.M{"_id": wallet.ID}, bson.M{"$set": bson.M{"balance": wallet.Balance}})
+	if err != nil {
+		return err
+	}
+
+	// Create a new budget
+	budget := Budget{
+		ID:        primitive.NewObjectID(),
+		UserID:    wallet.UserID,
+		PurposeID: PurposeID,
+		Amount:    amount,
+	}
+
+	_, err = budgetCollection.InsertOne(ctx, budget)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UnlockBudget unlocks the amount to be either transferred to wallet or refunded to user
+func UnlockBudget(ctx context.Context, event Event, user UserResponse) float64 {
+	// Get budget for the event
+	budget, err := GetBudget(ctx, bson.M{"purpose_id": event.ID, "user_id": user.ID})
+	if err != nil {
+		return 0
+	}
+
+	// Delete budget
+	_, err = budgetCollection.DeleteOne(ctx, bson.M{"_id": budget.ID})
+	if err != nil {
+		return 0
+	}
+
+	return budget.Amount
+}

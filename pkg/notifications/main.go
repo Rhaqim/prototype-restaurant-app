@@ -211,6 +211,7 @@ func NewNotification(userIDs []primitive.ObjectID, notification []byte) *Notific
 // It takes the context
 // It returns an error if there is one
 func (n *Notifications) Send() error {
+	// Create a context needed for the database
 	ctx := context.Background()
 
 	funcName := ut.GetFunctionName()

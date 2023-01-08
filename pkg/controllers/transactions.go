@@ -210,7 +210,7 @@ func PayBill(c *gin.Context) {
 
 	var funcName = ut.GetFunctionName()
 
-	var request hp.Event
+	var request hp.EventBillPayment
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		var response = hp.SetError(err, "Error binding JSON", funcName)
@@ -225,7 +225,39 @@ func PayBill(c *gin.Context) {
 		return
 	}
 
-	txn, err := hp.SendtoVenues(ctx, request, user)
+	// Get Event
+	filter := bson.M{
+		"_id": request.EventID,
+	}
+	event, err := hp.GetEvent(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error fetching event", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Check that pin sent is correct
+
+	// Get wallet
+	filter = bson.M{
+		"_id": user.Wallet,
+	}
+	wallet, err := hp.GetWallet(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error fetching wallet", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Check if pin is correct
+	pin := auth.CheckPasswordHash(request.TxnPin, wallet.TxnPin)
+	if !pin {
+		response := hp.SetError(nil, "Incorrect pin", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	txn, err := hp.SendtoVenues(ctx, event, user)
 	if err != nil {
 		response := hp.SetError(err, "Error sending money to venue", funcName)
 		c.JSON(http.StatusBadRequest, response)
@@ -233,8 +265,8 @@ func PayBill(c *gin.Context) {
 	}
 
 	// Update event status to Finished once bill is paid
-	filter := bson.M{
-		"_id": request.ID,
+	filter = bson.M{
+		"_id": event.ID,
 	}
 	update := bson.M{
 		"$set": bson.M{
