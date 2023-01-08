@@ -35,7 +35,7 @@ func GetNotifications(c *gin.Context) {
 		return
 	}
 
-	generalNotifs, err := nf.GetNotificationByGroupID(ctx, user.Role)
+	generalNotifs, err := nf.GetNotificationByGroup(ctx, user.Role)
 	if err != nil {
 		response := hp.SetError(err, "Error getting notifications", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)

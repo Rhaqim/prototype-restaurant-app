@@ -174,17 +174,24 @@ type Notifications struct {
 	ID           primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
 	UserIDs      []primitive.ObjectID `json:"user_ids,omitempty" bson:"user_ids,omitempty"`
 	Notification []byte               `json:"notification,omitempty" bson:"notification,omitempty"`
-	IntededFor   string               `json:"intended_for,omitempty" bson:"intended_for,omitempty" default:"all"` // all, user, group, channel
-	Seen         bool                 `json:"seen,omitempty" bson:"seen,omitempty" binding:"bool" default:"false"`
+	IntededFor   string               `json:"intended_for,omitempty" bson:"intended_for,omitempty" default:"all" oneof:"all user business admin"` // all, user, business, admin
+	Seen         ReadMessage          `json:"seen,omitempty" bson:"seen,omitempty" binding:"bool" default:"false"`
 	Time         time.Time            `json:"time,omitempty" bson:"time,omitempty"`
 }
 
 type NotificationResponse struct {
-	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Notification string             `json:"notification,omitempty" bson:"notification,omitempty"`
-	Seen         bool               `json:"seen,omitempty" bson:"seen,omitempty"`
-	Time         time.Time          `json:"time,omitempty" bson:"time,omitempty"`
+	ID           primitive.ObjectID `json:"_id" bson:"_id"`
+	Notification string             `json:"notification" bson:"notification"`
+	Seen         ReadMessage        `json:"seen" bson:"seen"`
+	Time         time.Time          `json:"time" bson:"time"`
 }
+
+type ReadMessage bool
+
+const (
+	Unread ReadMessage = false
+	Read   ReadMessage = true
+)
 
 // NewNotification creates a new notification
 // It takes the user ID and the notification message
@@ -195,7 +202,7 @@ func NewNotification(userIDs []primitive.ObjectID, notification []byte) *Notific
 		UserIDs:      userIDs,
 		IntededFor:   "user",
 		Notification: notification,
-		Seen:         false,
+		Seen:         Unread,
 		Time:         time.Now(),
 	}
 }
@@ -209,7 +216,7 @@ func (n *Notifications) Create(ctx context.Context) error {
 	// Send the notification to the users
 	n.SendNotification()
 
-	n.Seen = false
+	n.Seen = Unread
 
 	// Insert the notification into the database
 	_, err := notificationCollection.InsertOne(ctx, n)
@@ -360,10 +367,10 @@ func GetNotificationByID(ctx context.Context, notificationID primitive.ObjectID)
 	return notification, nil
 }
 
-func GetNotificationByGroupID(ctx context.Context, group hp.Roles) ([]Notifications, error) {
+func GetNotificationByGroup(ctx context.Context, group hp.Roles) ([]Notifications, error) {
 	funcName := ut.GetFunctionName()
 
-	hp.SetInfo("Getting notifications for group: "+group+"", funcName)
+	hp.SetInfo("Getting notifications for group: "+group.String()+"", funcName)
 
 	var notifications []Notifications
 
