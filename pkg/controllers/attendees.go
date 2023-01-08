@@ -126,7 +126,7 @@ func SendEventInvites(c *gin.Context) {
 		request.Friends,
 		msgInvite,
 	)
-	go notifyInvite.Create(ctx)
+	go notifyInvite.Create()
 
 	// for _, invited := range request.Friends {
 	// 	// send notification to invited users

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
@@ -110,7 +111,7 @@ func CreateEvent(c *gin.Context) {
 		request.Invited,
 		msgInvited,
 	)
-	notifyInvited.Create(ctx)
+	notifyInvited.Create()
 
 	// send notification to venue owner
 	msgVenue := []byte(config.Reservation_ +
@@ -126,7 +127,29 @@ func CreateEvent(c *gin.Context) {
 		venueList,
 		msgVenue,
 	)
-	notifyVenue.Create(ctx)
+	notifyVenue.Create()
+
+	// Send notification to host 5 minutes before event
+	go func() {
+		minutes := request.GetTimeDifference()
+		hp.SetInfo("Minutes to event: "+fmt.Sprint(minutes), funcName)
+
+		duration := time.Duration(minutes-5) * time.Minute
+		time.Sleep(duration)
+		msgHost := []byte(
+			"Your event " + request.Title +
+				" at " + venue.Name +
+				" on " + request.Date.Format("02-01-2006") +
+				" at " + request.Time.Format("15:04") +
+				" is about to start",
+		)
+		hostList := []primitive.ObjectID{user.ID}
+		notifyHost := nf.NewNotification(
+			hostList,
+			msgHost,
+		)
+		notifyHost.Create()
+	}()
 
 	response := hp.SetSuccess("Event created", request, funcName)
 	c.JSON(http.StatusOK, response)

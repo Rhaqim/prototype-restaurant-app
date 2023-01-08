@@ -201,3 +201,53 @@ func GetTransactions(c *gin.Context) {
 	response := hp.SetSuccess("Transactions fetched successfully", transactions, funcName)
 	c.JSON(http.StatusOK, response)
 }
+
+// PayBill sends money to the venue of the event
+func PayBill(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	var request hp.Event
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		var response = hp.SetError(err, "Error binding JSON", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	txn, err := hp.SendtoVenues(ctx, request, user)
+	if err != nil {
+		response := hp.SetError(err, "Error sending money to venue", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Update event status to Finished once bill is paid
+	filter := bson.M{
+		"_id": request.ID,
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"event_status": hp.Finished,
+		},
+	}
+	_, err = hp.UpdateEvent(ctx, filter, update)
+	if err != nil {
+		response := hp.SetError(err, "Error updating event status", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("Money sent to venue successfully", txn, funcName)
+	c.JSON(http.StatusOK, response)
+}

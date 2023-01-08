@@ -200,7 +200,7 @@ func NewNotification(userIDs []primitive.ObjectID, notification []byte) *Notific
 	return &Notifications{
 		ID:           primitive.NewObjectID(),
 		UserIDs:      userIDs,
-		IntededFor:   "user",
+		IntededFor:   "",
 		Notification: notification,
 		Seen:         Unread,
 		Time:         time.Now(),
@@ -210,7 +210,9 @@ func NewNotification(userIDs []primitive.ObjectID, notification []byte) *Notific
 // Create inserts the notification into the database
 // It takes the context
 // It returns an error if there is one
-func (n *Notifications) Create(ctx context.Context) error {
+func (n *Notifications) Create() error {
+	ctx := context.Background()
+
 	funcName := ut.GetFunctionName()
 
 	// Send the notification to the users

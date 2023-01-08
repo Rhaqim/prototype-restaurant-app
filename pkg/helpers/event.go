@@ -130,21 +130,10 @@ func DeleteEvent(ctx context.Context, filter bson.M) (Event, error) {
 	return event, nil
 }
 
-// Check if Date and Time of event equal to Now()
-// If true, change event status to ongoing
-// After 24 hours, change event status to finished
-func CheckEventStatus(ctx context.Context, event Event) (Event, error) {
+// Return the difference in minutes between current time and the event time
+func (e *Event) GetTimeDifference() int {
+	currentTime := time.Now().Minute()
+	eventTime := e.Time.Time.Minute()
 
-	if event.Date.Equal(time.Now()) && event.Time.Equal(time.Now()) {
-		event.EventStatus = Ongoing
-	} else if event.Date.Equal(time.Now().AddDate(0, 0, 1)) && event.Time.Equal(time.Now().AddDate(0, 0, 1)) {
-		event.EventStatus = Finished
-	}
-
-	_, err := UpdateEvent(ctx, bson.M{"_id": event.ID}, bson.M{"$set": bson.M{"event_status": event.EventStatus}})
-	if err != nil {
-		return event, err
-	}
-
-	return event, nil
+	return eventTime - currentTime
 }
