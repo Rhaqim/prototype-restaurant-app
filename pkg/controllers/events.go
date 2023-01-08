@@ -142,7 +142,7 @@ func CreateEvent(c *gin.Context) {
 		// Change event status to ongoing
 		filter := bson.M{"_id": request.ID}
 		update := bson.M{"$set": bson.M{"event_status": hp.Ongoing}}
-		_, err := hp.UpdateEvent(ctx, filter, update)
+		event, err := hp.UpdateEvent(ctx, filter, update)
 		if err != nil {
 			hp.SetError(err, "Error updating event status", funcName)
 		}
@@ -155,7 +155,7 @@ func CreateEvent(c *gin.Context) {
 				" at " + request.Time.Format("15:04") +
 				" is about to start",
 		)
-		attendees := []primitive.ObjectID{user.ID}
+		attendees := event.Attendees
 		NotifyAttendees := nf.NewNotification(
 			attendees,
 			msgAttendees,
