@@ -129,26 +129,38 @@ func CreateEvent(c *gin.Context) {
 	)
 	notifyVenue.Create()
 
-	// Send notification to host 5 minutes before event
+	// Send notification to host 5 minutes before event and change event status to ongoing
 	go func() {
+		// Get the time difference in minutes
 		minutes := request.GetTimeDifference()
 		hp.SetInfo("Minutes to event: "+fmt.Sprint(minutes), funcName)
 
+		// Set the duration to sleep
 		duration := time.Duration(minutes-5) * time.Minute
 		time.Sleep(duration)
-		msgHost := []byte(
+
+		// Change event status to ongoing
+		filter := bson.M{"_id": request.ID}
+		update := bson.M{"$set": bson.M{"event_status": hp.Ongoing}}
+		_, err := hp.UpdateEvent(ctx, filter, update)
+		if err != nil {
+			hp.SetError(err, "Error updating event status", funcName)
+		}
+
+		// Send Notification to Attendees
+		msgAttendees := []byte(
 			"Your event " + request.Title +
 				" at " + venue.Name +
 				" on " + request.Date.Format("02-01-2006") +
 				" at " + request.Time.Format("15:04") +
 				" is about to start",
 		)
-		hostList := []primitive.ObjectID{user.ID}
-		notifyHost := nf.NewNotification(
-			hostList,
-			msgHost,
+		attendees := []primitive.ObjectID{user.ID}
+		NotifyAttendees := nf.NewNotification(
+			attendees,
+			msgAttendees,
 		)
-		notifyHost.Create()
+		NotifyAttendees.Create()
 	}()
 
 	response := hp.SetSuccess("Event created", request, funcName)

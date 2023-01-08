@@ -32,9 +32,10 @@ func (h EventType) String() string {
 type EventStatus string
 
 const (
-	Upcoming EventStatus = "upcoming"
-	Ongoing  EventStatus = "ongoing"
-	Finished EventStatus = "finished"
+	Upcoming  EventStatus = "upcoming"
+	Ongoing   EventStatus = "ongoing"
+	Finished  EventStatus = "finished"
+	cancelled EventStatus = "cancelled"
 )
 
 func (h EventStatus) String() string {
