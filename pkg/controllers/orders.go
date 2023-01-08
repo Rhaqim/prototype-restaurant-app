@@ -132,7 +132,7 @@ func CreateOrder(c *gin.Context) {
 		venueList,
 		msg,
 	)
-	notifyVenue.Create()
+	notifyVenue.Send()
 
 	// Send Notification to Event group regarding new order
 	// remove user from attendees so they don't get notified
@@ -146,7 +146,7 @@ func CreateOrder(c *gin.Context) {
 		event.Attendees,
 		msg,
 	)
-	notifyGroup.Create()
+	notifyGroup.Send()
 
 	response := hp.SetSuccess("Order created", insertResult, funcName)
 	c.JSON(http.StatusOK, response)

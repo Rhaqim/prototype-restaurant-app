@@ -111,7 +111,7 @@ func CreateEvent(c *gin.Context) {
 		request.Invited,
 		msgInvited,
 	)
-	notifyInvited.Create()
+	notifyInvited.Send()
 
 	// send notification to venue owner
 	msgVenue := []byte(config.Reservation_ +
@@ -127,7 +127,7 @@ func CreateEvent(c *gin.Context) {
 		venueList,
 		msgVenue,
 	)
-	notifyVenue.Create()
+	notifyVenue.Send()
 
 	// Send notification to host 5 minutes before event and change event status to ongoing
 	go func() {
@@ -142,6 +142,7 @@ func CreateEvent(c *gin.Context) {
 		// Change event status to ongoing
 		filter := bson.M{"_id": request.ID}
 		update := bson.M{"$set": bson.M{"event_status": hp.Ongoing}}
+
 		event, err := hp.UpdateEvent(ctx, filter, update)
 		if err != nil {
 			hp.SetError(err, "Error updating event status", funcName)
@@ -156,11 +157,13 @@ func CreateEvent(c *gin.Context) {
 				" is about to start",
 		)
 		attendees := event.Attendees
+
 		NotifyAttendees := nf.NewNotification(
 			attendees,
 			msgAttendees,
 		)
-		NotifyAttendees.Create()
+
+		NotifyAttendees.Send()
 	}()
 
 	response := hp.SetSuccess("Event created", request, funcName)

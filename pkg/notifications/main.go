@@ -210,7 +210,7 @@ func NewNotification(userIDs []primitive.ObjectID, notification []byte) *Notific
 // Create inserts the notification into the database
 // It takes the context
 // It returns an error if there is one
-func (n *Notifications) Create() error {
+func (n *Notifications) Send() error {
 	ctx := context.Background()
 
 	funcName := ut.GetFunctionName()
