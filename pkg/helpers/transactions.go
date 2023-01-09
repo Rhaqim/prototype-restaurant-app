@@ -77,6 +77,10 @@ func VerifyWalletSufficientBalance(ctx context.Context, user UserResponse, amoun
 	return wallet.Balance >= amount
 }
 
+// UpdateSenderTransaction updates the sender wallet balance
+// It tries to get the money from the budget first
+// If the budget is not sufficient, it gets the rest from the wallet
+// it updates the wallet balance and returns true if successful
 func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount float64, txn Transactions) bool {
 	if txn.Status != TxnPending {
 		return false
@@ -100,6 +104,9 @@ func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount floa
 	return updateResult.ModifiedCount == 1
 }
 
+// UpdateReceiverTransaction updates the receiver wallet balance
+// It adds the amount to the receiver wallet balance
+// It returns true if successful
 func UpdateReceiverTransaction(ctx context.Context, user UserResponse, amount float64, txn Transactions) bool {
 	if txn.Status != TxnSuccess {
 		return false
@@ -141,6 +148,9 @@ func UpdateAndReturnTransaction(ctx context.Context, txn Transactions, status Tx
 	return txn, nil
 }
 
+// UpdateWalletBalance updates the wallet balance of the sender and receiver
+// If an error occurs, it rolls back the transaction and updates the transaction status to fail
+// If the transaction is successful, it updates the transaction status to success
 func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, error) {
 	var fromUser UserResponse
 	var toUser UserResponse
@@ -187,7 +197,7 @@ func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transact
 	}
 
 	// Get Venue Owner
-	_, err := GetRestaurant(ctx, bson.M{"_id": event.Venue})
+	restaurant, err := GetRestaurant(ctx, bson.M{"_id": event.Venue})
 	if err != nil {
 		return txn, err
 	}
@@ -202,7 +212,7 @@ func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transact
 		ID:             primitive.NewObjectID(),
 		TransactionUID: TransactionUID,
 		FromID:         user.ID,
-		ToID:           event.Venue,
+		ToID:           restaurant.OwnerID,
 		Amount:         event.Bill,
 		Type:           Debit,
 		Status:         TxnPending,
