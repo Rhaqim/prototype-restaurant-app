@@ -270,10 +270,14 @@ func PayBillforEvent(c *gin.Context) {
 
 	// Send Notification to the Venue
 	billAmount := strconv.FormatFloat(txn.Amount, 'f', 2, 64)
-	msgVenue := []byte(
-		user.Username + " has paid the bill for " + event.Title + " of " + billAmount + " to your wallet",
+
+	msgVenue := []byte(config.Transaction_ +
+		user.Username + " has paid the bill for " + event.Title +
+		" of " + billAmount + " to your wallet",
 	)
+
 	venueList := []primitive.ObjectID{event.Venue}
+
 	notifyVenue := nf.NewNotification(
 		venueList,
 		msgVenue,
@@ -339,10 +343,14 @@ func SendOwnBillforEvent(c *gin.Context) {
 
 	// Send Notification to the Host
 	billAmount := strconv.FormatFloat(txn.Amount, 'f', 2, 64)
-	msgHost := []byte(
-		user.Username + " has sent you " + billAmount + " for " + event.Title,
+
+	msgHost := []byte(config.Transaction_ +
+		user.Username + " has sent you " + billAmount +
+		" for " + event.Title,
 	)
+
 	hostList := []primitive.ObjectID{event.HostID}
+
 	notifyHost := nf.NewNotification(
 		hostList,
 		msgHost,

@@ -94,6 +94,7 @@ func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount floa
 
 	// Get Money from the budget
 	budgetAmount := UnlockBudget(ctx, txn.ToID, user)
+	SetInfo(fmt.Sprintf("Unlocked budget amount: %f", budgetAmount), funcName)
 
 	amount = amount - budgetAmount
 
@@ -281,6 +282,7 @@ type EventBillPayment struct {
 // It takes a context and an event and a user
 // It gets the total bill from orders made for the event
 // and sends the money to the host
+// Get Unlocks the budget for the user and adds it to the wallet balance
 // It returns a transaction and an error
 func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactions, error) {
 	funcName := ut.GetFunctionName()
@@ -301,21 +303,19 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 
 	SetInfo(fmt.Sprintf("total bill: %f", totalBill), funcName)
 
-	// Get Budget
-	budgetAmount := GetBudget(ctx, bson.M{"intended_id": event.HostID, "user_id": user.ID})
-	var totalAmount float64 = budgetAmount + totalBill
+	// Put Budget back in Wallet
+	budgetAmount := UnlockBudget(ctx, event.HostID, user)
 
-	// check if user has sufficient balance
-	if !VerifyWalletSufficientBalance(ctx, user, totalAmount) {
-		SetDebug("insufficient balance", funcName)
-		return Transactions{}, errors.New("insufficient balance")
+	err = UpdateWallet(ctx, bson.M{"user_id": user.ID}, bson.M{"$inc": bson.M{"balance": +budgetAmount}})
+	if err != nil {
+		SetDebug("error updating wallet: "+err.Error(), funcName)
+		return Transactions{}, err
 	}
 
-	// Get Host
-	host, err := GetUser(ctx, bson.M{"_id": event.HostID})
-	if err != nil {
-		SetDebug("error getting host: "+err.Error(), funcName)
-		return Transactions{}, err
+	// check if user has sufficient balance
+	if !VerifyWalletSufficientBalance(ctx, user, totalBill) {
+		SetDebug("insufficient balance", funcName)
+		return Transactions{}, errors.New("insufficient balance")
 	}
 
 	// create transaction
@@ -323,7 +323,7 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 		ID:             primitive.NewObjectID(),
 		TransactionUID: TransactionUID,
 		FromID:         user.ID,
-		ToID:           host.ID,
+		ToID:           event.HostID,
 		Amount:         totalBill,
 		Type:           Debit,
 		Status:         TxnStart,

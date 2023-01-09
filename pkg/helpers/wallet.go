@@ -76,6 +76,15 @@ func GetWallet(ctx context.Context, filter bson.M) (Wallet, error) {
 	return wallet, nil
 }
 
+func UpdateWallet(ctx context.Context, filter bson.M, update bson.M) error {
+	_, err := walletCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CheckifWalletExists(ctx context.Context, filter bson.M) (bool, error) {
 	var wallet Wallet
 
