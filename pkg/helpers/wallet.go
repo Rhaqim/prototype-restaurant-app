@@ -165,3 +165,18 @@ func UnlockBudget(ctx context.Context, intended_id primitive.ObjectID, user User
 
 	return amount
 }
+
+func BudgetoWallet(ctx context.Context, intended_id primitive.ObjectID, user UserResponse) error {
+	funcName := "BudgetoWaller"
+
+	// Put Budget back in Wallet
+	budgetAmount := UnlockBudget(ctx, intended_id, user)
+
+	err := UpdateWallet(ctx, bson.M{"user_id": user.ID}, bson.M{"$inc": bson.M{"balance": +budgetAmount}})
+	if err != nil {
+		SetDebug("error updating wallet: "+err.Error(), funcName)
+		return err
+	}
+
+	return nil
+}

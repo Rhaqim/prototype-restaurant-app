@@ -108,6 +108,17 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
+	// TODO: Unlock Budget if Event is cancelled
+
+	// Unlock Budget and return to wallet after 24 hours
+	go func() {
+		time.Sleep(24 * time.Hour)
+		err = hp.BudgetoWallet(ctx, venue.OwnerID, user)
+		if err != nil {
+			hp.SetDebug("Error returning budget to wallet: "+err.Error(), funcName)
+		}
+	}()
+
 	// send invite to invited users
 	err = hp.SendInviteToEvent(ctx, request.ID, request.Invited, user)
 	if err != nil {

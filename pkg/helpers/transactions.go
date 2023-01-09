@@ -310,12 +310,9 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 
 	SetInfo(fmt.Sprintf("total bill: %f", totalBill), funcName)
 
-	// Put Budget back in Wallet
-	budgetAmount := UnlockBudget(ctx, restaurant.OwnerID, user)
-
-	err = UpdateWallet(ctx, bson.M{"user_id": user.ID}, bson.M{"$inc": bson.M{"balance": +budgetAmount}})
+	err = BudgetoWallet(ctx, restaurant.OwnerID, user)
 	if err != nil {
-		SetDebug("error updating wallet: "+err.Error(), funcName)
+		SetDebug("error returning budget: "+err.Error(), funcName)
 		return Transactions{}, err
 	}
 

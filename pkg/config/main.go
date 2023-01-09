@@ -167,6 +167,20 @@ const (
 	Transaction_  = "transaction: "
 )
 
+type NotificationMessage string
+
+const (
+	BudgetReturned NotificationMessage = "Budget has been returned to your wallet"
+	OrderCancelled NotificationMessage = "Order has been cancelled"
+	OrderCreated   NotificationMessage = "Order has been created"
+	OrderUpdated   NotificationMessage = "Order has been updated"
+	OrderPaid      NotificationMessage = "Order has been paid"
+	OrderRefunded  NotificationMessage = "Order has been refunded"
+	EventCancelled NotificationMessage = "Event has been cancelled"
+	EventCreated   NotificationMessage = "Event has been created"
+	EventUpdated   NotificationMessage = "Event has been updated"
+)
+
 // Context Timeout
 const (
 	ContextTimeout = 15 * time.Second
