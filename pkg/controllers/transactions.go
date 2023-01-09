@@ -128,7 +128,7 @@ func UpdateTransactionStatus(c *gin.Context) {
 		},
 	}
 
-	updateResult, err := config.TransactionCollection.UpdateOne(ctx, filter, update)
+	_, err = config.TransactionCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		response := hp.SetError(err, "Error updating transaction status", funcName)
 		c.JSON(http.StatusBadRequest, response)
@@ -151,14 +151,14 @@ func UpdateTransactionStatus(c *gin.Context) {
 	}
 
 	// Update Wallet Balance
-	err = hp.UpdateWalletBalance(ctx, transaction)
+	txn, err := hp.UpdateWalletBalance(ctx, transaction)
 	if err != nil {
 		response := hp.SetError(err, "Error updating wallet balance", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	response := hp.SetSuccess("Transaction status updated successfully", updateResult, funcName)
+	response := hp.SetSuccess("Transaction status updated successfully", txn, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -203,7 +203,7 @@ func GetTransactions(c *gin.Context) {
 }
 
 // PayBill sends money to the venue of the event
-func PayBill(c *gin.Context) {
+func PayBillforEvent(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())

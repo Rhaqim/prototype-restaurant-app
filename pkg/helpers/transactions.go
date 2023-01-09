@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
@@ -50,6 +51,12 @@ type TransactionStatus struct {
 	Status   TxnStatus          `json:"status" bson:"status" binding:"required"`
 }
 
+func GetTransaction(ctx context.Context, filter bson.M) (Transactions, error) {
+	var txn Transactions
+	err := transactionCollection.FindOne(ctx, filter).Decode(&txn)
+	return txn, err
+}
+
 func InsertTransaction(ctx context.Context, txn Transactions) (Transactions, error) {
 	var wg sync.WaitGroup
 	var err error
@@ -71,7 +78,7 @@ func VerifyWalletSufficientBalance(ctx context.Context, user UserResponse, amoun
 }
 
 func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount float64, txn Transactions) bool {
-	if txn.Status != TxnSuccess {
+	if txn.Status != TxnPending {
 		return false
 	}
 
@@ -110,42 +117,121 @@ func UpdateReceiverTransaction(ctx context.Context, user UserResponse, amount fl
 	return updateResult.ModifiedCount == 1
 }
 
-func UpdateWalletBalance(ctx context.Context, txn Transactions) error {
+// func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, error) {
+// 	var fromUser UserResponse
+// 	var toUser UserResponse
+
+// 	fromUser = GetUserByID(ctx, txn.FromID)
+// 	toUser = GetUserByID(ctx, txn.ToID)
+
+// 	var wg sync.WaitGroup
+// 	wg.Add(2)
+
+// 	errChan := make(chan error, 2)
+
+// 	go func() {
+// 		defer wg.Done()
+// 		if !UpdateSenderTransaction(ctx, fromUser, txn.Amount, txn) {
+// 			errChan <- errors.New("error updating sender transaction")
+// 			return
+// 		}
+// 	}()
+
+// 	go func() {
+// 		defer wg.Done()
+// 		if !UpdateReceiverTransaction(ctx, toUser, txn.Amount, txn) {
+// 			errChan <- errors.New("error updating receiver transaction")
+// 			return
+// 		}
+// 	}()
+
+// 	wg.Wait()
+// 	close(errChan)
+
+// 	for err := range errChan {
+// 		return txn, err
+// 	}
+
+//		return txn, nil
+//	}
+func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, error) {
 	var fromUser UserResponse
 	var toUser UserResponse
 
 	fromUser = GetUserByID(ctx, txn.FromID)
 	toUser = GetUserByID(ctx, txn.ToID)
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	errChan := make(chan error, 2)
-
-	go func() {
-		defer wg.Done()
-		if !UpdateSenderTransaction(ctx, fromUser, txn.Amount, txn) {
-			errChan <- errors.New("error updating sender transaction")
-			return
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		if !UpdateReceiverTransaction(ctx, toUser, txn.Amount, txn) {
-			errChan <- errors.New("error updating receiver transaction")
-			return
-		}
-	}()
-
-	wg.Wait()
-	close(errChan)
-
-	for err := range errChan {
-		return err
+	if !UpdateSenderTransaction(ctx, fromUser, txn.Amount, txn) {
+		return txn, errors.New("error updating sender transaction")
 	}
 
-	return nil
+	if !UpdateReceiverTransaction(ctx, toUser, txn.Amount, txn) {
+		// Rollback to Sender
+		_ = UpdateSenderTransaction(ctx, fromUser, -txn.Amount, txn)
+
+		return txn, errors.New("error updating receiver transaction")
+	}
+
+	// Update transaction status to success
+	filter := bson.M{"transaction_uid": txn.TransactionUID, "_id": txn.ID}
+	update := bson.M{"$set": bson.M{
+		"status": TxnSuccess,
+	}}
+	// update and return new document
+	updateResult, errs := transactionCollection.UpdateOne(ctx, filter, update)
+	if errs != nil {
+		return txn, errs
+	}
+	if updateResult.ModifiedCount != 1 {
+		return txn, errors.New("error updating transaction for success")
+	}
+
+	txn, errs = GetTransaction(ctx, filter)
+	if errs != nil {
+		return txn, errs
+	}
+
+	return txn, nil
+}
+
+// RollbackTransaction rolls back a transaction
+func RollbackTransaction(err error, txn Transactions, to UserResponse, from UserResponse) (Transactions, error) {
+	ctx := context.Background()
+
+	// Update transaction status to fail
+	filter := bson.M{"transaction_uid": txn.TransactionUID, "_id": txn.ID}
+	update := bson.M{"$set": bson.M{
+		"status": TxnFail,
+	}}
+	// update and return new document
+	updateResult, errs := transactionCollection.UpdateOne(ctx, filter, update)
+	if errs != nil {
+		return txn, errs
+	}
+	if updateResult.ModifiedCount != 1 {
+		return txn, errors.New("error updating transaction for rollback")
+	}
+
+	txn, errs = GetTransaction(ctx, filter)
+	if errs != nil {
+		return txn, errs
+	}
+
+	if err.Error() == "error updating sender transaction" {
+		// Update sender wallet
+		if !UpdateSenderTransaction(ctx, from, txn.Amount, txn) {
+			return txn, errors.New("error updating sender wallet")
+		}
+	}
+
+	if err.Error() == "error updating receiver transaction" {
+		// Update receiver wallet
+		if !UpdateReceiverTransaction(ctx, to, txn.Amount, txn) {
+			return txn, errors.New("error updating receiver wallet")
+		}
+	}
+
+	return txn, nil
 }
 
 // SendtoVenues sends money to venues
@@ -159,6 +245,12 @@ func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transact
 		return txn, errors.New("insufficient balance")
 	}
 
+	// Get Venue Owner
+	_, err := GetRestaurant(ctx, bson.M{"_id": event.Venue})
+	if err != nil {
+		return txn, err
+	}
+
 	// TODO: Determine if money goes from user to venue or
 	// TODO: from event wallet to venue
 	// TODO: if from event wallet to venue, then check if event has sufficient balance
@@ -166,22 +258,26 @@ func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transact
 
 	// create transaction
 	txn = Transactions{
+		ID:             primitive.NewObjectID(),
 		TransactionUID: TransactionUID,
 		FromID:         user.ID,
 		ToID:           event.Venue,
 		Amount:         event.Bill,
 		Type:           Debit,
-		Status:         TxnSuccess,
+		Status:         TxnPending,
+		CreatedAt:      primitive.NewDateTimeFromTime(time.Now()),
+		UpdatedAt:      primitive.NewDateTimeFromTime(time.Now()),
 	}
 
 	// insert transaction
-	txn, err := InsertTransaction(ctx, txn)
+	txn, err = InsertTransaction(ctx, txn)
 	if err != nil {
 		return txn, err
 	}
 
 	// update wallet balance
-	if err := UpdateWalletBalance(ctx, txn); err != nil {
+	txn, err = UpdateWalletBalance(ctx, txn)
+	if err != nil {
 		return txn, err
 	}
 
