@@ -191,8 +191,15 @@ func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, e
 func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transactions, error) {
 	var txn Transactions
 
+	// Get Budget
+	budget, err := GetBudget(ctx, bson.M{"event_id": event.ID})
+	if err != nil {
+		return Transactions{}, err
+	}
+	var totalAmount float64 = budget.Amount + event.Bill
+
 	// check if user has sufficient balance
-	if !VerifyWalletSufficientBalance(ctx, user, event.Bill) {
+	if !VerifyWalletSufficientBalance(ctx, user, totalAmount) {
 		return txn, errors.New("insufficient balance")
 	}
 
@@ -239,4 +246,69 @@ func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transact
 type EventBillPayment struct {
 	EventID primitive.ObjectID `json:"event_id" bson:"event_id" binding:"required"`
 	TxnPin  string             `json:"txn_pin" bson:"txn_pin" binding:"required"`
+}
+
+// SendToHost sends money to the host of the event
+// It takes a context and an event and a user
+// It gets the total bill from orders made for the event
+// and sends the money to the host
+// It returns a transaction and an error
+func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactions, error) {
+	var orders []Order
+
+	// Get total bill from orders
+	orders, err := GetOrders(ctx, bson.M{"event_id": event.ID})
+	if err != nil {
+		return Transactions{}, err
+	}
+
+	var totalBill float64
+	for _, order := range orders {
+		totalBill += order.Bill
+	}
+
+	// Get Budget
+	budget, err := GetBudget(ctx, bson.M{"event_id": event.ID})
+	if err != nil {
+		return Transactions{}, err
+	}
+	var totalAmount float64 = budget.Amount + totalBill
+
+	// check if user has sufficient balance
+	if !VerifyWalletSufficientBalance(ctx, user, totalAmount) {
+		return Transactions{}, errors.New("insufficient balance")
+	}
+
+	// Get Host
+	host, err := GetUser(ctx, bson.M{"_id": event.HostID})
+	if err != nil {
+		return Transactions{}, err
+	}
+
+	// create transaction
+	txn := Transactions{
+		ID:             primitive.NewObjectID(),
+		TransactionUID: TransactionUID,
+		FromID:         user.ID,
+		ToID:           host.ID,
+		Amount:         totalBill,
+		Type:           Debit,
+		Status:         TxnPending,
+		CreatedAt:      primitive.NewDateTimeFromTime(time.Now()),
+		UpdatedAt:      primitive.NewDateTimeFromTime(time.Now()),
+	}
+
+	// insert transaction
+	txn, err = InsertTransaction(ctx, txn)
+	if err != nil {
+		return txn, err
+	}
+
+	// update wallet balance
+	txn, err = UpdateWalletBalance(ctx, txn)
+	if err != nil {
+		return txn, err
+	}
+
+	return txn, nil
 }
