@@ -83,11 +83,11 @@ func VerifyWalletSufficientBalance(ctx context.Context, user UserResponse, amoun
 // If the budget is not sufficient, it gets the rest from the wallet
 // it updates the wallet balance and returns true if successful
 // TODO: have it return the transaction and an error
-func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount float64, txn Transactions) bool {
+func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount float64, txn Transactions) (Transactions, error) {
 	funcName := ut.GetFunctionName()
 
-	if txn.Status != TxnPending {
-		return false
+	if txn.Status != TxnStart {
+		return txn, errors.New("transaction status is not start")
 	}
 
 	// Get Money from the budget
@@ -101,12 +101,20 @@ func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount floa
 		"balance": -amount,
 	}}
 
-	updateResult, err := walletCollection.UpdateOne(ctx, filter, update)
+	_, err := walletCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		SetDebug("error updating sender wallet balance: "+err.Error(), funcName)
-		return false
+		return txn, err
 	}
-	return updateResult.ModifiedCount == 1
+
+	// Update transaction status to pending
+	txn, err = UpdateAndReturnTransaction(ctx, txn, TxnPending)
+	if err != nil {
+		SetDebug("error updating transaction status: "+err.Error(), funcName)
+		return txn, err
+	}
+
+	return txn, nil
 }
 
 // UpdateReceiverTransaction updates the receiver wallet balance
@@ -172,19 +180,28 @@ func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, e
 	fromUser = GetUserByID(ctx, txn.FromID)
 	toUser = GetUserByID(ctx, txn.ToID)
 
-	if !UpdateSenderTransaction(ctx, fromUser, txn.Amount, txn) {
+	// if !UpdateSenderTransaction(ctx, fromUser, txn.Amount, txn) {
+	// 	txn, err := UpdateAndReturnTransaction(ctx, txn, TxnFail)
+	// 	if err != nil {
+	// 		return txn, err
+	// 	}
+
+	// 	SetDebug("error updating sender transaction: "+err.Error(), funcName)
+	// 	return txn, errors.New("error updating sender transaction")
+	// }
+	txn, err := UpdateSenderTransaction(ctx, fromUser, txn.Amount, txn)
+	if err != nil {
+		SetDebug("error updating sender transaction: "+err.Error(), funcName)
 		txn, err := UpdateAndReturnTransaction(ctx, txn, TxnFail)
 		if err != nil {
 			return txn, err
 		}
-
-		SetDebug("error updating sender transaction: "+err.Error(), funcName)
-		return txn, errors.New("error updating sender transaction")
+		return txn, err
 	}
 
 	if !UpdateReceiverTransaction(ctx, toUser, txn.Amount, txn) {
 		// Rollback to Sender
-		_ = UpdateSenderTransaction(ctx, fromUser, -txn.Amount, txn)
+		_, _ = UpdateSenderTransaction(ctx, fromUser, -txn.Amount, txn)
 		txn, err := UpdateAndReturnTransaction(ctx, txn, TxnFail)
 		if err != nil {
 			return txn, err
@@ -194,7 +211,7 @@ func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, e
 		return txn, errors.New("error updating receiver transaction")
 	}
 
-	txn, err := UpdateAndReturnTransaction(ctx, txn, TxnSuccess)
+	txn, err = UpdateAndReturnTransaction(ctx, txn, TxnSuccess)
 	if err != nil {
 		SetDebug("error updating transaction for success: "+err.Error(), funcName)
 		return txn, err
@@ -219,7 +236,7 @@ func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transact
 	}
 
 	// Get Budget
-	budgetAmount := GetBudget(ctx, bson.M{"purpose_id": restaurant.OwnerID, "user_id": user.ID})
+	budgetAmount := GetBudget(ctx, bson.M{"intended_id": restaurant.OwnerID, "user_id": user.ID})
 	var totalAmount float64 = budgetAmount + event.Bill
 
 	// check if user has sufficient balance
@@ -288,7 +305,7 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 	}
 
 	// Get Budget
-	budgetAmount := GetBudget(ctx, bson.M{"purpose_id": event.ID})
+	budgetAmount := GetBudget(ctx, bson.M{"intended_id": event.HostID, "user_id": user.ID})
 	var totalAmount float64 = budgetAmount + totalBill
 
 	// check if user has sufficient balance

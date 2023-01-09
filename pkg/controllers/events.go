@@ -82,8 +82,16 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
+	// Get Venue
+	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": request.Venue})
+	if err != nil {
+		response := hp.SetError(err, "Error getting venue", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
 	// LOCK BUDGET
-	err = hp.LockBudget(ctx, wallet, request.Budget, request.Venue)
+	err = hp.LockBudget(ctx, wallet, request.Budget, venue.OwnerID)
 	if err != nil {
 		response := hp.SetError(err, "Error locking budget", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
@@ -99,13 +107,6 @@ func CreateEvent(c *gin.Context) {
 	}
 
 	// NOTIFICATION
-	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": request.Venue})
-	if err != nil {
-		response := hp.SetError(err, "Error getting venue", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
 	// send notification to invited users
 	msgInvited := []byte(config.Invite_ +
 		user.Username +

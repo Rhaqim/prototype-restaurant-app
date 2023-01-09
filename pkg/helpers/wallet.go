@@ -94,10 +94,10 @@ func CheckifWalletExists(ctx context.Context, filter bson.M) (bool, error) {
 var budgetCollection = config.BudgetCollection
 
 type Budget struct {
-	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id"`
-	UserID    primitive.ObjectID `json:"user_id" bson:"user_id" binding:"required"`
-	PurposeID primitive.ObjectID `json:"purpose_id" bson:"purpose_id" binding:"required"`
-	Amount    float64            `json:"amount" bson:"amount" binding:"required"`
+	ID         primitive.ObjectID `json:"id,omitempty" bson:"_id"`
+	UserID     primitive.ObjectID `json:"user_id" bson:"user_id" binding:"required"`
+	IntendedID primitive.ObjectID `json:"intended_id" bson:"intended_id" binding:"required"`
+	Amount     float64            `json:"amount" bson:"amount" binding:"required"`
 }
 
 func GetBudget(ctx context.Context, filter bson.M) float64 {
@@ -115,7 +115,7 @@ func GetBudget(ctx context.Context, filter bson.M) float64 {
 // LockBudget and UnlockBudget
 // LockBudget locks the amount specified as budget for an expense
 // UnlockBudget unlocks the amount to be either transferred to wallet or refunded to user
-func LockBudget(ctx context.Context, wallet Wallet, amount float64, PurposeID primitive.ObjectID) error {
+func LockBudget(ctx context.Context, wallet Wallet, amount float64, intended_id primitive.ObjectID) error {
 	// Subtract amount from wallet balance
 	wallet.Balance = wallet.Balance - amount
 
@@ -126,10 +126,10 @@ func LockBudget(ctx context.Context, wallet Wallet, amount float64, PurposeID pr
 
 	// Create a new budget
 	budget := Budget{
-		ID:        primitive.NewObjectID(),
-		UserID:    wallet.UserID,
-		PurposeID: PurposeID,
-		Amount:    amount,
+		ID:         primitive.NewObjectID(),
+		UserID:     wallet.UserID,
+		IntendedID: intended_id,
+		Amount:     amount,
 	}
 
 	_, err = budgetCollection.InsertOne(ctx, budget)
@@ -141,11 +141,11 @@ func LockBudget(ctx context.Context, wallet Wallet, amount float64, PurposeID pr
 }
 
 // UnlockBudget unlocks the amount to be either transferred to wallet or refunded to user
-func UnlockBudget(ctx context.Context, purpose_id primitive.ObjectID, user UserResponse) float64 {
+func UnlockBudget(ctx context.Context, intended_id primitive.ObjectID, user UserResponse) float64 {
 	// Get budget for the event
 	var amount float64
 
-	filter := bson.M{"purpose_id": purpose_id, "user_id": user.ID}
+	filter := bson.M{"intended_id": intended_id, "user_id": user.ID}
 	amount = GetBudget(ctx, filter)
 
 	// Delete budget
