@@ -3,11 +3,13 @@ package controllers
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/Rhaqim/thedutchapp/pkg/auth"
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
+	nf "github.com/Rhaqim/thedutchapp/pkg/notifications"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -276,6 +278,24 @@ func PayBillforEvent(c *gin.Context) {
 	_, err = hp.UpdateEvent(ctx, filter, update)
 	if err != nil {
 		response := hp.SetError(err, "Error updating event status", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Send Notification to the Venue
+	billAmount := strconv.FormatFloat(txn.Amount, 'f', 2, 64)
+	msgVenue := []byte(
+		user.Username + " has paid the bill for " + event.Title + " of " + billAmount + " to your wallet",
+	)
+	venueList := []primitive.ObjectID{event.Venue}
+	notifyVenue := nf.NewNotification(
+		venueList,
+		msgVenue,
+	)
+
+	err = notifyVenue.Send()
+	if err != nil {
+		response := hp.SetError(err, "Error sending notification to venue", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}

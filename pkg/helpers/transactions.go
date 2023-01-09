@@ -192,7 +192,7 @@ func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transact
 	var txn Transactions
 
 	// Get Budget
-	budget, err := GetBudget(ctx, bson.M{"event_id": event.ID})
+	budget, err := GetBudget(ctx, bson.M{"purpose_id": event.Venue, "user_id": user.ID})
 	if err != nil {
 		return Transactions{}, err
 	}
@@ -257,7 +257,7 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 	var orders []Order
 
 	// Get total bill from orders
-	orders, err := GetOrders(ctx, bson.M{"event_id": event.ID})
+	orders, err := GetOrders(ctx, bson.M{"event_id": event.Venue, "user_id": user.ID})
 	if err != nil {
 		return Transactions{}, err
 	}
@@ -268,7 +268,7 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 	}
 
 	// Get Budget
-	budget, err := GetBudget(ctx, bson.M{"event_id": event.ID})
+	budget, err := GetBudget(ctx, bson.M{"purpose_id": event.ID})
 	if err != nil {
 		return Transactions{}, err
 	}
