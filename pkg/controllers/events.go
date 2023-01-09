@@ -43,12 +43,12 @@ func CreateEvent(c *gin.Context) {
 	// VERIFICATION
 
 	// Check if DateTime is after time.Now()
-	okDate := hp.VeryifyDateTimeAfterNow(request.Date, request.Time)
-	if !okDate {
-		response := hp.SetError(err, "Date and Time must be after current Date and Time", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
+	// okDate := hp.VeryifyDateTimeAfterNow(request.Date, request.Time)
+	// if !okDate {
+	// 	response := hp.SetError(err, "Date and Time must be after current Date and Time", funcName)
+	// 	c.AbortWithStatusJSON(http.StatusBadRequest, response)
+	// 	return
+	// }
 
 	// Check if User has a Wallet already
 	exists, err := hp.CheckifWalletExists(ctx, bson.M{"user_id": user.ID})
@@ -113,7 +113,8 @@ func CreateEvent(c *gin.Context) {
 	// Unlock Budget and return to wallet after 24 hours
 	go func() {
 		time.Sleep(24 * time.Hour)
-		err = hp.BudgetoWallet(ctx, venue.OwnerID, user)
+		c := context.Background()
+		err = hp.BudgetoWallet(c, venue.OwnerID, user)
 		if err != nil {
 			hp.SetDebug("Error returning budget to wallet: "+err.Error(), funcName)
 		}
