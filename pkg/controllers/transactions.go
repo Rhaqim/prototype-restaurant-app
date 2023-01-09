@@ -238,8 +238,14 @@ func PayBillforEvent(c *gin.Context) {
 		return
 	}
 
-	// Check that pin sent is correct
+	// Check if Event is ongoing
+	if event.EventStatus != hp.Ongoing {
+		response := hp.SetError(nil, "Event is not ongoing", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
 
+	// Check that pin sent is correct
 	// Get wallet
 	filter = bson.M{
 		"_id": user.Wallet,

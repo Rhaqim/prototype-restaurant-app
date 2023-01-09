@@ -40,6 +40,22 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
+	// Get Event
+	filter := bson.M{"_id": request.EventID}
+	event, err := hp.GetEvent(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error getting event", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Check Event Status
+	if event.EventStatus != hp.Ongoing {
+		response := hp.SetError(err, "Event is not ongoing", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
 	request.ID = primitive.NewObjectID()
 	request.CustomerID = user.ID
 	request.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
@@ -78,17 +94,7 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
-	// NOTIFICATION
-
-	// Get event group id from event id
-	filter := bson.M{"_id": request.EventID}
-	event, err := hp.GetEvent(ctx, filter)
-	if err != nil {
-		response := hp.SetError(err, "Error getting event", funcName)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-		return
-	}
-
+	// NOTIFICATIONS
 	// Get Venue Owner from venue id
 	filter = bson.M{"_id": event.Venue}
 	venue, err := hp.GetRestaurant(ctx, filter)
