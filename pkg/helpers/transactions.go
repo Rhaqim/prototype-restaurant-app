@@ -27,6 +27,7 @@ const (
 )
 
 const (
+	TxnStart   TxnStatus = "start"
 	TxnSuccess TxnStatus = "success"
 	TxnPending TxnStatus = "pending"
 	TxnFail    TxnStatus = "fail"
@@ -81,7 +82,10 @@ func VerifyWalletSufficientBalance(ctx context.Context, user UserResponse, amoun
 // It tries to get the money from the budget first
 // If the budget is not sufficient, it gets the rest from the wallet
 // it updates the wallet balance and returns true if successful
+// TODO: have it return the transaction and an error
 func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount float64, txn Transactions) bool {
+	funcName := ut.GetFunctionName()
+
 	if txn.Status != TxnPending {
 		return false
 	}
@@ -99,6 +103,7 @@ func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount floa
 
 	updateResult, err := walletCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
+		SetDebug("error updating sender wallet balance: "+err.Error(), funcName)
 		return false
 	}
 	return updateResult.ModifiedCount == 1
@@ -108,7 +113,9 @@ func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount floa
 // It adds the amount to the receiver wallet balance
 // It returns true if successful
 func UpdateReceiverTransaction(ctx context.Context, user UserResponse, amount float64, txn Transactions) bool {
-	if txn.Status != TxnSuccess {
+	funcName := ut.GetFunctionName()
+
+	if txn.Status != TxnPending {
 		return false
 	}
 
@@ -119,6 +126,7 @@ func UpdateReceiverTransaction(ctx context.Context, user UserResponse, amount fl
 
 	updateResult, err := walletCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
+		SetDebug("error updating receiver wallet balance: "+err.Error(), funcName)
 		return false
 	}
 	return updateResult.ModifiedCount == 1
@@ -126,6 +134,8 @@ func UpdateReceiverTransaction(ctx context.Context, user UserResponse, amount fl
 
 // UpdateAndReturnTransaction updates the transaction status and returns the updated transaction
 func UpdateAndReturnTransaction(ctx context.Context, txn Transactions, status TxnStatus) (Transactions, error) {
+	funcName := ut.GetFunctionName()
+
 	// Update transaction status to success
 	filter := bson.M{"transaction_uid": txn.TransactionUID, "_id": txn.ID}
 	update := bson.M{"$set": bson.M{
@@ -134,6 +144,7 @@ func UpdateAndReturnTransaction(ctx context.Context, txn Transactions, status Tx
 	// update and return new document
 	updateResult, errs := transactionCollection.UpdateOne(ctx, filter, update)
 	if errs != nil {
+		SetDebug("error updating transaction for success: "+errs.Error(), funcName)
 		return txn, errs
 	}
 	if updateResult.ModifiedCount != 1 {
@@ -142,6 +153,7 @@ func UpdateAndReturnTransaction(ctx context.Context, txn Transactions, status Tx
 
 	txn, errs = GetTransaction(ctx, filter)
 	if errs != nil {
+		SetDebug("error getting transaction for success: "+errs.Error(), funcName)
 		return txn, errs
 	}
 
@@ -152,6 +164,8 @@ func UpdateAndReturnTransaction(ctx context.Context, txn Transactions, status Tx
 // If an error occurs, it rolls back the transaction and updates the transaction status to fail
 // If the transaction is successful, it updates the transaction status to success
 func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, error) {
+	funcName := ut.GetFunctionName()
+
 	var fromUser UserResponse
 	var toUser UserResponse
 
@@ -163,6 +177,8 @@ func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, e
 		if err != nil {
 			return txn, err
 		}
+
+		SetDebug("error updating sender transaction: "+err.Error(), funcName)
 		return txn, errors.New("error updating sender transaction")
 	}
 
@@ -174,11 +190,13 @@ func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, e
 			return txn, err
 		}
 
+		SetDebug("error updating receiver transaction: "+err.Error(), funcName)
 		return txn, errors.New("error updating receiver transaction")
 	}
 
 	txn, err := UpdateAndReturnTransaction(ctx, txn, TxnSuccess)
 	if err != nil {
+		SetDebug("error updating transaction for success: "+err.Error(), funcName)
 		return txn, err
 	}
 
@@ -189,24 +207,24 @@ func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, e
 // It takes a context and an event and a user
 // It returns a transaction and an error
 func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transactions, error) {
+	funcName := ut.GetFunctionName()
+
 	var txn Transactions
-
-	// Get Budget
-	budget, err := GetBudget(ctx, bson.M{"purpose_id": event.Venue, "user_id": user.ID})
-	if err != nil {
-		return Transactions{}, err
-	}
-	var totalAmount float64 = budget.Amount + event.Bill
-
-	// check if user has sufficient balance
-	if !VerifyWalletSufficientBalance(ctx, user, totalAmount) {
-		return txn, errors.New("insufficient balance")
-	}
 
 	// Get Venue Owner
 	restaurant, err := GetRestaurant(ctx, bson.M{"_id": event.Venue})
 	if err != nil {
+		SetDebug("error getting restaurant: "+err.Error(), funcName)
 		return txn, err
+	}
+
+	// Get Budget
+	budgetAmount := GetBudget(ctx, bson.M{"purpose_id": restaurant.OwnerID, "user_id": user.ID})
+	var totalAmount float64 = budgetAmount + event.Bill
+
+	// check if user has sufficient balance
+	if !VerifyWalletSufficientBalance(ctx, user, totalAmount) {
+		return txn, errors.New("insufficient balance")
 	}
 
 	// TODO: Determine if money goes from user to venue or
@@ -230,12 +248,14 @@ func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transact
 	// insert transaction
 	txn, err = InsertTransaction(ctx, txn)
 	if err != nil {
+		SetDebug("error inserting transaction: "+err.Error(), funcName)
 		return txn, err
 	}
 
 	// update wallet balance
 	txn, err = UpdateWalletBalance(ctx, txn)
 	if err != nil {
+		SetDebug("error updating wallet balance: "+err.Error(), funcName)
 		return txn, err
 	}
 
@@ -268,11 +288,8 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 	}
 
 	// Get Budget
-	budget, err := GetBudget(ctx, bson.M{"purpose_id": event.ID})
-	if err != nil {
-		return Transactions{}, err
-	}
-	var totalAmount float64 = budget.Amount + totalBill
+	budgetAmount := GetBudget(ctx, bson.M{"purpose_id": event.ID})
+	var totalAmount float64 = budgetAmount + totalBill
 
 	// check if user has sufficient balance
 	if !VerifyWalletSufficientBalance(ctx, user, totalAmount) {

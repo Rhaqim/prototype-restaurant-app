@@ -100,15 +100,15 @@ type Budget struct {
 	Amount    float64            `json:"amount" bson:"amount" binding:"required"`
 }
 
-func GetBudget(ctx context.Context, filter bson.M) (Budget, error) {
+func GetBudget(ctx context.Context, filter bson.M) float64 {
 	var budget Budget
 
 	err := budgetCollection.FindOne(ctx, filter).Decode(&budget)
 	if err != nil {
-		return Budget{}, err
+		return 0
 	}
 
-	return budget, nil
+	return budget.Amount
 }
 
 // TODO: Logic to lock amount soecified as budget for an expense
@@ -141,18 +141,18 @@ func LockBudget(ctx context.Context, wallet Wallet, amount float64, PurposeID pr
 }
 
 // UnlockBudget unlocks the amount to be either transferred to wallet or refunded to user
-func UnlockBudget(ctx context.Context, event_id primitive.ObjectID, user UserResponse) float64 {
+func UnlockBudget(ctx context.Context, purpose_id primitive.ObjectID, user UserResponse) float64 {
 	// Get budget for the event
-	budget, err := GetBudget(ctx, bson.M{"purpose_id": event_id, "user_id": user.ID})
-	if err != nil {
-		return 0
-	}
+	var amount float64
+
+	filter := bson.M{"purpose_id": purpose_id, "user_id": user.ID}
+	amount = GetBudget(ctx, filter)
 
 	// Delete budget
-	_, err = budgetCollection.DeleteOne(ctx, bson.M{"_id": budget.ID})
+	_, err := budgetCollection.DeleteOne(ctx, filter)
 	if err != nil {
 		return 0
 	}
 
-	return budget.Amount
+	return amount
 }

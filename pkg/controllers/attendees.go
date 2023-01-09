@@ -289,7 +289,13 @@ func AcceptInvite(c *gin.Context) {
 	go func() {
 		defer wg.Done()
 
-		err := hp.LockBudget(ctx, wallet, request.Budget, event.Venue)
+		venue, err := hp.GetRestaurant(ctx, bson.M{"_id": event.Venue})
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		err = hp.LockBudget(ctx, wallet, request.Budget, venue.OwnerID)
 		if err != nil {
 			errChan <- err
 			return
