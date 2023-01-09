@@ -117,65 +117,12 @@ func UpdateReceiverTransaction(ctx context.Context, user UserResponse, amount fl
 	return updateResult.ModifiedCount == 1
 }
 
-// func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, error) {
-// 	var fromUser UserResponse
-// 	var toUser UserResponse
-
-// 	fromUser = GetUserByID(ctx, txn.FromID)
-// 	toUser = GetUserByID(ctx, txn.ToID)
-
-// 	var wg sync.WaitGroup
-// 	wg.Add(2)
-
-// 	errChan := make(chan error, 2)
-
-// 	go func() {
-// 		defer wg.Done()
-// 		if !UpdateSenderTransaction(ctx, fromUser, txn.Amount, txn) {
-// 			errChan <- errors.New("error updating sender transaction")
-// 			return
-// 		}
-// 	}()
-
-// 	go func() {
-// 		defer wg.Done()
-// 		if !UpdateReceiverTransaction(ctx, toUser, txn.Amount, txn) {
-// 			errChan <- errors.New("error updating receiver transaction")
-// 			return
-// 		}
-// 	}()
-
-// 	wg.Wait()
-// 	close(errChan)
-
-// 	for err := range errChan {
-// 		return txn, err
-// 	}
-
-//		return txn, nil
-//	}
-func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, error) {
-	var fromUser UserResponse
-	var toUser UserResponse
-
-	fromUser = GetUserByID(ctx, txn.FromID)
-	toUser = GetUserByID(ctx, txn.ToID)
-
-	if !UpdateSenderTransaction(ctx, fromUser, txn.Amount, txn) {
-		return txn, errors.New("error updating sender transaction")
-	}
-
-	if !UpdateReceiverTransaction(ctx, toUser, txn.Amount, txn) {
-		// Rollback to Sender
-		_ = UpdateSenderTransaction(ctx, fromUser, -txn.Amount, txn)
-
-		return txn, errors.New("error updating receiver transaction")
-	}
-
+// UpdateAndReturnTransaction updates the transaction status and returns the updated transaction
+func UpdateAndReturnTransaction(ctx context.Context, txn Transactions, status TxnStatus) (Transactions, error) {
 	// Update transaction status to success
 	filter := bson.M{"transaction_uid": txn.TransactionUID, "_id": txn.ID}
 	update := bson.M{"$set": bson.M{
-		"status": TxnSuccess,
+		"status": status,
 	}}
 	// update and return new document
 	updateResult, errs := transactionCollection.UpdateOne(ctx, filter, update)
@@ -194,41 +141,35 @@ func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, e
 	return txn, nil
 }
 
-// RollbackTransaction rolls back a transaction
-func RollbackTransaction(err error, txn Transactions, to UserResponse, from UserResponse) (Transactions, error) {
-	ctx := context.Background()
+func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, error) {
+	var fromUser UserResponse
+	var toUser UserResponse
 
-	// Update transaction status to fail
-	filter := bson.M{"transaction_uid": txn.TransactionUID, "_id": txn.ID}
-	update := bson.M{"$set": bson.M{
-		"status": TxnFail,
-	}}
-	// update and return new document
-	updateResult, errs := transactionCollection.UpdateOne(ctx, filter, update)
-	if errs != nil {
-		return txn, errs
-	}
-	if updateResult.ModifiedCount != 1 {
-		return txn, errors.New("error updating transaction for rollback")
-	}
+	fromUser = GetUserByID(ctx, txn.FromID)
+	toUser = GetUserByID(ctx, txn.ToID)
 
-	txn, errs = GetTransaction(ctx, filter)
-	if errs != nil {
-		return txn, errs
-	}
-
-	if err.Error() == "error updating sender transaction" {
-		// Update sender wallet
-		if !UpdateSenderTransaction(ctx, from, txn.Amount, txn) {
-			return txn, errors.New("error updating sender wallet")
+	if !UpdateSenderTransaction(ctx, fromUser, txn.Amount, txn) {
+		txn, err := UpdateAndReturnTransaction(ctx, txn, TxnFail)
+		if err != nil {
+			return txn, err
 		}
+		return txn, errors.New("error updating sender transaction")
 	}
 
-	if err.Error() == "error updating receiver transaction" {
-		// Update receiver wallet
-		if !UpdateReceiverTransaction(ctx, to, txn.Amount, txn) {
-			return txn, errors.New("error updating receiver wallet")
+	if !UpdateReceiverTransaction(ctx, toUser, txn.Amount, txn) {
+		// Rollback to Sender
+		_ = UpdateSenderTransaction(ctx, fromUser, -txn.Amount, txn)
+		txn, err := UpdateAndReturnTransaction(ctx, txn, TxnFail)
+		if err != nil {
+			return txn, err
 		}
+
+		return txn, errors.New("error updating receiver transaction")
+	}
+
+	txn, err := UpdateAndReturnTransaction(ctx, txn, TxnSuccess)
+	if err != nil {
+		return txn, err
 	}
 
 	return txn, nil
