@@ -52,6 +52,7 @@ func GinRouter() *gin.Engine {
 			transactions.POST("/createTransaction", views.CreateTransaction)
 			transactions.PUT("/updateTransaction", views.UpdateTransactionStatus)
 			transactions.POST("/paybill", views.PayBillforEvent)
+			transactions.POST("/sendMoneytoHost", views.SendOwnBillforEvent)
 			transactions.GET("/getTransactions", views.GetTransactions)
 		}
 

@@ -3,9 +3,11 @@ package helpers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
+	"github.com/Rhaqim/thedutchapp/pkg/auth"
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -120,14 +122,15 @@ func UpdateSenderTransaction(ctx context.Context, user UserResponse, amount floa
 // UpdateReceiverTransaction updates the receiver wallet balance
 // It adds the amount to the receiver wallet balance
 // It returns true if successful
-func UpdateReceiverTransaction(ctx context.Context, user UserResponse, amount float64, txn Transactions) bool {
+func UpdateReceiverTransaction(ctx context.Context, to_id primitive.ObjectID, amount float64, txn Transactions) bool {
 	funcName := ut.GetFunctionName()
 
 	if txn.Status != TxnPending {
+		SetDebug("transaction status is not pending", funcName)
 		return false
 	}
 
-	filter := bson.M{"user_id": user.ID}
+	filter := bson.M{"user_id": to_id}
 	update := bson.M{"$inc": bson.M{
 		"balance": +amount,
 	}}
@@ -174,21 +177,8 @@ func UpdateAndReturnTransaction(ctx context.Context, txn Transactions, status Tx
 func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, error) {
 	funcName := ut.GetFunctionName()
 
-	var fromUser UserResponse
-	var toUser UserResponse
+	fromUser := GetUserByID(ctx, txn.FromID)
 
-	fromUser = GetUserByID(ctx, txn.FromID)
-	toUser = GetUserByID(ctx, txn.ToID)
-
-	// if !UpdateSenderTransaction(ctx, fromUser, txn.Amount, txn) {
-	// 	txn, err := UpdateAndReturnTransaction(ctx, txn, TxnFail)
-	// 	if err != nil {
-	// 		return txn, err
-	// 	}
-
-	// 	SetDebug("error updating sender transaction: "+err.Error(), funcName)
-	// 	return txn, errors.New("error updating sender transaction")
-	// }
 	txn, err := UpdateSenderTransaction(ctx, fromUser, txn.Amount, txn)
 	if err != nil {
 
@@ -199,9 +189,9 @@ func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, e
 		return txn, err
 	}
 
-	if !UpdateReceiverTransaction(ctx, toUser, txn.Amount, txn) {
+	if !UpdateReceiverTransaction(ctx, txn.ToID, txn.Amount, txn) {
 		// Rollback to Sender
-		SetDebug("error updating receiver transaction: "+err.Error(), funcName)
+		SetDebug("error updating receiver transaction", funcName)
 
 		_, _ = UpdateSenderTransaction(ctx, fromUser, -txn.Amount, txn)
 
@@ -293,11 +283,14 @@ type EventBillPayment struct {
 // and sends the money to the host
 // It returns a transaction and an error
 func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactions, error) {
+	funcName := ut.GetFunctionName()
+
 	var orders []Order
 
 	// Get total bill from orders
-	orders, err := GetOrders(ctx, bson.M{"event_id": event.Venue, "user_id": user.ID})
+	orders, err := GetOrders(ctx, bson.M{"event_id": event.ID, "customer_id": user.ID})
 	if err != nil {
+		SetDebug("error getting orders: "+err.Error(), funcName)
 		return Transactions{}, err
 	}
 
@@ -306,18 +299,22 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 		totalBill += order.Bill
 	}
 
+	SetInfo(fmt.Sprintf("total bill: %f", totalBill), funcName)
+
 	// Get Budget
 	budgetAmount := GetBudget(ctx, bson.M{"intended_id": event.HostID, "user_id": user.ID})
 	var totalAmount float64 = budgetAmount + totalBill
 
 	// check if user has sufficient balance
 	if !VerifyWalletSufficientBalance(ctx, user, totalAmount) {
+		SetDebug("insufficient balance", funcName)
 		return Transactions{}, errors.New("insufficient balance")
 	}
 
 	// Get Host
 	host, err := GetUser(ctx, bson.M{"_id": event.HostID})
 	if err != nil {
+		SetDebug("error getting host: "+err.Error(), funcName)
 		return Transactions{}, err
 	}
 
@@ -337,14 +334,47 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 	// insert transaction
 	txn, err = InsertTransaction(ctx, txn)
 	if err != nil {
+		SetDebug("error inserting transaction: "+err.Error(), funcName)
 		return txn, err
 	}
 
 	// update wallet balance
 	txn, err = UpdateWalletBalance(ctx, txn)
 	if err != nil {
+		SetDebug("error updating wallet balance: "+err.Error(), funcName)
 		return txn, err
 	}
 
 	return txn, nil
+}
+
+func VerificationforEventPayment(ctx context.Context, request EventBillPayment, event Event, user UserResponse) error {
+	funcName := ut.GetFunctionName()
+
+	// Check if Event is ongoing
+	if event.EventStatus != Ongoing {
+		SetError(nil, "Event is not ongoing", funcName)
+
+		return errors.New("event is not ongoing")
+	}
+
+	// Check that pin sent is correct
+	// Get wallet
+	filter := bson.M{
+		"_id": user.Wallet,
+	}
+	wallet, err := GetWallet(ctx, filter)
+	if err != nil {
+		SetError(err, "Error fetching wallet", funcName)
+		return err
+	}
+
+	// Check if pin is correct
+	pin := auth.CheckPasswordHash(request.TxnPin, wallet.TxnPin)
+	if !pin {
+		SetError(nil, "Incorrect pin", funcName)
+		return errors.New("incorrect pin")
+	}
+
+	return nil
 }

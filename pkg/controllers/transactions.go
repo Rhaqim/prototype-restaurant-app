@@ -238,29 +238,9 @@ func PayBillforEvent(c *gin.Context) {
 		return
 	}
 
-	// Check if Event is ongoing
-	if event.EventStatus != hp.Ongoing {
-		response := hp.SetError(nil, "Event is not ongoing", funcName)
-		c.JSON(http.StatusBadRequest, response)
-		return
-	}
-
-	// Check that pin sent is correct
-	// Get wallet
-	filter = bson.M{
-		"_id": user.Wallet,
-	}
-	wallet, err := hp.GetWallet(ctx, filter)
+	err = hp.VerificationforEventPayment(ctx, request, event, user)
 	if err != nil {
-		response := hp.SetError(err, "Error fetching wallet", funcName)
-		c.JSON(http.StatusBadRequest, response)
-		return
-	}
-
-	// Check if pin is correct
-	pin := auth.CheckPasswordHash(request.TxnPin, wallet.TxnPin)
-	if !pin {
-		response := hp.SetError(nil, "Incorrect pin", funcName)
+		response := hp.SetError(err, "Error verifying event payment", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -307,5 +287,74 @@ func PayBillforEvent(c *gin.Context) {
 	}
 
 	response := hp.SetSuccess("Money sent to venue successfully", txn, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func SendOwnBillforEvent(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	var request hp.EventBillPayment
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		var response = hp.SetError(err, "Error binding JSON", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	// Get Event
+	filter := bson.M{
+		"_id": request.EventID,
+	}
+	event, err := hp.GetEvent(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error fetching event", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	err = hp.VerificationforEventPayment(ctx, request, event, user)
+	if err != nil {
+		response := hp.SetError(err, "Error verifying event payment", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	txn, err := hp.SendToHost(ctx, event, user)
+	if err != nil {
+		response := hp.SetError(err, "Error sending money to host", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Send Notification to the Host
+	billAmount := strconv.FormatFloat(txn.Amount, 'f', 2, 64)
+	msgHost := []byte(
+		user.Username + " has sent you " + billAmount + " for " + event.Title,
+	)
+	hostList := []primitive.ObjectID{event.HostID}
+	notifyHost := nf.NewNotification(
+		hostList,
+		msgHost,
+	)
+
+	err = notifyHost.Send()
+	if err != nil {
+		response := hp.SetError(err, "Error sending notification to host", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("Money sent to host successfully", txn, funcName)
 	c.JSON(http.StatusOK, response)
 }
