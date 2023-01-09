@@ -117,6 +117,10 @@ func CreateEvent(c *gin.Context) {
 		if err != nil {
 			hp.SetDebug("Error returning budget to wallet: "+err.Error(), funcName)
 		}
+		err = nf.AlertUser(config.BudgetReturned, user.ID)
+		if err != nil {
+			hp.SetDebug("Error sending notification: "+err.Error(), funcName)
+		}
 	}()
 
 	// send invite to invited users
