@@ -191,23 +191,25 @@ func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, e
 	// }
 	txn, err := UpdateSenderTransaction(ctx, fromUser, txn.Amount, txn)
 	if err != nil {
+
 		SetDebug("error updating sender transaction: "+err.Error(), funcName)
-		txn, err := UpdateAndReturnTransaction(ctx, txn, TxnFail)
-		if err != nil {
-			return txn, err
-		}
+
+		_, _ = UpdateAndReturnTransaction(ctx, txn, TxnFail)
+
 		return txn, err
 	}
 
 	if !UpdateReceiverTransaction(ctx, toUser, txn.Amount, txn) {
 		// Rollback to Sender
+		SetDebug("error updating receiver transaction: "+err.Error(), funcName)
+
 		_, _ = UpdateSenderTransaction(ctx, fromUser, -txn.Amount, txn)
+
 		txn, err := UpdateAndReturnTransaction(ctx, txn, TxnFail)
 		if err != nil {
 			return txn, err
 		}
 
-		SetDebug("error updating receiver transaction: "+err.Error(), funcName)
 		return txn, errors.New("error updating receiver transaction")
 	}
 
@@ -257,7 +259,7 @@ func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transact
 		ToID:           restaurant.OwnerID,
 		Amount:         event.Bill,
 		Type:           Debit,
-		Status:         TxnPending,
+		Status:         TxnStart,
 		CreatedAt:      primitive.NewDateTimeFromTime(time.Now()),
 		UpdatedAt:      primitive.NewDateTimeFromTime(time.Now()),
 	}
@@ -327,7 +329,7 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 		ToID:           host.ID,
 		Amount:         totalBill,
 		Type:           Debit,
-		Status:         TxnPending,
+		Status:         TxnStart,
 		CreatedAt:      primitive.NewDateTimeFromTime(time.Now()),
 		UpdatedAt:      primitive.NewDateTimeFromTime(time.Now()),
 	}
