@@ -40,6 +40,16 @@ func CreateEvent(c *gin.Context) {
 		return
 	}
 
+	// VERIFICATION
+
+	// Check if DateTime is after time.Now()
+	okDate := hp.VeryifyDateTimeAfterNow(request.Date, request.Time)
+	if !okDate {
+		response := hp.SetError(err, "Date and Time must be after current Date and Time", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
 	// Check if User has a Wallet already
 	exists, err := hp.CheckifWalletExists(ctx, bson.M{"user_id": user.ID})
 	if err != nil {

@@ -287,10 +287,17 @@ type EventBillPayment struct {
 func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactions, error) {
 	funcName := ut.GetFunctionName()
 
+	// Get Venue Owner
+	restaurant, err := GetRestaurant(ctx, bson.M{"_id": event.Venue})
+	if err != nil {
+		SetDebug("error getting restaurant: "+err.Error(), funcName)
+		return Transactions{}, err
+	}
+
 	var orders []Order
 
 	// Get total bill from orders
-	orders, err := GetOrders(ctx, bson.M{"event_id": event.ID, "customer_id": user.ID})
+	orders, err = GetOrders(ctx, bson.M{"event_id": event.ID, "customer_id": user.ID})
 	if err != nil {
 		SetDebug("error getting orders: "+err.Error(), funcName)
 		return Transactions{}, err
@@ -304,7 +311,7 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 	SetInfo(fmt.Sprintf("total bill: %f", totalBill), funcName)
 
 	// Put Budget back in Wallet
-	budgetAmount := UnlockBudget(ctx, event.HostID, user)
+	budgetAmount := UnlockBudget(ctx, restaurant.OwnerID, user)
 
 	err = UpdateWallet(ctx, bson.M{"user_id": user.ID}, bson.M{"$inc": bson.M{"balance": +budgetAmount}})
 	if err != nil {

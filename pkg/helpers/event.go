@@ -138,3 +138,11 @@ func (e *Event) GetTimeDifference() int {
 
 	return eventTime - currentTime
 }
+
+func VeryifyDateTimeAfterNow(eventDate CustomDate, eventTime CustomTime) bool {
+	currentTime := time.Now()
+	eventDate_ := time.Date(eventDate.Time.Year(), eventDate.Time.Month(), eventDate.Time.Day(), eventTime.Time.Hour(), eventTime.Time.Minute(), 0, 0, time.UTC)
+	eventTime_ := time.Time(eventTime.Time)
+
+	return currentTime.Before(eventDate_) && currentTime.Before(eventTime_)
+}
