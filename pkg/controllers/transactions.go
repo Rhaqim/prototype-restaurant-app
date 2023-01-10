@@ -294,7 +294,7 @@ func PayBillforEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func SendOwnBillforEvent(c *gin.Context) {
+func SendOwnBillforEventToHost(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())

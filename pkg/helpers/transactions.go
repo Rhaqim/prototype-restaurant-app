@@ -259,9 +259,11 @@ type EventBillPayment struct {
 	TxnPin  string             `json:"txn_pin" bson:"txn_pin" binding:"required"`
 }
 
-// SendtoVenues sends money to venues
-// It takes a context and an event and a user
-// It returns a transaction and an error
+// SendtoVenuePayforEvent sends money to venues
+// Anyone can pay for the total bill of an event
+// It returns the transaction and error if any
+// It returns error if the user has insufficient balance
+// It returns error if the event is not found
 func SendtoVenuePayforEvent(ctx context.Context, event Event, user UserResponse) (Transactions, error) {
 	funcName := ut.GetFunctionName()
 
@@ -348,6 +350,10 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 
 	return txn, nil
 }
+
+// SendMoneyToVenuePayOwnBill sends money to venue to pay for own bill
+// It takes a context, the user and the event
+// It returns a transaction and an error
 
 // SendToOtherUsers sends money to other users
 // It takes a context, the user the money is being sent to and the user sending the money
