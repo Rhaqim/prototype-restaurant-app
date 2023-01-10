@@ -446,8 +446,8 @@ func UpdateNotificationStatus(ctx context.Context, notificationID primitive.Obje
 // AlertUser sends a notification to a user
 // It takes a context and a user ID as arguments
 // It returns an error if there is one
-func AlertUser(message string, user_id primitive.ObjectID) error {
-	msg := []byte(config.Notification_ +
+func AlertUser(header config.NotificationMessage, message string, user_id primitive.ObjectID) error {
+	msg := []byte(header.String() +
 		message,
 	)
 

@@ -181,6 +181,10 @@ const (
 	EventUpdated   NotificationMessage = "Event has been updated"
 )
 
+func (nm NotificationMessage) String() string {
+	return string(nm)
+}
+
 // Context Timeout
 const (
 	ContextTimeout = 15 * time.Second

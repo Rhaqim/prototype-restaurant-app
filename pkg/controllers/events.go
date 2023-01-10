@@ -111,12 +111,17 @@ func CreateEvent(c *gin.Context) {
 	// Unlock Budget and return to wallet after 24 hours
 	go func() {
 		time.Sleep(24 * time.Hour)
+
 		c := context.Background()
+
 		err = hp.BudgetoWallet(c, venue.OwnerID, user)
 		if err != nil {
 			hp.SetDebug("Error returning budget to wallet: "+err.Error(), funcName)
 		}
-		err = nf.AlertUser(config.BudgetReturned, user.ID)
+
+		msg := "Your budget of " + fmt.Sprintf("%.2f", request.Budget) + " has been returned to your wallet."
+
+		err = nf.AlertUser(config.BudgetReturned, msg, user.ID)
 		if err != nil {
 			hp.SetDebug("Error sending notification: "+err.Error(), funcName)
 		}

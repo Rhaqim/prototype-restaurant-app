@@ -419,7 +419,7 @@ func SendToOtherUsers(c *gin.Context) {
 
 	msg := user.Username + " has sent you " + billAmount
 
-	if err := nf.AlertUser(msg, user2.ID); err != nil {
+	if err := nf.AlertUser(config.Transaction_, msg, user2.ID); err != nil {
 		response := hp.SetError(err, "Error sending notification to users", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
