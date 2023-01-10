@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Rhaqim/thedutchapp/pkg/auth"
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -52,6 +51,12 @@ type TransactionStatus struct {
 	Txn_uuid string             `json:"txn_uuid" bson:"txn_uuid" binding:"required"`
 	TxnPin   string             `json:"txn_pin" bson:"txn_pin" binding:"required"`
 	Status   TxnStatus          `json:"status" bson:"status" binding:"required"`
+}
+
+type SendMoneyOtherUser struct {
+	Username string `json:"username" binding:"required"`
+	Amount   string `json:"amount" binding:"required"`
+	TxnPin   string `json:"txn_pin" binding:"required"`
 }
 
 func GetTransaction(ctx context.Context, filter bson.M) (Transactions, error) {
@@ -362,22 +367,11 @@ func VerificationforEventPayment(ctx context.Context, request EventBillPayment, 
 		return errors.New("event is not ongoing")
 	}
 
-	// Check that pin sent is correct
-	// Get wallet
-	filter := bson.M{
-		"_id": user.Wallet,
-	}
-	wallet, err := GetWallet(ctx, filter)
-	if err != nil {
-		SetError(err, "Error fetching wallet", funcName)
-		return err
-	}
+	//verify pin
+	if !VeryfyPin(ctx, user, request.TxnPin) {
+		SetError(nil, "Invalid Pin", funcName)
 
-	// Check if pin is correct
-	pin := auth.CheckPasswordHash(request.TxnPin, wallet.TxnPin)
-	if !pin {
-		SetError(nil, "Incorrect pin", funcName)
-		return errors.New("incorrect pin")
+		return errors.New("invalid pin")
 	}
 
 	return nil

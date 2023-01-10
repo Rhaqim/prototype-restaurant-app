@@ -366,3 +366,65 @@ func SendOwnBillforEvent(c *gin.Context) {
 	response := hp.SetSuccess("Money sent to host successfully", txn, funcName)
 	c.JSON(http.StatusOK, response)
 }
+
+func SendToOtherUsers(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	var request hp.SendMoneyOtherUser
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		var response = hp.SetError(err, "Error binding JSON", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	// Veryfy Pin of the User is correct
+	if !hp.VeryfyPin(ctx, user, request.TxnPin) {
+		response := hp.SetError(err, "Incorrect Pin", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Get User
+	filter := bson.M{
+		"username": request.Username,
+	}
+	user2, err := hp.GetUser(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error fetching user", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	txn, err := hp.SendToOtherUsers(ctx, user2, user)
+	if err != nil {
+		response := hp.SetError(err, "Error sending money to other users", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Send Notification to the Users
+	billAmount := strconv.FormatFloat(txn.Amount, 'f', 2, 64)
+
+	msg := user.Username + " has sent you " + billAmount
+
+	if err := nf.AlertUser(msg, user2.ID); err != nil {
+		response := hp.SetError(err, "Error sending notification to users", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("Money sent to users successfully", txn, funcName)
+	c.JSON(http.StatusOK, response)
+}

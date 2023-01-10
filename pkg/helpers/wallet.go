@@ -3,6 +3,7 @@ package helpers
 import (
 	"context"
 
+	"github.com/Rhaqim/thedutchapp/pkg/auth"
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -97,6 +98,29 @@ func CheckifWalletExists(ctx context.Context, filter bson.M) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func VeryfyPin(ctx context.Context, user UserResponse, pin string) bool {
+	funcName := "VeryfyPin"
+
+	// Check that pin sent is correct
+	// Get wallet
+	filter := bson.M{
+		"_id": user.Wallet,
+	}
+	wallet, err := GetWallet(ctx, filter)
+	if err != nil {
+		SetError(err, "Error fetching wallet", funcName)
+		return false
+	}
+
+	// Check if pin is correct
+	if !auth.CheckPasswordHash(pin, wallet.TxnPin) {
+		SetError(err, "Incorrect pin", funcName)
+		return false
+	}
+
+	return false
 }
 
 /* Budget */
