@@ -245,7 +245,7 @@ func PayBillforEvent(c *gin.Context) {
 		return
 	}
 
-	txn, err := hp.SendtoVenues(ctx, event, user)
+	txn, err := hp.SendtoVenuePayforEvent(ctx, event, user)
 	if err != nil {
 		response := hp.SetError(err, "Error sending money to venue", funcName)
 		c.JSON(http.StatusBadRequest, response)
@@ -407,7 +407,7 @@ func SendToOtherUsers(c *gin.Context) {
 		return
 	}
 
-	txn, err := hp.SendToOtherUsers(ctx, user2, user)
+	txn, err := hp.SendToOtherUsers(ctx, user2, user, request.Amount)
 	if err != nil {
 		response := hp.SetError(err, "Error sending money to other users", funcName)
 		c.JSON(http.StatusBadRequest, response)

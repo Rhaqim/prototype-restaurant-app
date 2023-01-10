@@ -54,9 +54,9 @@ type TransactionStatus struct {
 }
 
 type SendMoneyOtherUser struct {
-	Username string `json:"username" binding:"required"`
-	Amount   string `json:"amount" binding:"required"`
-	TxnPin   string `json:"txn_pin" binding:"required"`
+	Username string  `json:"username" binding:"required"`
+	Amount   float64 `json:"amount" binding:"required"`
+	TxnPin   string  `json:"txn_pin" binding:"required"`
 }
 
 func GetTransaction(ctx context.Context, filter bson.M) (Transactions, error) {
@@ -218,10 +218,51 @@ func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, e
 	return txn, nil
 }
 
+func startDebitTransaction(from, to primitive.ObjectID, amount float64) (Transactions, error) {
+	funcName := ut.GetFunctionName()
+
+	ctx := context.Background()
+
+	// create transaction
+	txn := Transactions{
+		ID:             primitive.NewObjectID(),
+		TransactionUID: TransactionUID,
+		FromID:         from,
+		ToID:           to,
+		Amount:         amount,
+		Type:           Debit,
+		Status:         TxnStart,
+		CreatedAt:      primitive.NewDateTimeFromTime(time.Now()),
+		UpdatedAt:      primitive.NewDateTimeFromTime(time.Now()),
+	}
+
+	// insert transaction
+	txn, err := InsertTransaction(ctx, txn)
+	if err != nil {
+		SetDebug("error inserting transaction: "+err.Error(), funcName)
+		return txn, err
+	}
+
+	// update wallet balance
+	txn, err = UpdateWalletBalance(ctx, txn)
+	if err != nil {
+		SetDebug("error updating wallet balance: "+err.Error(), funcName)
+		return txn, err
+	}
+
+	return txn, nil
+}
+
+/* Event Transaction */
+type EventBillPayment struct {
+	EventID primitive.ObjectID `json:"event_id" bson:"event_id" binding:"required"`
+	TxnPin  string             `json:"txn_pin" bson:"txn_pin" binding:"required"`
+}
+
 // SendtoVenues sends money to venues
 // It takes a context and an event and a user
 // It returns a transaction and an error
-func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transactions, error) {
+func SendtoVenuePayforEvent(ctx context.Context, event Event, user UserResponse) (Transactions, error) {
 	funcName := ut.GetFunctionName()
 
 	var txn Transactions
@@ -242,45 +283,15 @@ func SendtoVenues(ctx context.Context, event Event, user UserResponse) (Transact
 		return txn, errors.New("insufficient balance")
 	}
 
-	// TODO: Determine if money goes from user to venue or
-	// TODO: from event wallet to venue
-	// TODO: if from event wallet to venue, then check if event has sufficient balance
-	// TODO: or from user to venue owner
-
-	// create transaction
-	txn = Transactions{
-		ID:             primitive.NewObjectID(),
-		TransactionUID: TransactionUID,
-		FromID:         user.ID,
-		ToID:           restaurant.OwnerID,
-		Amount:         event.Bill,
-		Type:           Debit,
-		Status:         TxnStart,
-		CreatedAt:      primitive.NewDateTimeFromTime(time.Now()),
-		UpdatedAt:      primitive.NewDateTimeFromTime(time.Now()),
-	}
-
-	// insert transaction
-	txn, err = InsertTransaction(ctx, txn)
+	// start debit transaction
+	// Send Money to Venue Owner
+	txn, err = startDebitTransaction(user.ID, restaurant.OwnerID, event.Bill)
 	if err != nil {
-		SetDebug("error inserting transaction: "+err.Error(), funcName)
-		return txn, err
-	}
-
-	// update wallet balance
-	txn, err = UpdateWalletBalance(ctx, txn)
-	if err != nil {
-		SetDebug("error updating wallet balance: "+err.Error(), funcName)
+		SetDebug("error starting debit transaction: "+err.Error(), funcName)
 		return txn, err
 	}
 
 	return txn, nil
-}
-
-/* Event Transaction */
-type EventBillPayment struct {
-	EventID primitive.ObjectID `json:"event_id" bson:"event_id" binding:"required"`
-	TxnPin  string             `json:"txn_pin" bson:"txn_pin" binding:"required"`
 }
 
 // SendToHost sends money to the host of the event
@@ -327,30 +338,33 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 		return Transactions{}, errors.New("insufficient balance")
 	}
 
-	// create transaction
-	txn := Transactions{
-		ID:             primitive.NewObjectID(),
-		TransactionUID: TransactionUID,
-		FromID:         user.ID,
-		ToID:           event.HostID,
-		Amount:         totalBill,
-		Type:           Debit,
-		Status:         TxnStart,
-		CreatedAt:      primitive.NewDateTimeFromTime(time.Now()),
-		UpdatedAt:      primitive.NewDateTimeFromTime(time.Now()),
-	}
-
-	// insert transaction
-	txn, err = InsertTransaction(ctx, txn)
+	// Start Debit Transaction
+	// Send money to Host of Event
+	txn, err := startDebitTransaction(user.ID, event.HostID, totalBill)
 	if err != nil {
-		SetDebug("error inserting transaction: "+err.Error(), funcName)
+		SetDebug("error starting debit transaction: "+err.Error(), funcName)
 		return txn, err
 	}
 
-	// update wallet balance
-	txn, err = UpdateWalletBalance(ctx, txn)
+	return txn, nil
+}
+
+// SendToOtherUsers sends money to other users
+// It takes a context, the user the money is being sent to and the user sending the money
+// It returns a transaction and an error
+func SendToOtherUsers(ctx context.Context, toUser UserResponse, fromUser UserResponse, amount float64) (Transactions, error) {
+	funcName := ut.GetFunctionName()
+
+	// check if user has sufficient balance
+	if !VerifyWalletSufficientBalance(ctx, fromUser, amount) {
+		return Transactions{}, errors.New("insufficient balance")
+	}
+
+	// start debit transaction
+	//Send Money to User
+	txn, err := startDebitTransaction(fromUser.ID, toUser.ID, amount)
 	if err != nil {
-		SetDebug("error updating wallet balance: "+err.Error(), funcName)
+		SetDebug("error starting debit transaction: "+err.Error(), funcName)
 		return txn, err
 	}
 
