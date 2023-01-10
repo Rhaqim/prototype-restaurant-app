@@ -14,7 +14,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var eventCollection = config.EventCollection
@@ -450,16 +449,19 @@ func CancelEvent(c *gin.Context) {
 
 	filter := bson.M{"_id": id, "host_id": user.ID}
 
-	update := bson.M{
-		"$set": bson.M{"event_status": hp.Cancelled},
+	// Get Event
+	event, err := hp.GetEvent(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error getting event", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
 	}
 
-	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
-
-	var event hp.Event
-	if err = eventCollection.FindOneAndUpdate(ctx, filter, update, opts).Decode(&event); err != nil {
-		response := hp.SetError(err, "Error cancelling event", funcName)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+	// NOTE: Might seperate the finished and ongoing checks
+	// Check that event is not currently ongoing or finished
+	if event.EventStatus == hp.Ongoing || event.EventStatus == hp.Finished {
+		response := hp.SetError(err, "Event is currently ongoing or finished", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
@@ -467,13 +469,28 @@ func CancelEvent(c *gin.Context) {
 	filter = bson.M{"_id": event.Venue}
 	venue, err := hp.GetRestaurant(ctx, filter)
 	if err != nil {
-		hp.SetError(err, "Error getting venue", funcName)
+		response := hp.SetError(err, "Error getting venue", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
 	}
 
 	// Return the budget to the wallet
 	err = hp.BudgetoWallet(ctx, venue.OwnerID, user)
 	if err != nil {
-		hp.SetError(err, "Error returning budget to wallet", funcName)
+		response := hp.SetError(err, "Error returning budget to wallet", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	update := bson.M{
+		"$set": bson.M{"event_status": hp.Cancelled},
+	}
+
+	_, err = eventCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		response := hp.SetError(err, "Error cancelling event", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
 	}
 
 	response := hp.SetSuccess(" event cancelled", nil, funcName)
