@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var eventCollection = config.EventCollection
@@ -107,8 +108,6 @@ func CreateEvent(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
-
-	// TODO: Unlock Budget if Event is cancelled
 
 	// Unlock Budget and return to wallet after 24 hours
 	go func() {
@@ -424,5 +423,59 @@ func DeleteEvent(c *gin.Context) {
 	}
 
 	response := hp.SetSuccess(" event deleted", deleteResult, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+// CancelEvent cancels an event
+func CancelEvent(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		response := hp.SetError(err, "Error converting id to object id", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	filter := bson.M{"_id": id, "host_id": user.ID}
+
+	update := bson.M{
+		"$set": bson.M{"event_status": hp.Cancelled},
+	}
+
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	var event hp.Event
+	if err = eventCollection.FindOneAndUpdate(ctx, filter, update, opts).Decode(&event); err != nil {
+		response := hp.SetError(err, "Error cancelling event", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Get Venue
+	filter = bson.M{"_id": event.Venue}
+	venue, err := hp.GetRestaurant(ctx, filter)
+	if err != nil {
+		hp.SetError(err, "Error getting venue", funcName)
+	}
+
+	// Return the budget to the wallet
+	err = hp.BudgetoWallet(ctx, venue.OwnerID, user)
+	if err != nil {
+		hp.SetError(err, "Error returning budget to wallet", funcName)
+	}
+
+	response := hp.SetSuccess(" event cancelled", nil, funcName)
 	c.JSON(http.StatusOK, response)
 }

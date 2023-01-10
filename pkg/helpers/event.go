@@ -35,7 +35,7 @@ const (
 	Upcoming  EventStatus = "upcoming"
 	Ongoing   EventStatus = "ongoing"
 	Finished  EventStatus = "finished"
-	cancelled EventStatus = "cancelled"
+	Cancelled EventStatus = "cancelled"
 )
 
 func (h EventStatus) String() string {
