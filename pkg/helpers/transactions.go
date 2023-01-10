@@ -276,12 +276,8 @@ func SendtoVenuePayforEvent(ctx context.Context, event Event, user UserResponse)
 		return txn, err
 	}
 
-	// Get Budget
-	budgetAmount := GetBudget(ctx, bson.M{"intended_id": restaurant.OwnerID, "user_id": user.ID})
-	var totalAmount float64 = budgetAmount + event.Bill
-
 	// check if user has sufficient balance
-	if !VerifyWalletSufficientBalance(ctx, user, totalAmount) {
+	if !VerifyWalletSufficientBalance(ctx, user, event.Bill) {
 		return txn, errors.New("insufficient balance")
 	}
 
@@ -351,9 +347,59 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 	return txn, nil
 }
 
-// SendMoneyToVenuePayOwnBill sends money to venue to pay for own bill
+// SendMoneyPayOwnBill sends money to venue to pay for own bill
 // It takes a context, the user and the event
 // It returns a transaction and an error
+func SendMoneyPayOwnBill(ctx context.Context, event Event, user UserResponse) (Transactions, error) {
+	funcName := ut.GetFunctionName()
+
+	var txn Transactions
+
+	// Get Venue Owner
+	restaurant, err := GetRestaurant(ctx, bson.M{"_id": event.Venue})
+	if err != nil {
+		SetDebug("error getting restaurant: "+err.Error(), funcName)
+		return txn, err
+	}
+
+	var orders []Order
+
+	// Get total bill from orders
+	orders, err = GetOrders(ctx, bson.M{"event_id": event.ID, "customer_id": user.ID})
+	if err != nil {
+		SetDebug("error getting orders: "+err.Error(), funcName)
+		return Transactions{}, err
+	}
+
+	var totalBill float64
+	for _, order := range orders {
+		totalBill += order.Bill
+	}
+
+	SetInfo(fmt.Sprintf("total bill: %f", totalBill), funcName)
+
+	err = BudgetoWallet(ctx, restaurant.OwnerID, user)
+	if err != nil {
+		SetDebug("error returning budget: "+err.Error(), funcName)
+		return Transactions{}, err
+	}
+
+	// check if user has sufficient balance
+	if !VerifyWalletSufficientBalance(ctx, user, totalBill) {
+		SetDebug("insufficient balance", funcName)
+		return Transactions{}, errors.New("insufficient balance")
+	}
+
+	// start debit transaction
+	// Send Money to Venue Owner
+	txn, err = startDebitTransaction(user.ID, restaurant.OwnerID, totalBill)
+	if err != nil {
+		SetDebug("error starting debit transaction: "+err.Error(), funcName)
+		return txn, err
+	}
+
+	return txn, nil
+}
 
 // SendToOtherUsers sends money to other users
 // It takes a context, the user the money is being sent to and the user sending the money
