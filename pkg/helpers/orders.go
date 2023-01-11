@@ -187,3 +187,33 @@ func UpdateManyOrders(ctx context.Context, filter bson.M, update bson.M) (bool, 
 
 	return true, nil
 }
+
+func UpdateCustomerOrders(ctx context.Context, event Event, user UserResponse, orderErrChan chan error) {
+	var wg sync.WaitGroup
+
+	// get orders by event id
+	filter := bson.M{"event_id": event.ID, "customer_id": user.ID}
+	update := bson.M{
+		"$set": bson.M{
+			"paid": true,
+		},
+	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		// update orders
+		_, err := UpdateManyOrders(ctx, filter, update)
+		if err != nil {
+			orderErrChan <- err
+			return
+		}
+	}()
+
+	go func() {
+		wg.Wait()
+		close(orderErrChan)
+	}()
+
+}

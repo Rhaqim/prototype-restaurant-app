@@ -354,7 +354,7 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 // SendMoneyPayOwnBill sends money to venue to pay for own bill
 // It takes a context, the user and the event
 // It returns a transaction and an error
-func SendMoneyPayOwnBill(ctx context.Context, event Event, user UserResponse) (Transactions, error) {
+func PayOwnBillforEvent(ctx context.Context, event Event, user UserResponse) (Transactions, error) {
 	funcName := ut.GetFunctionName()
 
 	var txn Transactions
