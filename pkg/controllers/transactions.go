@@ -254,35 +254,24 @@ func PayBillforEvent(c *gin.Context) {
 		return
 	}
 
-	// Update event status to Finished once bill is paid
-	// Deduct the amount from the bill
-	filter = bson.M{
-		"_id": event.ID,
-	}
-	update := bson.M{
-		"$set": bson.M{
-			"event_status": hp.Finished,
-			"bill":         -txn.Amount,
-		},
-	}
-	_, err = hp.UpdateEvent(ctx, filter, update)
-	if err != nil {
+	// Update Event and Orders
+	// Event Status to Finished
+	// Orders Paid to True
+	eventErrChan := make(chan error, 1)
+	orderErrChan := make(chan error, 1)
+
+	go hp.UpdateEventandOrders(ctx, event, txn, eventErrChan, orderErrChan)
+
+	select {
+	case err := <-eventErrChan:
 		response := hp.SetError(err, "Error updating event status", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
-	}
-
-	// Update all Orders Paid to True
-	update = bson.M{
-		"$set": bson.M{
-			"paid": true,
-		},
-	}
-	_, err = hp.UpdateManyOrders(ctx, filter, update)
-	if err != nil {
-		response := hp.SetError(err, "Error updating orders", funcName)
+	case err := <-orderErrChan:
+		response := hp.SetError(err, "Error updating order status", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
+	default:
 	}
 
 	// Send Notification to the Venue

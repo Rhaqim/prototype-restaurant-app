@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
@@ -145,4 +146,54 @@ func VeryifyDateTimeAfterNow(eventDate CustomDate, eventTime CustomTime) bool {
 	eventTime_ := time.Time(eventTime.Time)
 
 	return currentTime.Before(eventDate_) && currentTime.Before(eventTime_)
+}
+
+// Update Event Status to Finished
+// Update all orders for the event to paid
+func UpdateEventandOrders(ctx context.Context, event Event, txn Transactions, eventErrChan, orderErrChan chan error) {
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// Update event status to Finished once bill is paid
+	// Deduct the amount from the bill
+	filter := bson.M{
+		"_id": event.ID,
+	}
+	go func() {
+		defer wg.Done()
+
+		update := bson.M{
+			"$set": bson.M{
+				"event_status": Finished,
+				"bill":         -txn.Amount,
+			},
+		}
+		_, err := UpdateEvent(ctx, filter, update)
+		if err != nil {
+			eventErrChan <- err
+			return
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		// Update all Orders Paid to True
+		update := bson.M{
+			"$set": bson.M{
+				"paid": true,
+			},
+		}
+		_, err := UpdateManyOrders(ctx, filter, update)
+		if err != nil {
+			orderErrChan <- err
+			return
+		}
+	}()
+
+	go func() {
+		wg.Wait()
+		close(eventErrChan)
+		close(orderErrChan)
+	}()
 }
