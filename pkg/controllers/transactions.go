@@ -204,7 +204,15 @@ func GetTransactions(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+/* EVENT TRANSACTION */
+
 // PayBill sends money to the venue of the event
+// it takes the event id and the pin of the user paying for the event
+// Verifies the pin and confirms user has suffiecient amount in wallet
+// Sends the money to the venue's owner's wallet
+// Updates the Event Status to Finished and the bills for the Users to Paid
+// Sends a notification to the venue about the payment
+// it returns the transaction details
 func PayBillforEvent(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
@@ -278,7 +286,12 @@ func PayBillforEvent(c *gin.Context) {
 		" of " + billAmount + " to your wallet",
 	)
 
-	venueList := []primitive.ObjectID{event.Venue}
+	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": event.Venue})
+	if err != nil {
+		hp.SetError(err, "Error fetching venue", funcName)
+	}
+
+	venueList := []primitive.ObjectID{venue.OwnerID}
 
 	notifyVenue := nf.NewNotification(
 		venueList,
@@ -291,7 +304,13 @@ func PayBillforEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func SendOwnBillforEventToHost(c *gin.Context) {
+// SendMoneytoHost sends money for Orders to the host of the event
+// it takes the event id and the pin of the user sending the money
+// Verifies the pin and confirms user has suffiecient amount in wallet
+// It sends the money directly to the host's wallet
+// Sends a notification to the host about the payment
+// it returns the transaction details
+func SendMoneytoHost(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
 	defer database.ConnectMongoDB().Disconnect(context.TODO())
@@ -359,6 +378,13 @@ func SendOwnBillforEventToHost(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// PayOwnBill pays the bill for Orders made by the user
+// it takes the event id and the pin of the user sending the money
+// Verifies the pin and confirms user has suffiecient amount in wallet
+// It sends the money directly to the venue owner's wallet
+// Sends a notification to the venue owner about the payment
+// Sends a notification to the host about the payment
+// it returns the transaction details
 func PayOwnBill(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
@@ -428,12 +454,17 @@ func PayOwnBill(c *gin.Context) {
 	// Send Notification to the Host
 	billAmount := strconv.FormatFloat(txn.Amount, 'f', 2, 64)
 
+	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": event.Venue})
+	if err != nil {
+		hp.SetError(err, "Error fetching venue", funcName)
+	}
+
 	msgHost := []byte(config.Transaction_ +
-		user.Username + " has paid the bill for " + event.Title +
-		" of " + billAmount + " to your wallet",
+		user.Username + " has paid their bill for " + event.Title +
+		" amount of " + billAmount + " has been sent to" + venue.Name,
 	)
 
-	hostList := []primitive.ObjectID{event.HostID}
+	hostList := []primitive.ObjectID{event.HostID, venue.OwnerID}
 
 	notifyHost := nf.NewNotification(
 		hostList,
@@ -446,6 +477,11 @@ func PayOwnBill(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// SendToOtherUsers sends money to another user
+// it takes the username of the user and the amount to be sent
+// Sends the money to the user's wallet
+// Sends a notification to the user about the payment
+// it returns the transaction details
 func SendToOtherUsers(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
