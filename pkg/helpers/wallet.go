@@ -120,7 +120,7 @@ func VeryfyPin(ctx context.Context, user UserResponse, pin string) bool {
 		return false
 	}
 
-	return false
+	return true
 }
 
 /* Budget */

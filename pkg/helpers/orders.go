@@ -192,7 +192,7 @@ func UpdateCustomerOrders(ctx context.Context, event Event, user UserResponse, t
 	var wg sync.WaitGroup
 
 	// get orders by event id
-	filter := bson.M{"event_id": event.ID, "customer_id": user.ID}
+	filter := bson.M{"event_id": event.ID, "customer_id": user.ID, "paid": false}
 	update := bson.M{
 		"$set": bson.M{
 			"paid": true,

@@ -315,7 +315,7 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 	var orders []Order
 
 	// Get total bill from orders
-	orders, err = GetOrders(ctx, bson.M{"event_id": event.ID, "customer_id": user.ID})
+	orders, err = GetOrders(ctx, bson.M{"event_id": event.ID, "customer_id": user.ID, "paid": false})
 	if err != nil {
 		SetDebug("error getting orders: "+err.Error(), funcName)
 		return Transactions{}, err
@@ -332,6 +332,12 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 	if err != nil {
 		SetDebug("error returning budget: "+err.Error(), funcName)
 		return Transactions{}, err
+	}
+
+	// Check if totalBill is greater than 0
+	if totalBill <= 0 {
+		SetDebug("total bill is less than or equal to 0", funcName)
+		return Transactions{}, errors.New("there are no orders to pay for")
 	}
 
 	// check if user has sufficient balance
@@ -369,7 +375,7 @@ func PayOwnBillforEvent(ctx context.Context, event Event, user UserResponse) (Tr
 	var orders []Order
 
 	// Get total bill from orders
-	orders, err = GetOrders(ctx, bson.M{"event_id": event.ID, "customer_id": user.ID})
+	orders, err = GetOrders(ctx, bson.M{"event_id": event.ID, "customer_id": user.ID, "paid": false})
 	if err != nil {
 		SetDebug("error getting orders: "+err.Error(), funcName)
 		return Transactions{}, err

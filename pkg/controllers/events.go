@@ -177,6 +177,8 @@ func CreateEvent(c *gin.Context) {
 		duration := time.Duration(minutes-5) * time.Minute
 		time.Sleep(duration)
 
+		ctx := context.Background()
+
 		// Change event status to ongoing
 		filter := bson.M{"_id": request.ID}
 		update := bson.M{"$set": bson.M{"event_status": hp.Ongoing}}
