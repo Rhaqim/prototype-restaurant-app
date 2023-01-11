@@ -17,6 +17,7 @@ type Order struct {
 	CustomerID primitive.ObjectID `json:"customer_id,omitempty" bson:"customer_id,omitempty"`
 	Products   []OrderRequest     `json:"products,omitempty" bson:"products" min:"1" binding:"required"`
 	Bill       float64            `json:"bill,omitempty" bson:"bill" binding:"number" default:"0"`
+	Paid       bool               `json:"paid,omitempty" bson:"paid" default:"false"`
 	CreatedAt  primitive.DateTime `json:"created_at" bson:"created_at" default:"time.Now()"`
 	UpdatedAt  primitive.DateTime `json:"updated_at" bson:"updated_at" default:"time.Now()"`
 }
@@ -167,4 +168,22 @@ func GetOrderbyID(c context.Context, id primitive.ObjectID) (Order, error) {
 	}
 
 	return order, nil
+}
+
+func UpdateOrder(ctx context.Context, filter bson.M, update bson.M) (bool, error) {
+	_, err := orderCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func UpdateManyOrders(ctx context.Context, filter bson.M, update bson.M) (bool, error) {
+	_, err := orderCollection.UpdateMany(ctx, filter, update)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

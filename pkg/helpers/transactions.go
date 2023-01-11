@@ -218,6 +218,10 @@ func UpdateWalletBalance(ctx context.Context, txn Transactions) (Transactions, e
 	return txn, nil
 }
 
+// StartDebitTransaction starts a debit transaction
+// It creates a transaction with the sender, receiver and amount
+// It stores the transaction in the database with a status of start
+// Then it updates the wallet balance of the sender and receiver
 func startDebitTransaction(from, to primitive.ObjectID, amount float64) (Transactions, error) {
 	funcName := ut.GetFunctionName()
 

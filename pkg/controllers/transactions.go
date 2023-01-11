@@ -238,6 +238,7 @@ func PayBillforEvent(c *gin.Context) {
 		return
 	}
 
+	// Verify Event for Payment
 	err = hp.VerificationforEventPayment(ctx, request, event, user)
 	if err != nil {
 		response := hp.SetError(err, "Error verifying event payment", funcName)
@@ -245,6 +246,7 @@ func PayBillforEvent(c *gin.Context) {
 		return
 	}
 
+	// Begin Transaction
 	txn, err := hp.SendtoVenuePayforEvent(ctx, event, user)
 	if err != nil {
 		response := hp.SetError(err, "Error sending money to venue", funcName)
@@ -253,17 +255,32 @@ func PayBillforEvent(c *gin.Context) {
 	}
 
 	// Update event status to Finished once bill is paid
+	// Deduct the amount from the bill
 	filter = bson.M{
 		"_id": event.ID,
 	}
 	update := bson.M{
 		"$set": bson.M{
 			"event_status": hp.Finished,
+			"bill":         -txn.Amount,
 		},
 	}
 	_, err = hp.UpdateEvent(ctx, filter, update)
 	if err != nil {
 		response := hp.SetError(err, "Error updating event status", funcName)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Update all Orders Paid to True
+	update = bson.M{
+		"$set": bson.M{
+			"paid": true,
+		},
+	}
+	_, err = hp.UpdateManyOrders(ctx, filter, update)
+	if err != nil {
+		response := hp.SetError(err, "Error updating orders", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
