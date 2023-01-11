@@ -165,7 +165,9 @@ func UpdateEventandOrders(ctx context.Context, event Event, txn Transactions, ev
 		update := bson.M{
 			"$set": bson.M{
 				"event_status": Finished,
-				"bill":         -txn.Amount,
+			},
+			"$inc": bson.M{
+				"bill": -txn.Amount,
 			},
 		}
 		_, err := UpdateEvent(ctx, filter, update)

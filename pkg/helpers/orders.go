@@ -188,7 +188,7 @@ func UpdateManyOrders(ctx context.Context, filter bson.M, update bson.M) (bool, 
 	return true, nil
 }
 
-func UpdateCustomerOrders(ctx context.Context, event Event, user UserResponse, orderErrChan chan error) {
+func UpdateCustomerOrders(ctx context.Context, event Event, user UserResponse, txn Transactions, orderErrChan, eventErrChan chan error) {
 	var wg sync.WaitGroup
 
 	// get orders by event id
@@ -199,7 +199,7 @@ func UpdateCustomerOrders(ctx context.Context, event Event, user UserResponse, o
 		},
 	}
 
-	wg.Add(1)
+	wg.Add(2)
 	go func() {
 		defer wg.Done()
 
@@ -212,8 +212,28 @@ func UpdateCustomerOrders(ctx context.Context, event Event, user UserResponse, o
 	}()
 
 	go func() {
+		defer wg.Done()
+
+		// update event
+		filter := bson.M{"_id": event.ID}
+		update := bson.M{
+			"$inc": bson.M{
+				"bill": -txn.Amount,
+			},
+		}
+
+		_, err := UpdateEvent(ctx, filter, update)
+		if err != nil {
+			eventErrChan <- err
+			return
+		}
+
+	}()
+
+	go func() {
 		wg.Wait()
 		close(orderErrChan)
+		close(eventErrChan)
 	}()
 
 }

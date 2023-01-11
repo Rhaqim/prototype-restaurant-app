@@ -410,12 +410,19 @@ func PayOwnBill(c *gin.Context) {
 
 	// Update All Customer Orders for the Event to paid
 	orderErrChan := make(chan error)
+	eventErrChan := make(chan error)
 
-	go hp.UpdateCustomerOrders(ctx, event, user, orderErrChan)
+	go hp.UpdateCustomerOrders(ctx, event, user, txn, orderErrChan, eventErrChan)
 
-	err = <-orderErrChan
-	if err != nil {
-		hp.SetError(err, "Error updating customer orders", funcName)
+	select {
+	case err := <-orderErrChan:
+		if err != nil {
+			hp.SetError(err, "Error updating customer orders", funcName)
+		}
+	case err := <-eventErrChan:
+		if err != nil {
+			hp.SetError(err, "Error updating event", funcName)
+		}
 	}
 
 	// Send Notification to the Host
