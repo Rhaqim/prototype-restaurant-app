@@ -283,7 +283,7 @@ func PayBillforEvent(c *gin.Context) {
 
 	msgVenue := []byte(config.Transaction_ +
 		user.Username + " has paid the bill for " + event.Title +
-		" of " + billAmount + " to your wallet",
+		" of " + billAmount + " money has been sent to your wallet",
 	)
 
 	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": event.Venue})
@@ -461,7 +461,7 @@ func PayOwnBill(c *gin.Context) {
 
 	msgHost := []byte(config.Transaction_ +
 		user.Username + " has paid their bill for " + event.Title +
-		" amount of " + billAmount + " has been sent to" + venue.Name,
+		" amount of " + billAmount + " has been sent to " + venue.Name,
 	)
 
 	hostList := []primitive.ObjectID{event.HostID, venue.OwnerID}
