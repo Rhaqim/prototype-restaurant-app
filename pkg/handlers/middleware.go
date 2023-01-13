@@ -17,6 +17,19 @@ import (
 
 var usersCollection = config.UserCollection
 
+// TokenGuardMiddleware is a middleware to check if the token is valid
+// User must be signed in to access this resource
+// This middleware is used to protect routes
+// It will check if the token is valid and if the user exists
+// If the user does not exist, it will return an error
+// If the user exists, it will set the user in the context
+// The user can then be accessed in the controller
+// Example:
+//
+//	func GetProfile(c *gin.Context) {
+//		user := c.MustGet("user").(hp.UserResponse)
+//		c.JSON(http.StatusOK, user)
+//	}
 func TokenGuardMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -59,6 +72,8 @@ func TokenGuardMiddleware() gin.HandlerFunc {
 	}
 }
 
+// RefreshTokenGuardMiddleware is a middleware to check if the refresh token is valid
+// User does not have to be signed in to access this resource
 func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -100,6 +115,9 @@ func RefreshTokenGuardMiddleware() gin.HandlerFunc {
 	}
 }
 
+// AdminGuardMiddleware is a middleware to check if the user is an admin
+// User has to be signed in to access this resource
+// User has to be an admin to access this resource
 func AdminGuardMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user, _ := hp.GetUserFromToken(c)

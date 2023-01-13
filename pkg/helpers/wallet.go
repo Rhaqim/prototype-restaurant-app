@@ -261,3 +261,15 @@ func BudgetoWallet(ctx context.Context, intended_id primitive.ObjectID, user Use
 
 	return nil
 }
+
+func AddMoney(ctx context.Context, user UserResponse, amount float64) error {
+	funcName := "AddMoney"
+
+	err := UpdateWallet(ctx, bson.M{"user_id": user.ID}, bson.M{"$inc": bson.M{"balance": +amount}})
+	if err != nil {
+		SetDebug("error updating wallet: "+err.Error(), funcName)
+		return err
+	}
+
+	return nil
+}

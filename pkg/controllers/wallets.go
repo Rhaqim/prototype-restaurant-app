@@ -184,12 +184,7 @@ func FundWallet(c *gin.Context) {
 	// Perform Transaction Fund Wallet to Paystack
 
 	// Update user wallet
-	filter := bson.M{"user_id": user.ID}
-	update := bson.M{"$set": bson.M{
-		"balance": +request.Amount,
-	}}
-
-	_, err = walletCollection.UpdateOne(ctx, filter, update)
+	err = hp.AddMoney(ctx, user, request.Amount)
 	if err != nil {
 		response := hp.SetError(err, "Error updating user", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
