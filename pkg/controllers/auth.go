@@ -191,11 +191,9 @@ Checks if the user has verified their email otherwise sends a verification email
 Returns the user data and the JWT and refresh token
 */
 
-func SignIn(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.DisconnectMongoDB()
+var SignIn = AbstractConnection(signin)
 
+func signin(c *gin.Context, ctx context.Context) {
 	funcName := ut.GetFunctionName()
 
 	var request = hp.SignIn{}
@@ -289,11 +287,9 @@ func SignIn(c *gin.Context) {
 	}
 }
 
-func Signout(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.DisconnectMongoDB()
+var Signout = AbstractConnection(signout)
 
+func signout(c *gin.Context, ctx context.Context) {
 	funcName := ut.GetFunctionName()
 
 	user, err := hp.GetUserFromToken(c)
@@ -313,6 +309,31 @@ func Signout(c *gin.Context) {
 	response := hp.SetSuccess("User signed out successfully", nil, funcName)
 	c.JSON(http.StatusOK, response)
 }
+
+// func Signout(c *gin.Context) {
+// 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
+// 	defer cancel()
+// 	defer database.DisconnectMongoDB()
+
+// 	funcName := ut.GetFunctionName()
+
+// 	user, err := hp.GetUserFromToken(c)
+// 	if err != nil {
+// 		response := hp.SetError(err, "User not logged in", funcName)
+// 		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+// 		return
+// 	}
+
+// 	err = hp.UpdateRefreshToken(ctx, user.ID, "")
+// 	if err != nil {
+// 		response := hp.SetError(err, "Error signing out", funcName)
+// 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+// 		return
+// 	}
+
+// 	response := hp.SetSuccess("User signed out successfully", nil, funcName)
+// 	c.JSON(http.StatusOK, response)
+// }
 
 func RefreshToken(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
