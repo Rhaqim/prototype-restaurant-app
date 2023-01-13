@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/auth"
 	"github.com/Rhaqim/thedutchapp/pkg/config"
@@ -140,11 +139,13 @@ func ChangePin(c *gin.Context) {
 		return
 	}
 
+	update_at, _ := hp.CreatedAtUpdatedAt()
+
 	filter := bson.M{"_id": wallet.ID}
 	update := bson.M{
 		"$set": bson.M{
 			"txn_pin":    request.NewPin,
-			"updated_at": time.Now().Format("2006-01-02 15:04:05"),
+			"updated_at": update_at,
 		}}
 
 	_, err = walletCollection.UpdateOne(ctx, filter, update)
@@ -203,5 +204,30 @@ func FundWallet(c *gin.Context) {
 	}
 
 	response := hp.SetSuccess("Wallet funded", user, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func GetWalletBalance(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
+	defer cancel()
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	var funcName = ut.GetFunctionName()
+
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	wallet, err := hp.GetWallet(ctx, bson.M{"user_id": user.ID})
+	if err != nil {
+		response := hp.SetError(err, "Error getting wallet", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("Wallet balance", wallet.Balance, funcName)
 	c.JSON(http.StatusOK, response)
 }
