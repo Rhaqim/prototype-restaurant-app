@@ -19,26 +19,9 @@ func AbstractConnection(fn handlerFunc) gin.HandlerFunc {
 	}
 }
 
-var AuthViews = map[string]handlerFunc{
-	"signin":  signin,
-	"signout": signout,
-}
-
-type Route struct {
-	Method      string
-	Path        string
-	HandlerFunc handlerFunc
-}
-
-var AuthRoutes = []Route{
-	{
-		Method:      "POST",
-		Path:        "/signin",
-		HandlerFunc: signin,
-	},
-	{
-		Method:      "GET",
-		Path:        "/signout",
-		HandlerFunc: signout,
-	},
+var AuthViews = map[string]gin.HandlerFunc{
+	"signUp":      AbstractConnection(signUp),
+	"verifyEmail": AbstractConnection(verifyEmail),
+	"signIn":      AbstractConnection(signIn),
+	"signOut":     AbstractConnection(signOut),
 }

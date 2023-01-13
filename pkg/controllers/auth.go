@@ -32,11 +32,9 @@ Stores the refresh token in the database
 Sends a verification code to the email
 Sends the access token and refresh token in the response
 */
-func Signup(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.DisconnectMongoDB()
+var Signup = AbstractConnection(signUp)
 
+func signUp(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	var user = hp.UserStruct{}
@@ -151,11 +149,9 @@ func Signup(c *gin.Context) {
 Gets the token and email from the query
 Verifies the email with the token sent to the email
 */
-func VerifyEmail(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.DisconnectMongoDB()
+var VerifyEmail = AbstractConnection(verifyEmail)
 
+func verifyEmail(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	token := c.Query("token")
@@ -191,9 +187,9 @@ Checks if the user has verified their email otherwise sends a verification email
 Returns the user data and the JWT and refresh token
 */
 
-var SignIn = AbstractConnection(signin)
+var SignIn = AbstractConnection(signIn)
 
-func signin(c *gin.Context, ctx context.Context) {
+func signIn(c *gin.Context, ctx context.Context) {
 	funcName := ut.GetFunctionName()
 
 	var request = hp.SignIn{}
@@ -287,9 +283,9 @@ func signin(c *gin.Context, ctx context.Context) {
 	}
 }
 
-var Signout = AbstractConnection(signout)
+var Signout = AbstractConnection(signOut)
 
-func signout(c *gin.Context, ctx context.Context) {
+func signOut(c *gin.Context, ctx context.Context) {
 	funcName := ut.GetFunctionName()
 
 	user, err := hp.GetUserFromToken(c)

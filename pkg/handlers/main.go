@@ -16,13 +16,13 @@ func GinRouter() *gin.Engine {
 	/* Auth Routes */
 	auth := router.Group("/auth")
 	{
-		auth.POST("/signup", views.Signup)
-		auth.GET("/verifyEmail", views.VerifyEmail)
-		auth.POST("/signin", views.SignIn)
+		auth.POST("/signUp", views.AuthViews["signUp"])
+		auth.GET("/verifyEmail", views.AuthViews["verifyEmail"])
+		auth.POST("/signIn", views.AuthViews["signIn"])
 	}
 	tokenProtected := auth.Group("/protected", TokenGuardMiddleware())
 	{
-		tokenProtected.GET("/signout", views.Signout)
+		tokenProtected.GET("/signOut", views.AuthViews["signOut"])
 		tokenProtected.GET("/ws", nf.WsHandler)
 
 	}
