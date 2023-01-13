@@ -9,6 +9,7 @@ import (
 	"os"
 	"reflect"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -113,4 +114,12 @@ func RandomString(length int, key string) string {
 func ToJSON(i interface{}) string {
 	json, _ := json.Marshal(i)
 	return string(json)
+}
+
+// Generate 10 digit reference number with uuid
+func GenerateReferenceNumber() string {
+	ref := RandomString(10, GenerateUUID())
+
+	// conver ref to uppercase
+	return strings.ToUpper(ref)
 }

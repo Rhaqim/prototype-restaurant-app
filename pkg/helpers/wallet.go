@@ -40,7 +40,7 @@ type FundWalletResponse struct {
 }
 
 // func FundWalletPaystack(request FundWalletRequest, user UserResponse) (FundWalletResponse, error) {
-// Create a new Paystack client
+// // Create a new Paystack client
 // 	client := paystack.NewClient(paystack.ClientOptions{
 // 		SecretKey: os.Getenv("PAYSTACK_SECRET_KEY"),
 // 	})
@@ -64,6 +64,63 @@ type FundWalletResponse struct {
 // 	var paystackResponse FundWalletResponse
 
 // 	return paystackResponse, nil
+
+// Insert new Credit transaction
+// transaction := hp.Transaction{
+// 	ID:        primitive.NewObjectID(),
+// 	From:      user.ID,
+// 	To:        user.ID,
+// 	Amount:    request.Amount,
+// 	TransactionUID: paystackResponse.Data.Reference,
+// 	Status:    hp.Start,
+// 	Type:      "credit",
+// 	CreatedAt: time.Now(),
+// 	UpdatedAt: time.Now(),
+// }
+
+// _, err = transactionCollection.InsertOne(ctx, transaction)
+// if err != nil {
+// 	response := hp.SetError(err, "Error creating transaction", funcName)
+// 	c.AbortWithStatusJSON(http.StatusBadRequest, response)
+// 	return
+// }
+
+// Await a response from the Paystack API
+// paystackResponse, err := hp.FundWalletPaystack(request, user)
+// if err != nil {
+//  // Update transaction status to failed
+//  filter := bson.M{"_id": transaction.ID}
+//  update := bson.M{"$set": bson.M{
+//   "status": hp.Failed,
+//  }}
+
+//  _, err = transactionCollection.UpdateOne(ctx, filter
+//  if err != nil {
+//   response := hp.SetError(err, "Error updating transaction", funcName)
+//   c.AbortWithStatusJSON(http.StatusBadRequest, response)
+//   return
+//  }
+
+// 	response := hp.SetError(err, "Error funding wallet", funcName)
+// 	c.AbortWithStatusJSON(http.StatusBadRequest, response)
+// 	return
+// }
+
+// user.Wallet += request.Amount
+
+// Update Transaction status to success
+// filter := bson.M{"_id": transaction.ID}
+// update := bson.M{"$set": bson.M{
+//  "status": hp.Success,
+// }}
+
+// _, err = transactionCollection.UpdateOne(ctx, filter, update)
+// if err != nil {
+//  response := hp.SetError(err, "Error updating transaction", funcName)
+//  c.AbortWithStatusJSON(http.StatusBadRequest, response)
+//  return
+// }
+
 // }
 
 func GetWallet(ctx context.Context, filter bson.M) (Wallet, error) {

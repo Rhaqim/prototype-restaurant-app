@@ -16,7 +16,7 @@ import (
 var transactionCollection = config.TransactionCollection
 
 // unique id for transactions
-var TransactionUID = "TC-" + ut.GenerateUUID()
+var TransactionUID = "TC-" + ut.GenerateReferenceNumber()
 
 type TxnType string
 
