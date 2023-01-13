@@ -36,3 +36,11 @@ func ConnectMongoDB() *mongo.Client {
 func OpenCollection(client *mongo.Client, databaseName string, collectionName string) *mongo.Collection {
 	return client.Database(databaseName).Collection(collectionName)
 }
+
+func DisconnectMongoDB() {
+	log.Println("Disconnecting from the database...")
+
+	ConnectMongoDB().Disconnect(context.TODO())
+
+	log.Println("Disconnecting from the database... [OK]")
+}

@@ -3,10 +3,12 @@ package config
 import (
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/database"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Time format
@@ -52,27 +54,30 @@ const (
 	WALLET       = "wallets"
 )
 
+func OpenCollection(name string) *mongo.Collection {
+	return database.OpenCollection(database.ConnectMongoDB(), DB, name)
+}
+
 // Open Database Collections
 var (
-	AdminCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, ADMIN)
-	AttendeeCollection     = database.OpenCollection(database.ConnectMongoDB(), DB, ATTENDEE)
-	BudgetCollection       = database.OpenCollection(database.ConnectMongoDB(), DB, BUDGET)
-	CityCollection         = database.OpenCollection(database.ConnectMongoDB(), DB, CITY)
-	CountryCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, COUNTRY)
-	EventCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, EVENT)
-	FriendshipCollection   = database.OpenCollection(database.ConnectMongoDB(), DB, FRIENDSHIP)
-	NotificationCollection = database.OpenCollection(database.ConnectMongoDB(), DB, NOTIFICATION)
-	OrderCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, ORDER)
-	ProductCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, PRODUCT)
-	RestaurantCollection   = database.OpenCollection(database.ConnectMongoDB(), DB, RESTAURAUNT)
-	SessionCollection      = database.OpenCollection(database.ConnectMongoDB(), DB, SESSION)
-	StateCollection        = database.OpenCollection(database.ConnectMongoDB(), DB, STATE)
-	TransactionCollection  = database.OpenCollection(database.ConnectMongoDB(), DB, TRANSACTION)
-	UserCollection         = database.OpenCollection(database.ConnectMongoDB(), DB, USERS)
-	WalletCollection       = database.OpenCollection(database.ConnectMongoDB(), DB, WALLET)
+	AdminCollection        = OpenCollection(ADMIN)
+	AttendeeCollection     = OpenCollection(ATTENDEE)
+	BudgetCollection       = OpenCollection(BUDGET)
+	CityCollection         = OpenCollection(CITY)
+	CountryCollection      = OpenCollection(COUNTRY)
+	EventCollection        = OpenCollection(EVENT)
+	FriendshipCollection   = OpenCollection(FRIENDSHIP)
+	NotificationCollection = OpenCollection(NOTIFICATION)
+	OrderCollection        = OpenCollection(ORDER)
+	ProductCollection      = OpenCollection(PRODUCT)
+	RestaurantCollection   = OpenCollection(RESTAURAUNT)
+	SessionCollection      = OpenCollection(SESSION)
+	StateCollection        = OpenCollection(STATE)
+	TransactionCollection  = OpenCollection(TRANSACTION)
+	UserCollection         = OpenCollection(USERS)
+	WalletCollection       = OpenCollection(WALLET)
 )
 
-// Log Messages
 type LogType string
 
 const (
@@ -82,37 +87,33 @@ const (
 	Debug   LogType = "debug"
 )
 
+var colorFuncs = map[LogType]func(string) string{
+	Error:   coloriseError,
+	Info:    coloriseInfo,
+	Warning: coloriseWarning,
+	Debug:   coloriseDebug,
+}
+
 func Logs(level LogType, message, funcName interface{}) {
+	colorFunc := colorFuncs[level]
+	if colorFunc == nil {
+		colorFunc = colorFuncs[Info]
+	}
+
+	level = LogType(colorFunc(strings.ToUpper(string(level))))
 	var timeFMT = TimeFormat
 	var strFuncNmae = funcName.(string)
 
 	var clrInfoTime = coloriseTime(timeFMT)
 	var clrInfoFunc = coloriseFunc(strFuncNmae)
 
-	var infoStr = coloriseInfo("[INFO]")
-	var errorStr = coloriseError("[ERROR]")
-	var warningStr = coloriseWarning("[WARNING]")
-	var debugStr = coloriseDebug("[DEBUG]")
+	var baseStr = "\n \n" +
+		"######################################### \n" +
+		" \n LEVEL:%s \n TIME:%s \n FUNC:%s \n MSG:%s \n" +
+		"\n #########################################" +
+		"\n \n"
 
-	var baseStr = " \n" +
-		"#########################################" +
-		" \n %s \n TIME:%s \n FUNC:%s \n MSG:%s \n" +
-		"#########################################" +
-		" \n"
-
-	switch level {
-	case Info:
-		log.Printf(baseStr, infoStr, clrInfoTime, clrInfoFunc, coloriseInfo(message.(string)))
-	case Error:
-		log.Printf(baseStr, errorStr, clrInfoTime, clrInfoFunc, coloriseError(message.(string)))
-	case Warning:
-		log.Printf(baseStr, warningStr, clrInfoTime, clrInfoFunc, coloriseWarning(message.(string)))
-	case Debug:
-		log.Printf(baseStr, debugStr, clrInfoTime, clrInfoFunc, coloriseDebug(message.(string)))
-	default:
-		log.Printf(baseStr, infoStr, clrInfoTime, clrInfoFunc, coloriseInfo(message.(string)))
-
-	}
+	log.Printf(baseStr, level, clrInfoTime, clrInfoFunc, colorFunc(message.(string)))
 }
 
 func coloriseInfo(message string) string {
@@ -139,26 +140,93 @@ func coloriseFunc(message string) string {
 	return ut.Colorise("magenta", message)
 }
 
-func CheckErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
+// // Log Messages
+// type LogType string
 
-func Colorise(message string, log LogType) string {
-	switch log {
-	case Info:
-		return ut.Colorise("green", message)
-	case Error:
-		return ut.Colorise("red", message)
-	case Warning:
-		return ut.Colorise("yellow", message)
-	case Debug:
-		return ut.Colorise("blue", message)
-	default:
-		return ut.Colorise("green", message)
-	}
-}
+// const (
+// 	Error   LogType = "error"
+// 	Info    LogType = "info"
+// 	Warning LogType = "warning"
+// 	Debug   LogType = "debug"
+// )
+
+// func Logs(level LogType, message, funcName interface{}) {
+// 	var timeFMT = TimeFormat
+// 	var strFuncNmae = funcName.(string)
+
+// 	var clrInfoTime = coloriseTime(timeFMT)
+// 	var clrInfoFunc = coloriseFunc(strFuncNmae)
+
+// 	var infoStr = coloriseInfo("[INFO]")
+// 	var errorStr = coloriseError("[ERROR]")
+// 	var warningStr = coloriseWarning("[WARNING]")
+// 	var debugStr = coloriseDebug("[DEBUG]")
+
+// 	var baseStr = " \n" +
+// 		"#########################################" +
+// 		" \n %s \n TIME:%s \n FUNC:%s \n MSG:%s \n" +
+// 		"#########################################" +
+// 		" \n"
+
+// 	switch level {
+// 	case Info:
+// 		log.Printf(baseStr, infoStr, clrInfoTime, clrInfoFunc, coloriseInfo(message.(string)))
+// 	case Error:
+// 		log.Printf(baseStr, errorStr, clrInfoTime, clrInfoFunc, coloriseError(message.(string)))
+// 	case Warning:
+// 		log.Printf(baseStr, warningStr, clrInfoTime, clrInfoFunc, coloriseWarning(message.(string)))
+// 	case Debug:
+// 		log.Printf(baseStr, debugStr, clrInfoTime, clrInfoFunc, coloriseDebug(message.(string)))
+// 	default:
+// 		log.Printf(baseStr, infoStr, clrInfoTime, clrInfoFunc, coloriseInfo(message.(string)))
+
+// 	}
+// }
+
+// func coloriseInfo(message string) string {
+// 	return ut.Colorise("green", message)
+// }
+
+// func coloriseError(message string) string {
+// 	return ut.Colorise("red", message)
+// }
+
+// func coloriseWarning(message string) string {
+// 	return ut.Colorise("yellow", message)
+// }
+
+// func coloriseDebug(message string) string {
+// 	return ut.Colorise("blue", message)
+// }
+
+// func coloriseTime(message string) string {
+// 	return ut.Colorise("cyan", message)
+// }
+
+// func coloriseFunc(message string) string {
+// 	return ut.Colorise("magenta", message)
+// }
+
+// func CheckErr(err error) {
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// }
+
+// func Colorise(message string, log LogType) string {
+// 	switch log {
+// 	case Info:
+// 		return ut.Colorise("green", message)
+// 	case Error:
+// 		return ut.Colorise("red", message)
+// 	case Warning:
+// 		return ut.Colorise("yellow", message)
+// 	case Debug:
+// 		return ut.Colorise("blue", message)
+// 	default:
+// 		return ut.Colorise("green", message)
+// 	}
+// }
 
 // Types of messages sent over Websocket
 const (

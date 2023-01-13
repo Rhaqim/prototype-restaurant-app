@@ -35,7 +35,7 @@ Sends the access token and refresh token in the response
 func Signup(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+	defer database.DisconnectMongoDB()
 
 	var funcName = ut.GetFunctionName()
 
@@ -154,7 +154,7 @@ Verifies the email with the token sent to the email
 func VerifyEmail(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+	defer database.DisconnectMongoDB()
 
 	var funcName = ut.GetFunctionName()
 
@@ -194,7 +194,7 @@ Returns the user data and the JWT and refresh token
 func SignIn(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+	defer database.DisconnectMongoDB()
 
 	funcName := ut.GetFunctionName()
 
@@ -292,7 +292,7 @@ func SignIn(c *gin.Context) {
 func Signout(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+	defer database.DisconnectMongoDB()
 
 	funcName := ut.GetFunctionName()
 
@@ -317,7 +317,7 @@ func Signout(c *gin.Context) {
 func RefreshToken(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+	defer database.DisconnectMongoDB()
 
 	funcName := ut.GetFunctionName()
 
@@ -370,7 +370,7 @@ func RefreshToken(c *gin.Context) {
 func ForgotPassword(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+	defer database.DisconnectMongoDB()
 
 	funcName := ut.GetFunctionName()
 
@@ -416,7 +416,7 @@ func ForgotPassword(c *gin.Context) {
 func ResetPassword(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+	defer database.DisconnectMongoDB()
 
 	funcName := ut.GetFunctionName()
 

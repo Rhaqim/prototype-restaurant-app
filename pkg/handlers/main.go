@@ -20,16 +20,14 @@ func GinRouter() *gin.Engine {
 		auth.GET("/verifyEmail", views.VerifyEmail)
 		auth.POST("/signin", views.SignIn)
 	}
-	tokenProtected := auth.Group("/protected")
-	tokenProtected.Use(TokenGuardMiddleware())
+	tokenProtected := auth.Group("/protected", TokenGuardMiddleware())
 	{
 		tokenProtected.GET("/signout", views.Signout)
 		tokenProtected.GET("/ws", nf.WsHandler)
 
 	}
 
-	refreshTokenProtected := auth.Group("/protected")
-	refreshTokenProtected.Use(RefreshTokenGuardMiddleware())
+	refreshTokenProtected := auth.Group("/protected", RefreshTokenGuardMiddleware())
 	{
 		refreshTokenProtected.POST("/refreshToken", views.RefreshToken)
 		refreshTokenProtected.POST("/forgotPassword", views.ForgotPassword)

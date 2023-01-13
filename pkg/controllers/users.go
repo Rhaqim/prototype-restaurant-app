@@ -25,7 +25,7 @@ var usersCollection = config.UserCollection
 func CreatNewUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
 	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+	defer database.DisconnectMongoDB()
 
 	var user = hp.CreatUser{}
 	var response = hp.MongoJsonResponse{
@@ -74,7 +74,11 @@ func CreatNewUser(c *gin.Context) {
 	user.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
 	user.Role = hp.Roles(hp.Roles(user.Role).String())
 	password, err := auth.HashAndSalt(user.Password)
-	config.CheckErr(err)
+	if err != nil {
+		// config.Logs("error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	filter := bson.M{
 		"fullname":      user.Fullname,
