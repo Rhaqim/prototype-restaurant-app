@@ -26,57 +26,54 @@ func GinRouter() *gin.Engine {
 	/* Auth Routes */
 	auth := router.Group("/auth")
 	{
-		auth.POST("/signUp", views.Signup)
-		auth.GET("/verifyEmail", views.VerifyEmail)
-		auth.POST("/signIn", views.SignIn)
+		auth.POST("/signin", views.SignIn)
+		auth.POST("/signup", views.Signup)
+		auth.GET("/verifyemail", views.VerifyEmail)
+		auth.POST("/forgot_password", views.ForgotPassword)
 	}
-	tokenProtected := auth.Group("/protected", TokenGuardMiddleware())
+	auth.Use(TokenGuardMiddleware())
 	{
-		tokenProtected.GET("/signOut", views.Signout)
-		tokenProtected.GET("/ws", nf.WsHandler)
+		auth.GET("/signout", views.Signout)
+		auth.GET("/ws", nf.WsHandler)
 
 	}
 
-	auth.POST("/forgotPassword", views.ForgotPassword)
 	refreshTokenProtected := auth.Group("/protected", RefreshTokenGuardMiddleware())
 	{
-		refreshTokenProtected.POST("/refreshToken", views.RefreshToken)
-		refreshTokenProtected.POST("/changePassword", views.ResetPassword)
+		refreshTokenProtected.POST("/refresh_token", views.RefreshToken)
+		refreshTokenProtected.POST("/reset_password", views.ResetPassword)
 	}
 
 	/* User Routes */
 	user := router.Group("/user")
-	user.GET("/getUser", views.GetUser)
+	user.GET("/get_profile", views.GetUser)
 	user.Use(TokenGuardMiddleware())
 	{
-		user.POST("/createUser", views.CreatNewUser)
-		user.PUT("/updateUser", views.UpdateUser)
-		user.PUT("/updateKyc", views.UpdateUsersKYC)
-		user.DELETE("/deleteUser", views.DeleteUser)
+		user.PUT("/update_profile", views.UpdateUser)
+		user.PUT("/update_kyc", views.UpdateUsersKYC)
+		user.DELETE("/delete_profile", views.DeleteUser)
 
 		/* Transaction Routes */
 		transactions := user.Group("/transactions")
 		{
-			transactions.POST("/createTransaction", views.CreateTransaction)
-			transactions.PUT("/updateTransaction", views.UpdateTransactionStatus)
 			transactions.POST("/paybill", views.PayBillforEvent)
-			transactions.POST("/sendMoneytoHost", views.SendMoneytoHost)
-			transactions.POST("/payOwnBill", views.PayOwnBill)
-			transactions.POST("/sendmoney", views.SendToOtherUsers)
-			transactions.GET("/getTransactions", views.GetTransactions)
+			transactions.POST("/pay_own_bill", views.PayOwnBill)
+			transactions.POST("/send_money_to_host", views.SendMoneytoHost)
+			transactions.POST("/send_money_to_user", views.SendToOtherUsers)
+			transactions.GET("/get_transactions", views.GetTransactions)
 		}
 
 		/* Social Routes */
 		social := user.Group("/social")
 		{
-			social.POST("/sendFriendRequest", views.SendFriendRequest)
-			social.POST("/acceptFriendRequest", views.AcceptFriendRequest)
-			social.POST("/declineFriendRequest", views.DeclineFriendRequest)
+			social.POST("/send_friend_request", views.SendFriendRequest)
+			social.POST("/accept_friend_request", views.AcceptFriendRequest)
+			social.POST("/decline_friend_request", views.DeclineFriendRequest)
 			social.POST("/block", views.BlockUser)
 			social.POST("/unblock", views.UnblockUser)
-			social.GET("/getFriends", views.GetFriends)
-			social.GET("/getFriendRequests", views.GetFriendRequests)
-			social.GET("/getBlockedUsers", views.GetBlockedUsers)
+			social.GET("/get_friends", views.GetFriends)
+			social.GET("/get_friend_requests", views.GetFriendRequests)
+			social.GET("/get_blocked_friends", views.GetBlockedUsers)
 		}
 
 		/* Wallet Routes */
@@ -84,7 +81,7 @@ func GinRouter() *gin.Engine {
 		{
 			wallet.POST("/create", views.CreateWallet)
 			wallet.POST("/fund", views.FundWallet)
-			wallet.POST("/pinChange", views.ChangePin)
+			wallet.POST("/pin_change", views.ChangePin)
 			wallet.GET("/balance", views.GetWalletBalance)
 		}
 
@@ -92,7 +89,8 @@ func GinRouter() *gin.Engine {
 		notification := user.Group("/notification")
 		{
 			notification.GET("/get", views.GetNotifications)
-			notification.POST("/markAs", views.UpdateNotificationStatus)
+			notification.POST("/mark_as", views.UpdateNotificationStatus)
+			// notification.POST("/mark_all_as", views.UpdateAllNotificationsStatus)
 		}
 	}
 
