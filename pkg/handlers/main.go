@@ -96,38 +96,39 @@ func GinRouter() *gin.Engine {
 
 	/* Event Routes */
 	event := router.Group("/event")
-	event.GET("/getEvent", views.GetEvent)
-	event.GET("/getEvents", views.GetEvents)
+	event.GET("/get", views.GetEvent)
+	event.GET("/get_events", views.GetEvents)
 	event.Use(TokenGuardMiddleware())
 	{
-		event.POST("/createEvent", views.CreateEvent)
-		event.PUT("/updateEvent", views.UpdateEvent)
-		event.DELETE("/deleteEvent/:id", views.DeleteEvent)
+		event.POST("/create", views.CreateEvent)
+		event.PUT("/update", views.UpdateEvent)
+		event.DELETE("/delete/:id", views.DeleteEvent)
 		event.GET("/cancel/:id", views.CancelEvent)
 
 		/* Order Routes */
 		order := event.Group("/order")
 		{
 			order.POST("create", views.CreateOrder)
-			order.GET("getOrders", views.GetOrders)
+			order.GET("get_orders", views.GetOrders)
+			order.GET("get_order", views.GetOrder)
 			order.GET("getEventOrders/:id", views.GetEventOrders)
 			order.GET("getUserEventOrders/:id", views.GetUserEventOrders)
 		}
 
 		attend := event.Group("/attend")
 		{
-			attend.POST("/sendInvites", views.SendEventInvites)
-			attend.GET("/acceptInvite", views.AcceptInvite)
-			attend.POST("/declineInvite", views.DeclineInvite)
+			attend.POST("/send_invites", views.SendEventInvites)
+			attend.GET("/accept_invite", views.AcceptInvite)
+			attend.POST("/decline_invite", views.DeclineInvite)
 			// attend.GET("/getInvites", views.GetInvites)
-			// attend.GET("/getAttendees", views.GetAttendees)
+			// attend.GET("/get_attendees", views.GetAttendees)
 		}
 	}
 
 	/* Restaurant Routes */
 	restaurant := router.Group("/restaurant")
-	restaurant.GET("/getRestaurant", views.GetRestaurant)
-	restaurant.GET("/getRestaurants", views.GetRestaurants)
+	restaurant.GET("/get", views.GetRestaurant)
+	restaurant.GET("/get_restaurants", views.GetRestaurants)
 	restaurant.Use(TokenGuardMiddleware())
 	{
 		restaurant.POST("/create", views.CreateRestaurant)
@@ -137,8 +138,8 @@ func GinRouter() *gin.Engine {
 
 	/* Product Routes */
 	product := router.Group("/product")
-	product.GET("/getProduct", views.GetProduct)
-	product.GET("/getProducts", views.GetProducts)
+	product.GET("/get", views.GetProduct)
+	product.GET("/get_products", views.GetProducts)
 	product.Use(TokenGuardMiddleware())
 	{
 		product.POST("/add", views.AddProduct)
@@ -149,12 +150,12 @@ func GinRouter() *gin.Engine {
 	/* Admin Routes */
 	admin := router.Group("/admin")
 	admin.Use(TokenGuardMiddleware())
-	admin.POST("/createAdmin", ad.Create)
+	admin.POST("/create", ad.Create)
 
 	protected := admin.Group("/protected")
 	protected.Use(AdminGuardMiddleware())
 	{
-		protected.POST("/sendNotification", ad.SendNotificationtoUsers)
+		protected.POST("/send_notification", ad.SendNotificationtoUsers)
 	}
 
 	return router
