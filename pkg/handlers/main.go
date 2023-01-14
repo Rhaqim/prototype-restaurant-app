@@ -4,14 +4,18 @@ import (
 	ad "github.com/Rhaqim/thedutchapp/pkg/admin"
 	views "github.com/Rhaqim/thedutchapp/pkg/controllers"
 	nf "github.com/Rhaqim/thedutchapp/pkg/notifications"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func GinRouter() *gin.Engine {
 	router := gin.Default()
 
-	// Websocket Notification Handler
-	// router.GET("/ws", nf.WsHandler)
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders: []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+	}))
 
 	/* Auth Routes */
 	auth := router.Group("/auth")
