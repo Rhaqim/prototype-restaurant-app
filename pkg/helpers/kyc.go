@@ -58,8 +58,8 @@ type IdentityType string
 const (
 	// Identity Types
 	Passport IdentityType = "passport"
-	National IdentityType = "national id card"
-	License  IdentityType = "driver's license"
+	National IdentityType = "national_id"
+	License  IdentityType = "drivers_license"
 )
 
 func (IT IdentityType) String() string {

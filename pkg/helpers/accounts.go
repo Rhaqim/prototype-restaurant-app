@@ -15,6 +15,7 @@ import (
 
 // Create a bank account struct for external API
 type BankAccount struct {
+	AccountName   string             `json:"account_name"`
 	AccountNumber string             `json:"account_number"`
 	BankCode      string             `json:"bank_code"`
 	BankName      string             `json:"bank_name"`

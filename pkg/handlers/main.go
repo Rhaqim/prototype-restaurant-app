@@ -11,6 +11,12 @@ import (
 func GinRouter() *gin.Engine {
 	router := gin.Default()
 
+	// Setting the trusted proxies
+	router.SetTrustedProxies([]string{
+		"http://localhost:3000",
+	})
+
+	// Enable CORS
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},

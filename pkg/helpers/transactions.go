@@ -59,6 +59,13 @@ type SendMoneyOtherUser struct {
 	TxnPin   string  `json:"txn_pin" binding:"required"`
 }
 
+type SenfMoneyOtherBank struct {
+	AccountNumber string  `json:"account_number" binding:"required"`
+	Amount        float64 `json:"amount" binding:"required"`
+	TxnPin        string  `json:"txn_pin" binding:"required"`
+	BankCode      string  `json:"bank_code" binding:"required"`
+}
+
 func GetTransaction(ctx context.Context, filter bson.M) (Transactions, error) {
 	var txn Transactions
 	err := transactionCollection.FindOne(ctx, filter).Decode(&txn)
