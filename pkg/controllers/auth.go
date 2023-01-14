@@ -17,7 +17,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var authCollection = config.UserCollection
+var (
+	authCollection = config.UserCollection
+
+	Signup         = AbstractConnection(signUp)
+	VerifyEmail    = AbstractConnection(verifyEmail)
+	SignIn         = AbstractConnection(signIn)
+	Signout        = AbstractConnection(signOut)
+	RefreshToken   = AbstractConnection(refreshToken)
+	ForgotPassword = AbstractConnection(forgotPassword)
+	ResetPassword  = AbstractConnection(resetPassword)
+)
 
 /*
 	Signup
@@ -31,8 +41,6 @@ Stores the refresh token in the database
 Sends a verification code to the email
 Sends the access token and refresh token in the response
 */
-var Signup = AbstractConnection(signUp)
-
 func signUp(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
@@ -148,8 +156,6 @@ func signUp(c *gin.Context, ctx context.Context) {
 Gets the token and email from the query
 Verifies the email with the token sent to the email
 */
-var VerifyEmail = AbstractConnection(verifyEmail)
-
 func verifyEmail(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
@@ -175,6 +181,7 @@ func verifyEmail(c *gin.Context, ctx context.Context) {
 
 /*
 	Signin
+
 Signs in a user
 Uses the username and password to sign in a user
 Gets the user from the database
@@ -185,9 +192,6 @@ Stores the refresh token in the database
 Checks if the user has verified their email otherwise sends a verification email
 Returns the user data and the JWT and refresh token
 */
-
-var SignIn = AbstractConnection(signIn)
-
 func signIn(c *gin.Context, ctx context.Context) {
 	funcName := ut.GetFunctionName()
 
@@ -282,8 +286,6 @@ func signIn(c *gin.Context, ctx context.Context) {
 	}
 }
 
-var Signout = AbstractConnection(signOut)
-
 func signOut(c *gin.Context, ctx context.Context) {
 	funcName := ut.GetFunctionName()
 
@@ -304,8 +306,6 @@ func signOut(c *gin.Context, ctx context.Context) {
 	response := hp.SetSuccess("User signed out successfully", nil, funcName)
 	c.JSON(http.StatusOK, response)
 }
-
-var RefreshToken = AbstractConnection(refreshToken)
 
 func refreshToken(c *gin.Context, ctx context.Context) {
 
@@ -357,8 +357,6 @@ func refreshToken(c *gin.Context, ctx context.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-var ForgotPassword = AbstractConnection(forgotPassword)
-
 func forgotPassword(c *gin.Context, ctx context.Context) {
 
 	funcName := ut.GetFunctionName()
@@ -395,14 +393,14 @@ func forgotPassword(c *gin.Context, ctx context.Context) {
 		return
 	}
 
+	// Send email of refresh code
+
 	var data = gin.H{
 		"token": t,
 	}
 	response := hp.SetSuccess("Token generated successfully", data, funcName)
 	c.JSON(http.StatusOK, response)
 }
-
-var ResetPassword = AbstractConnection(resetPassword)
 
 func resetPassword(c *gin.Context, ctx context.Context) {
 	funcName := ut.GetFunctionName()

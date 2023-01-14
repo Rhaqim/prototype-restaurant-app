@@ -27,10 +27,10 @@ func GinRouter() *gin.Engine {
 
 	}
 
+	auth.POST("/forgotPassword", views.ForgotPassword)
 	refreshTokenProtected := auth.Group("/protected", RefreshTokenGuardMiddleware())
 	{
 		refreshTokenProtected.POST("/refreshToken", views.RefreshToken)
-		refreshTokenProtected.POST("/forgotPassword", views.ForgotPassword)
 		refreshTokenProtected.POST("/changePassword", views.ResetPassword)
 	}
 
@@ -90,7 +90,6 @@ func GinRouter() *gin.Engine {
 	event := router.Group("/event")
 	event.GET("/getEvent", views.GetEvent)
 	event.GET("/getEvents", views.GetEvents)
-	// event.GET("/getAllEventsAttended", views.GetEventByID)
 	event.Use(TokenGuardMiddleware())
 	{
 		event.POST("/createEvent", views.CreateEvent)

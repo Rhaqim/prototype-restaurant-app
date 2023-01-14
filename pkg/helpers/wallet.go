@@ -66,12 +66,13 @@ func FundWalletPaystack(request FundWalletRequest, user UserResponse) (float64, 
 
 	// Await a response from the Paystack API
 	// if there's an error set it to failed
+	var amountPaystack float64 = request.Amount
 
 	// Update Transaction status to success and amount from the paystack
 	filter := bson.M{"_id": transaction.ID}
 	update := bson.M{"$set": bson.M{
 		"status": TxnSuccess,
-		"amount": 1000,
+		"amount": amountPaystack,
 	}}
 	_, err = transactionCollection.UpdateOne(ctx, filter, update)
 	if err != nil {

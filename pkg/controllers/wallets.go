@@ -15,6 +15,7 @@ import (
 
 var (
 	walletCollection = config.WalletCollection
+
 	CreateWallet     = AbstractConnection(createWallet)
 	ChangePin        = AbstractConnection(changePin)
 	FundWallet       = AbstractConnection(fundWallet)
