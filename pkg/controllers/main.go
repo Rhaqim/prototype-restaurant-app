@@ -18,10 +18,3 @@ func AbstractConnection(fn handlerFunc) gin.HandlerFunc {
 		fn(c, ctx)
 	}
 }
-
-var AuthViews = map[string]gin.HandlerFunc{
-	"signUp":      AbstractConnection(signUp),
-	"verifyEmail": AbstractConnection(verifyEmail),
-	"signIn":      AbstractConnection(signIn),
-	"signOut":     AbstractConnection(signOut),
-}

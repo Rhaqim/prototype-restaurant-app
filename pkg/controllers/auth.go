@@ -8,7 +8,6 @@ import (
 
 	"github.com/Rhaqim/thedutchapp/pkg/auth"
 	"github.com/Rhaqim/thedutchapp/pkg/config"
-	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 
@@ -306,35 +305,9 @@ func signOut(c *gin.Context, ctx context.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// func Signout(c *gin.Context) {
-// 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-// 	defer cancel()
-// 	defer database.DisconnectMongoDB()
+var RefreshToken = AbstractConnection(refreshToken)
 
-// 	funcName := ut.GetFunctionName()
-
-// 	user, err := hp.GetUserFromToken(c)
-// 	if err != nil {
-// 		response := hp.SetError(err, "User not logged in", funcName)
-// 		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
-// 		return
-// 	}
-
-// 	err = hp.UpdateRefreshToken(ctx, user.ID, "")
-// 	if err != nil {
-// 		response := hp.SetError(err, "Error signing out", funcName)
-// 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-// 		return
-// 	}
-
-// 	response := hp.SetSuccess("User signed out successfully", nil, funcName)
-// 	c.JSON(http.StatusOK, response)
-// }
-
-func RefreshToken(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.DisconnectMongoDB()
+func refreshToken(c *gin.Context, ctx context.Context) {
 
 	funcName := ut.GetFunctionName()
 
@@ -384,10 +357,9 @@ func RefreshToken(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func ForgotPassword(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.DisconnectMongoDB()
+var ForgotPassword = AbstractConnection(forgotPassword)
+
+func forgotPassword(c *gin.Context, ctx context.Context) {
 
 	funcName := ut.GetFunctionName()
 
@@ -430,11 +402,9 @@ func ForgotPassword(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func ResetPassword(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.DisconnectMongoDB()
+var ResetPassword = AbstractConnection(resetPassword)
 
+func resetPassword(c *gin.Context, ctx context.Context) {
 	funcName := ut.GetFunctionName()
 
 	request := hp.ResetPassword{}
