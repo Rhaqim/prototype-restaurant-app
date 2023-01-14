@@ -178,9 +178,15 @@ func fundWallet(c *gin.Context, ctx context.Context) {
 	}
 
 	// Perform Transaction Fund Wallet to Paystack
+	amount, err := hp.FundWalletPaystack(request, user)
+	if err != nil {
+		response := hp.SetError(err, "Couldn't complete wallet funding", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
 
 	// Update user wallet
-	err = hp.AddMoney(ctx, user, request.Amount)
+	err = hp.AddMoney(ctx, user, amount)
 	if err != nil {
 		response := hp.SetError(err, "Error updating user", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)

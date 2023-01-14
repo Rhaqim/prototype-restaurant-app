@@ -54,6 +54,7 @@ const (
 	WALLET       = "wallets"
 )
 
+// Open Collections
 func OpenCollection(name string) *mongo.Collection {
 	return database.OpenCollection(database.ConnectMongoDB(), DB, name)
 }
@@ -77,6 +78,8 @@ var (
 	UserCollection         = OpenCollection(USERS)
 	WalletCollection       = OpenCollection(WALLET)
 )
+
+/* LOG MESSAGES */
 
 type LogType string
 
@@ -139,94 +142,6 @@ func coloriseTime(message string) string {
 func coloriseFunc(message string) string {
 	return ut.Colorise("magenta", message)
 }
-
-// // Log Messages
-// type LogType string
-
-// const (
-// 	Error   LogType = "error"
-// 	Info    LogType = "info"
-// 	Warning LogType = "warning"
-// 	Debug   LogType = "debug"
-// )
-
-// func Logs(level LogType, message, funcName interface{}) {
-// 	var timeFMT = TimeFormat
-// 	var strFuncNmae = funcName.(string)
-
-// 	var clrInfoTime = coloriseTime(timeFMT)
-// 	var clrInfoFunc = coloriseFunc(strFuncNmae)
-
-// 	var infoStr = coloriseInfo("[INFO]")
-// 	var errorStr = coloriseError("[ERROR]")
-// 	var warningStr = coloriseWarning("[WARNING]")
-// 	var debugStr = coloriseDebug("[DEBUG]")
-
-// 	var baseStr = " \n" +
-// 		"#########################################" +
-// 		" \n %s \n TIME:%s \n FUNC:%s \n MSG:%s \n" +
-// 		"#########################################" +
-// 		" \n"
-
-// 	switch level {
-// 	case Info:
-// 		log.Printf(baseStr, infoStr, clrInfoTime, clrInfoFunc, coloriseInfo(message.(string)))
-// 	case Error:
-// 		log.Printf(baseStr, errorStr, clrInfoTime, clrInfoFunc, coloriseError(message.(string)))
-// 	case Warning:
-// 		log.Printf(baseStr, warningStr, clrInfoTime, clrInfoFunc, coloriseWarning(message.(string)))
-// 	case Debug:
-// 		log.Printf(baseStr, debugStr, clrInfoTime, clrInfoFunc, coloriseDebug(message.(string)))
-// 	default:
-// 		log.Printf(baseStr, infoStr, clrInfoTime, clrInfoFunc, coloriseInfo(message.(string)))
-
-// 	}
-// }
-
-// func coloriseInfo(message string) string {
-// 	return ut.Colorise("green", message)
-// }
-
-// func coloriseError(message string) string {
-// 	return ut.Colorise("red", message)
-// }
-
-// func coloriseWarning(message string) string {
-// 	return ut.Colorise("yellow", message)
-// }
-
-// func coloriseDebug(message string) string {
-// 	return ut.Colorise("blue", message)
-// }
-
-// func coloriseTime(message string) string {
-// 	return ut.Colorise("cyan", message)
-// }
-
-// func coloriseFunc(message string) string {
-// 	return ut.Colorise("magenta", message)
-// }
-
-// func CheckErr(err error) {
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }
-
-// func Colorise(message string, log LogType) string {
-// 	switch log {
-// 	case Info:
-// 		return ut.Colorise("green", message)
-// 	case Error:
-// 		return ut.Colorise("red", message)
-// 	case Warning:
-// 		return ut.Colorise("yellow", message)
-// 	case Debug:
-// 		return ut.Colorise("blue", message)
-// 	default:
-// 		return ut.Colorise("green", message)
-// 	}
-// }
 
 // Types of messages sent over Websocket
 const (

@@ -39,6 +39,49 @@ type FundWalletResponse struct {
 	Transaction string `json:"transaction" bson:"transaction"`
 }
 
+func FundWalletPaystack(request FundWalletRequest, user UserResponse) (float64, error) {
+	funcName := "FundWalletPaystack"
+
+	ctx := context.Background()
+
+	// Insert new Credit transaction
+	createdAt, updatedAt := CreatedAtUpdatedAt()
+	transaction := Transactions{
+		ID:             primitive.NewObjectID(),
+		FromID:         user.ID,
+		ToID:           user.ID,
+		Amount:         request.Amount,
+		TransactionUID: TransactionUID,
+		Status:         TxnStart,
+		Type:           Credit,
+		CreatedAt:      createdAt,
+		UpdatedAt:      updatedAt,
+	}
+
+	_, err := transactionCollection.InsertOne(ctx, transaction)
+	if err != nil {
+		SetError(err, "Error creating transaction", funcName)
+		return 0, err
+	}
+
+	// Await a response from the Paystack API
+	// if there's an error set it to failed
+
+	// Update Transaction status to success and amount from the paystack
+	filter := bson.M{"_id": transaction.ID}
+	update := bson.M{"$set": bson.M{
+		"status": TxnSuccess,
+		"amount": 1000,
+	}}
+	_, err = transactionCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		SetError(err, "Error updating transaction", funcName)
+		return 0, err
+	}
+
+	return request.Amount, nil
+}
+
 // func FundWalletPaystack(request FundWalletRequest, user UserResponse) (FundWalletResponse, error) {
 // // Create a new Paystack client
 // 	client := paystack.NewClient(paystack.ClientOptions{
@@ -65,26 +108,6 @@ type FundWalletResponse struct {
 
 // 	return paystackResponse, nil
 
-// Insert new Credit transaction
-// transaction := hp.Transaction{
-// 	ID:        primitive.NewObjectID(),
-// 	From:      user.ID,
-// 	To:        user.ID,
-// 	Amount:    request.Amount,
-// 	TransactionUID: paystackResponse.Data.Reference,
-// 	Status:    hp.Start,
-// 	Type:      "credit",
-// 	CreatedAt: time.Now(),
-// 	UpdatedAt: time.Now(),
-// }
-
-// _, err = transactionCollection.InsertOne(ctx, transaction)
-// if err != nil {
-// 	response := hp.SetError(err, "Error creating transaction", funcName)
-// 	c.AbortWithStatusJSON(http.StatusBadRequest, response)
-// 	return
-// }
-
 // Await a response from the Paystack API
 // paystackResponse, err := hp.FundWalletPaystack(request, user)
 // if err != nil {
@@ -94,25 +117,12 @@ type FundWalletResponse struct {
 //   "status": hp.Failed,
 //  }}
 
-//  _, err = transactionCollection.UpdateOne(ctx, filter
-//  if err != nil {
-//   response := hp.SetError(err, "Error updating transaction", funcName)
-//   c.AbortWithStatusJSON(http.StatusBadRequest, response)
-//   return
-//  }
-
 // 	response := hp.SetError(err, "Error funding wallet", funcName)
 // 	c.AbortWithStatusJSON(http.StatusBadRequest, response)
 // 	return
 // }
 
 // user.Wallet += request.Amount
-
-// Update Transaction status to success
-// filter := bson.M{"_id": transaction.ID}
-// update := bson.M{"$set": bson.M{
-//  "status": hp.Success,
-// }}
 
 // _, err = transactionCollection.UpdateOne(ctx, filter, update)
 // if err != nil {
@@ -265,6 +275,7 @@ func BudgetoWallet(ctx context.Context, intended_id primitive.ObjectID, user Use
 func AddMoney(ctx context.Context, user UserResponse, amount float64) error {
 	funcName := "AddMoney"
 
+	// Save amount in database
 	err := UpdateWallet(ctx, bson.M{"user_id": user.ID}, bson.M{"$inc": bson.M{"balance": +amount}})
 	if err != nil {
 		SetDebug("error updating wallet: "+err.Error(), funcName)
