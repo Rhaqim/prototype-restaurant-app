@@ -4,8 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Rhaqim/thedutchapp/pkg/config"
-	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
 	nf "github.com/Rhaqim/thedutchapp/pkg/notifications"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
@@ -13,12 +11,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// GetNotifications returns all notifications for a user
-func GetNotifications(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+var GetNotifications = AbstractConnection(getNotifications)
+var UpdateNotificationStatus = AbstractConnection(updateNotificationStatus)
 
+// GetNotifications returns all notifications for a user
+func getNotifications(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	user, err := hp.GetUserFromToken(c)
@@ -61,11 +58,7 @@ func GetNotifications(c *gin.Context) {
 
 // UpdateNotificationStatus updates the status of a notification
 // or group of notifications to seen or unseen
-func UpdateNotificationStatus(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
+func updateNotificationStatus(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	_, err := hp.GetUserFromToken(c)

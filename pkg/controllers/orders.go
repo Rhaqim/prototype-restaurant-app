@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
-	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
 	nf "github.com/Rhaqim/thedutchapp/pkg/notifications"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
@@ -18,11 +17,13 @@ import (
 
 var orderCollection = config.OrderCollection
 
-func CreateOrder(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+var CreateOrder = AbstractConnection(createOrder)
+var GetOrders = AbstractConnection(getOrders)
+var GetOrder = AbstractConnection(getOrder)
+var GetUserEventOrders = AbstractConnection(getUserEventOrders)
+var GetEventOrders = AbstractConnection(getEventOrders)
 
+func createOrder(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	var request hp.Order
@@ -158,11 +159,7 @@ func CreateOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetOrders(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
+func getOrders(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	user, err := hp.GetUserFromToken(c)
@@ -192,11 +189,7 @@ func GetOrders(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetOrder(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
+func getOrder(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	user, err := hp.GetUserFromToken(c)
@@ -227,11 +220,7 @@ func GetOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetUserEventOrders(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
+func getUserEventOrders(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	user, err := hp.GetUserFromToken(c)
@@ -268,11 +257,7 @@ func GetUserEventOrders(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetEventOrders(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
+func getEventOrders(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	_, err := hp.GetUserFromToken(c)

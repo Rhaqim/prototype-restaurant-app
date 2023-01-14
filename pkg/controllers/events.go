@@ -17,13 +17,18 @@ import (
 
 var eventCollection = config.EventCollection
 
+var CreateEvent = AbstractConnection(createEvent)
+var GetEvent = AbstractConnection(getEvent)
+var GetEvents = AbstractConnection(getEvents)
+var UpdateEvent = AbstractConnection(updateEvent)
+var DeleteEvent = AbstractConnection(deleteEvent)
+var CancelEvent = AbstractConnection(cancelEvent)
+
 // CreateEvent creates an event
 // It accests the Title of the event, the Restaurant for the event,
 // a group of invited friends and also the event time
 // it stores the event in the database with the User as the host and a status of upcoming
 // It sends a notification to the invited users and also the restaurant for the event.
-var CreateEvent = AbstractConnection(createEvent)
-
 func createEvent(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
@@ -213,8 +218,6 @@ func createEvent(c *gin.Context, ctx context.Context) {
 }
 
 // GetEvent fetches an event by either the ID or the title
-var GetEvent = AbstractConnection(getEvent)
-
 func getEvent(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
@@ -256,8 +259,6 @@ func getEvent(c *gin.Context, ctx context.Context) {
 
 // GetEvents fetches a list of events by either the type, venue, host,
 // date or attended
-var GetEvents = AbstractConnection(getEvents)
-
 func getEvents(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
@@ -319,8 +320,6 @@ func getEvents(c *gin.Context, ctx context.Context) {
 }
 
 // UpdateEvent updates the event with the request sent.
-var UpdateEvent = AbstractConnection(updateEvent)
-
 func updateEvent(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
@@ -365,8 +364,6 @@ func updateEvent(c *gin.Context, ctx context.Context) {
 }
 
 // DeleteEvent deletes the event from the database
-var DeleteEvent = AbstractConnection(deleteEvent)
-
 func deleteEvent(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
@@ -399,8 +396,6 @@ func deleteEvent(c *gin.Context, ctx context.Context) {
 }
 
 // CancelEvent cancels an event
-var CancelEvent = AbstractConnection(cancelEvent)
-
 func cancelEvent(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
