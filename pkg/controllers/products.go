@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
-	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -14,13 +13,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var productCollection = config.ProductCollection
+var (
+	productCollection = config.ProductCollection
 
-func AddProduct(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+	AddProduct    = AbstractConnection(addProduct)
+	GetProducts   = AbstractConnection(getProducts)
+	GetProduct    = AbstractConnection(getProduct)
+	DeleteProduct = AbstractConnection(deleteProduct)
+	UpdateProduct = AbstractConnection(updateProduct)
+)
 
+func addProduct(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	var request hp.Product
@@ -73,11 +76,7 @@ func AddProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetProducts(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
+func getProducts(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	var products []hp.Product
@@ -127,11 +126,7 @@ func GetProducts(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetProduct(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
+func getProduct(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	// Get name from query params
@@ -168,11 +163,7 @@ func GetProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func DeleteProduct(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
+func deleteProduct(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	productID, err := primitive.ObjectIDFromHex(c.Param("id"))
@@ -216,11 +207,7 @@ func DeleteProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func UpdateProduct(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
+func updateProduct(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	var request hp.Product

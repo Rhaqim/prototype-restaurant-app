@@ -15,14 +15,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var eventCollection = config.EventCollection
+var (
+	eventCollection = config.EventCollection
 
-var CreateEvent = AbstractConnection(createEvent)
-var GetEvent = AbstractConnection(getEvent)
-var GetEvents = AbstractConnection(getEvents)
-var UpdateEvent = AbstractConnection(updateEvent)
-var DeleteEvent = AbstractConnection(deleteEvent)
-var CancelEvent = AbstractConnection(cancelEvent)
+	CreateEvent = AbstractConnection(createEvent)
+	GetEvent    = AbstractConnection(getEvent)
+	GetEvents   = AbstractConnection(getEvents)
+	UpdateEvent = AbstractConnection(updateEvent)
+	DeleteEvent = AbstractConnection(deleteEvent)
+	CancelEvent = AbstractConnection(cancelEvent)
+)
 
 // CreateEvent creates an event
 // It accests the Title of the event, the Restaurant for the event,

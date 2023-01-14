@@ -7,7 +7,6 @@ import (
 
 	"github.com/Rhaqim/thedutchapp/pkg/auth"
 	"github.com/Rhaqim/thedutchapp/pkg/config"
-	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
 	nf "github.com/Rhaqim/thedutchapp/pkg/notifications"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
@@ -16,10 +15,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func CreateTransaction(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+var (
+	CreateTransaction       = AbstractConnection(createTransaction)
+	UpdateTransactionStatus = AbstractConnection(updateTransactionStatus)
+	GetTransactions         = AbstractConnection(getTransactions)
+	PayBillforEvent         = AbstractConnection(payBillforEvent)
+	SendMoneytoHost         = AbstractConnection(sendMoneytoHost)
+	PayOwnBill              = AbstractConnection(payOwnBill)
+	SendToOtherUsers        = AbstractConnection(sendToOtherUsers)
+)
+
+func createTransaction(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
 
@@ -71,10 +77,7 @@ func CreateTransaction(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func UpdateTransactionStatus(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+func updateTransactionStatus(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
 
@@ -164,10 +167,7 @@ func UpdateTransactionStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetTransactions(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+func getTransactions(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
 
@@ -213,10 +213,7 @@ func GetTransactions(c *gin.Context) {
 // Updates the Event Status to Finished and the bills for the Users to Paid
 // Sends a notification to the venue about the payment
 // it returns the transaction details
-func PayBillforEvent(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+func payBillforEvent(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
 
@@ -310,10 +307,7 @@ func PayBillforEvent(c *gin.Context) {
 // It sends the money directly to the host's wallet
 // Sends a notification to the host about the payment
 // it returns the transaction details
-func SendMoneytoHost(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+func sendMoneytoHost(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
 
@@ -385,10 +379,7 @@ func SendMoneytoHost(c *gin.Context) {
 // Sends a notification to the venue owner about the payment
 // Sends a notification to the host about the payment
 // it returns the transaction details
-func PayOwnBill(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+func payOwnBill(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
 
@@ -482,10 +473,7 @@ func PayOwnBill(c *gin.Context) {
 // Sends the money to the user's wallet
 // Sends a notification to the user about the payment
 // it returns the transaction details
-func SendToOtherUsers(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+func sendToOtherUsers(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
 

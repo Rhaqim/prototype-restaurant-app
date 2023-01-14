@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
-	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -13,17 +12,21 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var restaurantCollection = config.RestaurantCollection
+var (
+	restaurantCollection = config.RestaurantCollection
 
-func CreateRestaurant(c *gin.Context) {
+	CreateRestaurant = AbstractConnection(createRestaurant)
+	GetRestaurant    = AbstractConnection(getRestaurant)
+	GetRestaurants   = AbstractConnection(getRestaurants)
+	UpdateRestaurant = AbstractConnection(updateRestaurant)
+	DeleteRestaurant = AbstractConnection(deleteRestaurant)
+)
+
+func createRestaurant(c *gin.Context, ctx context.Context) {
 	// get restaurant data from request body
 	// validate restaurant data
 	// check if restaurant already exists
 	// create restaurant
-
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var funcName = ut.GetFunctionName()
 
@@ -99,15 +102,11 @@ func CreateRestaurant(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetRestaurant(c *gin.Context) {
+func getRestaurant(c *gin.Context, ctx context.Context) {
 	// get restaurant id from request params
 	// validate restaurant id
 	// get restaurant from db
 	// return restaurant
-
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var funcName = ut.GetFunctionName()
 
@@ -147,15 +146,11 @@ func GetRestaurant(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetRestaurants(c *gin.Context) {
+func getRestaurants(c *gin.Context, ctx context.Context) {
 	// get restaurant id from request params
 	// validate restaurant id
 	// get restaurant from db
 	// return restaurant
-
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var funcName = ut.GetFunctionName()
 
@@ -188,17 +183,13 @@ func GetRestaurants(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func UpdateRestaurant(c *gin.Context) {
+func updateRestaurant(c *gin.Context, ctx context.Context) {
 	// get restaurant id from request params
 	// validate restaurant id
 	// get restaurant data from request body
 	// validate restaurant data
 	// check if restaurant already exists
 	// update restaurant
-
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var funcName = ut.GetFunctionName()
 
@@ -243,14 +234,10 @@ func UpdateRestaurant(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func DeleteRestaurant(c *gin.Context) {
+func deleteRestaurant(c *gin.Context, ctx context.Context) {
 	// get restaurant id from request params
 	// validate restaurant id
 	// delete restaurant
-
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
 
 	var funcName = ut.GetFunctionName()
 
@@ -270,6 +257,18 @@ func DeleteRestaurant(c *gin.Context) {
 		response := hp.SetError(err, "Invalid restaurant id", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
+	}
+
+	// Check Restaurant Belongs to User
+	owner, err := hp.CheckRestaurantBelongsToUser(ctx, id, user)
+	if err != nil {
+		response := hp.SetError(err, "could not verify restaurant belongs to user", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+	}
+
+	if !owner {
+		response := hp.SetError(err, "restaurant does not belong to user", funcName)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 	}
 
 	// Delete restaurant

@@ -11,8 +11,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var GetNotifications = AbstractConnection(getNotifications)
-var UpdateNotificationStatus = AbstractConnection(updateNotificationStatus)
+var (
+	GetNotifications         = AbstractConnection(getNotifications)
+	UpdateNotificationStatus = AbstractConnection(updateNotificationStatus)
+)
 
 // GetNotifications returns all notifications for a user
 func getNotifications(c *gin.Context, ctx context.Context) {

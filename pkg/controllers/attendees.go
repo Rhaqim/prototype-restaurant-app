@@ -16,7 +16,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var attendeeCollection = config.AttendeeCollection
+var (
+	attendeeCollection = config.AttendeeCollection
+
+	SendEventInvites = AbstractConnection(sendEventInvites)
+	AcceptInvite     = AbstractConnection(acceptInvite)
+	DeclineInvite    = AbstractConnection(declineInvite)
+)
 
 // SendEventInvites sends invites to friends for an event
 // Gets the event from the database
@@ -27,8 +33,6 @@ var attendeeCollection = config.AttendeeCollection
 // Sends the invites to the friends
 // Sends a notification to the friends
 // Sends a notification to Venue with updated event details
-var SendEventInvites = AbstractConnection(sendEventInvites)
-
 func sendEventInvites(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
@@ -160,8 +164,6 @@ func sendEventInvites(c *gin.Context, ctx context.Context) {
 // Check if User has enough money to match budget set
 // Updates the event with the new attendee
 // Updates the attendee Collection with status attending
-var AcceptInvite = AbstractConnection(acceptInvite)
-
 func acceptInvite(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
@@ -329,8 +331,6 @@ func acceptInvite(c *gin.Context, ctx context.Context) {
 // Checks if the user is invited to the event
 // Checks if the user has already declined the invite
 // Updates the attendee and event with go routines
-var DeclineInvite = AbstractConnection(declineInvite)
-
 func declineInvite(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 

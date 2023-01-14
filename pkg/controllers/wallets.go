@@ -6,7 +6,6 @@ import (
 
 	"github.com/Rhaqim/thedutchapp/pkg/auth"
 	"github.com/Rhaqim/thedutchapp/pkg/config"
-	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -14,12 +13,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var walletCollection = config.WalletCollection
+var (
+	walletCollection = config.WalletCollection
+	CreateWallet     = AbstractConnection(createWallet)
+	ChangePin        = AbstractConnection(changePin)
+	FundWallet       = AbstractConnection(fundWallet)
+	GetWalletBalance = AbstractConnection(getWalletBalance)
+)
 
-func CreateWallet(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+func createWallet(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
 
@@ -94,10 +96,7 @@ func CreateWallet(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func ChangePin(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+func changePin(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
 
@@ -159,10 +158,7 @@ func ChangePin(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func FundWallet(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+func fundWallet(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
 
@@ -195,10 +191,7 @@ func FundWallet(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetWalletBalance(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+func getWalletBalance(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
 

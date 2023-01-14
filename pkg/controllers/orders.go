@@ -15,13 +15,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var orderCollection = config.OrderCollection
+var (
+	orderCollection = config.OrderCollection
 
-var CreateOrder = AbstractConnection(createOrder)
-var GetOrders = AbstractConnection(getOrders)
-var GetOrder = AbstractConnection(getOrder)
-var GetUserEventOrders = AbstractConnection(getUserEventOrders)
-var GetEventOrders = AbstractConnection(getEventOrders)
+	CreateOrder        = AbstractConnection(createOrder)
+	GetOrders          = AbstractConnection(getOrders)
+	GetOrder           = AbstractConnection(getOrder)
+	GetUserEventOrders = AbstractConnection(getUserEventOrders)
+	GetEventOrders     = AbstractConnection(getEventOrders)
+)
 
 func createOrder(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
