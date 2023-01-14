@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
-	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
 	nf "github.com/Rhaqim/thedutchapp/pkg/notifications"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
@@ -28,10 +27,9 @@ var attendeeCollection = config.AttendeeCollection
 // Sends the invites to the friends
 // Sends a notification to the friends
 // Sends a notification to Venue with updated event details
-func SendEventInvites(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+var SendEventInvites = AbstractConnection(sendEventInvites)
+
+func sendEventInvites(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
 
@@ -162,11 +160,9 @@ func SendEventInvites(c *gin.Context) {
 // Check if User has enough money to match budget set
 // Updates the event with the new attendee
 // Updates the attendee Collection with status attending
-func AcceptInvite(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+var AcceptInvite = AbstractConnection(acceptInvite)
 
+func acceptInvite(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	var request hp.AcceptInviteRequest
@@ -333,11 +329,9 @@ func AcceptInvite(c *gin.Context) {
 // Checks if the user is invited to the event
 // Checks if the user has already declined the invite
 // Updates the attendee and event with go routines
-func DeclineInvite(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+var DeclineInvite = AbstractConnection(declineInvite)
 
+func declineInvite(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	var request hp.DeclineInviteRequest
