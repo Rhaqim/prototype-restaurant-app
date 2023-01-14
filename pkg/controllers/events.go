@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
-	"github.com/Rhaqim/thedutchapp/pkg/database"
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
 	nf "github.com/Rhaqim/thedutchapp/pkg/notifications"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
@@ -18,11 +17,14 @@ import (
 
 var eventCollection = config.EventCollection
 
-func CreateEvent(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+// CreateEvent creates an event
+// It accests the Title of the event, the Restaurant for the event,
+// a group of invited friends and also the event time
+// it stores the event in the database with the User as the host and a status of upcoming
+// It sends a notification to the invited users and also the restaurant for the event.
+var CreateEvent = AbstractConnection(createEvent)
 
+func createEvent(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	var request hp.Event
@@ -210,11 +212,10 @@ func CreateEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetEvent(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+// GetEvent fetches an event by either the ID or the title
+var GetEvent = AbstractConnection(getEvent)
 
+func getEvent(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	// Get event id from url
@@ -253,11 +254,11 @@ func GetEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetEvents(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+// GetEvents fetches a list of events by either the type, venue, host,
+// date or attended
+var GetEvents = AbstractConnection(getEvents)
 
+func getEvents(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	// Get event type from url
@@ -317,44 +318,10 @@ func GetEvents(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func GetUserEventsByHost(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+// UpdateEvent updates the event with the request sent.
+var UpdateEvent = AbstractConnection(updateEvent)
 
-	var funcName = ut.GetFunctionName()
-
-	user, err := hp.GetUserFromToken(c)
-	if err != nil {
-		response := hp.SetError(err, "User not logged in", funcName)
-		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
-		return
-	}
-
-	filter := bson.M{"host_id": user.ID}
-	cursor, err := eventCollection.Find(ctx, filter)
-	if err != nil {
-		response := hp.SetError(err, "Error finding hosted events", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	var hosting []hp.Event
-	if err = cursor.All(ctx, &hosting); err != nil {
-		response := hp.SetError(err, "Error decoding hosted events", funcName)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
-		return
-	}
-
-	response := hp.SetSuccess(" events found", hosting, funcName)
-	c.JSON(http.StatusOK, response)
-}
-
-func UpdateEvent(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
-
+func updateEvent(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	var request hp.Event
@@ -397,11 +364,10 @@ func UpdateEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func DeleteEvent(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+// DeleteEvent deletes the event from the database
+var DeleteEvent = AbstractConnection(deleteEvent)
 
+func deleteEvent(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	user, err := hp.GetUserFromToken(c)
@@ -433,11 +399,9 @@ func DeleteEvent(c *gin.Context) {
 }
 
 // CancelEvent cancels an event
-func CancelEvent(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+var CancelEvent = AbstractConnection(cancelEvent)
 
+func cancelEvent(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	user, err := hp.GetUserFromToken(c)
