@@ -29,7 +29,7 @@ func GinRouter() *gin.Engine {
 		auth.POST("/signin", views.SignIn)
 		auth.POST("/signup", views.Signup)
 		auth.GET("/verifyemail", views.VerifyEmail)
-		auth.POST("/forgot_password", views.ForgotPassword)
+		auth.GET("/forgot_password", views.ForgotPassword)
 	}
 	auth.Use(TokenGuardMiddleware())
 	{

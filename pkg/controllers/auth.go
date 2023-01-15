@@ -318,20 +318,6 @@ func refreshToken(c *gin.Context, ctx context.Context) {
 		return
 	}
 
-	request := hp.RefreshToken{}
-
-	if err := c.BindJSON(&request); err != nil {
-		response := hp.SetError(err, "refresh token is required", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	if user.RefreshToken != request.RefreshToken {
-		response := hp.SetError(nil, "Invalid refresh token", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
 	t, rt, err := auth.GenerateJWT(user.Email, user.Username, user.ID)
 
 	if err != nil {
@@ -361,18 +347,11 @@ func forgotPassword(c *gin.Context, ctx context.Context) {
 
 	funcName := ut.GetFunctionName()
 
-	request := hp.ForgotPassword{}
-
-	if err := c.BindJSON(&request); err != nil {
-		response := hp.SetError(err, "Error binding request", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-	log.Print("Request ID sent by client:", request.Email)
+	email := c.Query("email")
 
 	var user = hp.UserStruct{}
 	options := hp.PasswordOpts
-	filter := bson.M{"email": request.Email}
+	filter := bson.M{"email": email}
 	if err := usersCollection.FindOne(ctx, filter, options).Decode(&user); err != nil {
 		response := hp.SetError(err, "User not found", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
@@ -420,14 +399,6 @@ func resetPassword(c *gin.Context, ctx context.Context) {
 		return
 	}
 
-	filter := bson.M{"_id": user.ID}
-
-	if user.RefreshToken != request.RefreshToken {
-		response := hp.SetError(nil, "Invalid refresh token", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
 	hashedPassword, err := auth.HashPassword(request.NewPassword)
 	if err != nil {
 		response := hp.SetError(err, "Error hashing password", funcName)
@@ -435,6 +406,7 @@ func resetPassword(c *gin.Context, ctx context.Context) {
 		return
 	}
 
+	filter := bson.M{"_id": user.ID}
 	update := bson.M{
 		"$set": bson.M{
 			"password": hashedPassword,

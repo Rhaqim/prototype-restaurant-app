@@ -30,9 +30,8 @@ type ForgotPassword struct {
 
 // USER STRUCT for resetting password
 type ResetPassword struct {
-	RefreshToken string `json:"refresh_token"`
-	OldPassword  string `json:"old_password"`
-	NewPassword  string `json:"new_password"`
+	OldPassword string `json:"old_password"`
+	NewPassword string `json:"new_password"`
 }
 
 // USER VALIDATION EMAIL AND USERNAME
