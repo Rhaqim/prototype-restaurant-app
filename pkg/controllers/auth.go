@@ -376,7 +376,7 @@ func verifyPasswordResetCode(c *gin.Context, ctx context.Context) {
 	funcName := ut.GetFunctionName()
 
 	email := c.Query("email")
-	code := c.Query("code")
+	token := c.Query("token")
 
 	var user = hp.UserStruct{}
 	options := hp.PasswordOpts
@@ -387,7 +387,7 @@ func verifyPasswordResetCode(c *gin.Context, ctx context.Context) {
 		return
 	}
 
-	if user.PasswordResetToken == code {
+	if user.PasswordResetToken == token {
 		response := hp.SetSuccess("Code verified successfully", nil, funcName)
 		c.JSON(http.StatusOK, response)
 	} else {
