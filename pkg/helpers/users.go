@@ -39,6 +39,7 @@ type UserStruct struct {
 	RefreshToken           string               `bson:"refresh_token,omitempty" json:"refresh_token,omitempty"`
 	EmailVerified          bool                 `bson:"email_confirmed" json:"email_confirmed" default:"false"`
 	EmailVerificationToken string               `bson:"email_verification_token,omitempty" json:"email_verification_token,omitempty"`
+	PasswordResetToken     string               `bson:"password_reset_token,omitempty" json:"password_reset_token,omitempty"`
 	KYCStatus              KYCStatus            `bson:"kyc_status,omitempty" json:"kyc_status,omitempty" default:"unverified"`
 	Role                   Roles                `bson:"role" json:"role" default:"user"`
 	CreatedAt              primitive.DateTime   `bson:"created_at" json:"created_at" default:"Now()"`
@@ -71,6 +72,7 @@ type UserResponse struct {
 	RefreshToken           string               `bson:"refresh_token" json:"refresh_token"`
 	EmailVerified          bool                 `bson:"email_confirmed" json:"email_confirmed"`
 	EmailVerificationToken string               `bson:"email_verification_token,omitempty" json:"email_verification_token,omitempty"`
+	PasswordResetToken     string               `bson:"password_reset_token,omitempty" json:"password_reset_token,omitempty"`
 	KYCStatus              KYCStatus            `bson:"kyc_status" json:"kyc_status"`
 	Role                   Roles                `bson:"role" json:"role"`
 	CreatedAt              primitive.DateTime   `bson:"created_at" json:"created_at"`
@@ -241,6 +243,12 @@ func GenerateEmailVerificationToken(email string) string {
 	return ut.RandomString(6, email)
 }
 
+// Password Reset
+// Genereate random 4 char string as token for password reset
+func GeneratePasswordResetToken(email string) string {
+	return ut.RandomString(4, email)
+}
+
 // Send email verification email
 // Update email verification token in database
 // Send email
@@ -286,7 +294,7 @@ func SendVerificationEmail(ctx context.Context, email string) error {
 	return nil
 }
 
-// Verify email
+// Verify email with token
 func VerifyEmail(ctx context.Context, email string, token string) error {
 	// get user data
 	user := GetUserByEmail(ctx, email)
@@ -326,6 +334,49 @@ func RemoveVerificationCode(ctx context.Context, email string) error {
 	err := UpdateUser(ctx, filter, update)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// SendPasswordResetEmail sends password reset email
+// It sends a token to the user's email
+// It updates the user's password reset token in the database
+// It returns error
+func SendPasswordResetEmail(ctx context.Context, email string) error {
+	// Get user data after updating password reset token
+	filter := bson.M{"email": email}
+	update := bson.M{"$set": bson.M{"password_reset_token": GeneratePasswordResetToken(email)}}
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	var user UserResponse
+	if err := usersCollection.FindOneAndUpdate(ctx, filter, update, opts).Decode(&user); err != nil {
+		return err
+	}
+
+	// Send email
+	r := em.NewRequest([]string{email}, "Password Reset", user.PasswordResetToken)
+
+	template := struct {
+		Title string
+		Body  string
+	}{
+		Title: "Password Reset",
+		Body:  user.PasswordResetToken,
+	}
+
+	err := r.ParseTemplate("password-reset.html", template)
+	if err != nil {
+		return err
+	}
+
+	ok, err := r.SendEmail()
+	if err != nil {
+		return err
+	}
+
+	if !ok {
+		return errors.New("email not sent")
 	}
 
 	return nil

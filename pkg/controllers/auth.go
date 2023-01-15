@@ -373,6 +373,12 @@ func forgotPassword(c *gin.Context, ctx context.Context) {
 	}
 
 	// Send email of refresh code
+	err = hp.SendPasswordResetEmail(ctx, email)
+	if err != nil {
+		response := hp.SetError(err, "Error sending email", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
 
 	var data = gin.H{
 		"token": t,
