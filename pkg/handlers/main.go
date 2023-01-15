@@ -28,8 +28,9 @@ func GinRouter() *gin.Engine {
 	{
 		auth.POST("/signin", views.SignIn)
 		auth.POST("/signup", views.Signup)
-		auth.GET("/verifyemail", views.VerifyEmail)
+		auth.GET("/verify_email", views.VerifyEmail)
 		auth.GET("/forgot_password", views.ForgotPassword)
+		auth.GET("/verify_password_reset", views.VerifyPasswordResetCode)
 	}
 	auth.Use(TokenGuardMiddleware())
 	{
@@ -47,6 +48,7 @@ func GinRouter() *gin.Engine {
 	{
 		refreshTokenProtected.POST("/refresh_token", views.RefreshToken)
 		refreshTokenProtected.POST("/reset_password", views.ResetPassword)
+		refreshTokenProtected.POST("/update_password", views.UpdatePassword)
 	}
 
 	/* User Routes */

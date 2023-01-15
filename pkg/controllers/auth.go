@@ -20,13 +20,15 @@ import (
 var (
 	authCollection = config.UserCollection
 
-	Signup         = AbstractConnection(signUp)
-	VerifyEmail    = AbstractConnection(verifyEmail)
-	SignIn         = AbstractConnection(signIn)
-	Signout        = AbstractConnection(signOut)
-	RefreshToken   = AbstractConnection(refreshToken)
-	ForgotPassword = AbstractConnection(forgotPassword)
-	ResetPassword  = AbstractConnection(resetPassword)
+	Signup                  = AbstractConnection(signUp)
+	VerifyEmail             = AbstractConnection(verifyEmail)
+	SignIn                  = AbstractConnection(signIn)
+	Signout                 = AbstractConnection(signOut)
+	RefreshToken            = AbstractConnection(refreshToken)
+	ForgotPassword          = AbstractConnection(forgotPassword)
+	VerifyPasswordResetCode = AbstractConnection(verifyPasswordResetCode)
+	ResetPassword           = AbstractConnection(resetPassword)
+	UpdatePassword          = AbstractConnection(updatePassword)
 )
 
 /*
@@ -358,7 +360,42 @@ func forgotPassword(c *gin.Context, ctx context.Context) {
 		return
 	}
 
-	t, rt, err := auth.GenerateJWT(user.Email, user.Username, user.ID)
+	// Send email of refresh code
+	err := hp.SendPasswordResetEmail(ctx, email)
+	if err != nil {
+		response := hp.SetError(err, "Error sending email", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := hp.SetSuccess("Email sent successfully to:"+email, nil, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func verifyPasswordResetCode(c *gin.Context, ctx context.Context) {
+	funcName := ut.GetFunctionName()
+
+	email := c.Query("email")
+	code := c.Query("code")
+
+	var user = hp.UserStruct{}
+	options := hp.PasswordOpts
+	filter := bson.M{"email": email}
+	if err := usersCollection.FindOne(ctx, filter, options).Decode(&user); err != nil {
+		response := hp.SetError(err, "User not found", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	if user.PasswordResetToken == code {
+		response := hp.SetSuccess("Code verified successfully", nil, funcName)
+		c.JSON(http.StatusOK, response)
+	} else {
+		response := hp.SetError(nil, "Invalid code", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+	}
+
+	_, rt, err := auth.GenerateJWT(user.Email, user.Username, user.ID)
 	if err != nil {
 		response := hp.SetError(err, "Error generating token", funcName)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
@@ -372,18 +409,48 @@ func forgotPassword(c *gin.Context, ctx context.Context) {
 		return
 	}
 
-	// Send email of refresh code
-	err = hp.SendPasswordResetEmail(ctx, email)
+	data := gin.H{
+		"refreshToken": rt,
+	}
+
+	response := hp.SetSuccess("Code verified, Token refreshed successfully", data, funcName)
+	c.JSON(http.StatusOK, response)
+
+}
+
+func updatePassword(c *gin.Context, ctx context.Context) {
+	funcName := ut.GetFunctionName()
+
+	request := hp.UpdatePassword{}
+
+	if err := c.BindJSON(&request); err != nil {
+		response := hp.SetError(err, "Error binding request", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user, err := hp.GetUserFromToken(c)
 	if err != nil {
-		response := hp.SetError(err, "Error sending email", funcName)
+		response := hp.SetError(err, "User not logged in", funcName)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	hashedPassword, err := auth.HashPassword(request.NewPassword)
+	if err != nil {
+		response := hp.SetError(err, "Error hashing password", funcName)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
 		return
 	}
 
-	var data = gin.H{
-		"token": t,
+	_, err = usersCollection.UpdateOne(ctx, bson.M{"_id": user.ID}, bson.M{"$set": bson.M{"password": hashedPassword}})
+	if err != nil {
+		response := hp.SetError(err, "Error updating password", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
 	}
-	response := hp.SetSuccess("Token generated successfully", data, funcName)
+
+	response := hp.SetSuccess("Password updated successfully", nil, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
