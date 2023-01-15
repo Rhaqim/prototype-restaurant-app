@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -132,6 +133,48 @@ func AdminGuardMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		c.Next()
+	}
+}
+
+// cookieGuardMiddleware is a middleware to check if the cookie is valid
+func CookieGuardMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+		cookie, err := c.Cookie("token")
+		log.Println("Cookie gotten is: ", cookie)
+		if err != nil {
+			hp.SetDebug(err.Error(), ut.GetFunctionName())
+			response := hp.SetError(err, "Invalid Token!", ut.GetFunctionName())
+			c.JSON(http.StatusUnauthorized, response)
+			c.Abort()
+			return
+		}
+
+		claims, err := auth.VerifyToken(cookie)
+		if err != nil {
+			hp.SetDebug(err.Error(), ut.GetFunctionName())
+			response := hp.SetError(err, "Invalid Token!", ut.GetFunctionName())
+			c.JSON(http.StatusUnauthorized, response)
+			c.Abort()
+			return
+		}
+
+		var user = hp.UserResponse{}
+		filter := bson.M{"email": claims.Email}
+		options := hp.PasswordOpts
+		if err := usersCollection.FindOne(ctx, filter, options).Decode(&user); err != nil {
+			hp.SetDebug(err.Error(), ut.GetFunctionName())
+			response := hp.SetError(nil, err.Error(), ut.GetFunctionName())
+			c.JSON(http.StatusInternalServerError, response)
+			c.Abort()
+			return
+		}
+
+		c.Set("user", user)
 		c.Next()
 	}
 }

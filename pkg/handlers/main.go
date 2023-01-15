@@ -37,6 +37,11 @@ func GinRouter() *gin.Engine {
 		auth.GET("/ws", nf.WsHandler)
 
 	}
+	/* For frontend login */
+	cookie := router.Group("/cookie", CookieGuardMiddleware())
+	{
+		cookie.GET("/ws", nf.WsHandler)
+	}
 
 	refreshTokenProtected := auth.Group("/protected", RefreshTokenGuardMiddleware())
 	{
