@@ -254,7 +254,7 @@ func signIn(c *gin.Context, ctx context.Context) {
 				}()
 
 				response := hp.SetError(nil, "Email not verified, please check your email for verification code", funcName)
-				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				c.AbortWithStatusJSON(http.StatusOK, response)
 				return
 			}
 		}
