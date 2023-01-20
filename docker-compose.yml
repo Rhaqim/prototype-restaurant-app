@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+  backend:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    image: thedutchapp:latest
+    container_name: thedutchappbackend
+    env_file:
+      - .env
+    ports:
+      - 8080:8080
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    networks:
+      - thedutchapp
+    expose:
+      - 8080
+    command: ["./THEDUTCHAPP"]
+
+  db:
+    image: mongo:latest
+    container_name: thedutchappdb
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data:/data/db
+    networks:
+      - thedutchapp
+    expose:
+      - 27017
+
+  # frontend:
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: .
+  #   image: thedutchapp:latest
+  #   container_name: thedutchappfrontend
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - 3000:3000
+  #   volumes:
+  #     - .:/app
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - thedutchapp
+  #   expose:
+  #     - 3000
+
+networks:
+  thedutchapp:
