@@ -21,7 +21,10 @@
 go.work
 
 # env
-.env
+*.env
 
 # json file
 countries.json
+
+# mongo data docker
+data
