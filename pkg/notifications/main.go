@@ -272,7 +272,7 @@ func (n *Notifications) ToIntendedUsers(ctx context.Context, role hp.Roles) erro
 func (n *Notifications) SendNotification() {
 	funcName := ut.GetFunctionName()
 
-	hp.SetInfo("Sending notification to users", funcName)
+	hp.SetInfo(fmt.Sprintf("Sending notification to %v users", len(n.UserIDs)), funcName)
 
 	for _, userID := range n.UserIDs {
 		// Get the user's WebSocket connections

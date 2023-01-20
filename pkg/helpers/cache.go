@@ -91,6 +91,22 @@ func GetUserIDsFromCache(ctx context.Context, filter bson.M, key config.CacheKey
 	// check if users is empty
 	if len(users) == 0 {
 		SetInfo("No users in cache", funcName)
+
+		// Set users in cache
+		err = SetUserIDsCache(ctx, filter, key)
+		if err != nil {
+			SetError(err, "Error setting users in cache", funcName)
+			return nil, err
+		}
+
+		// Get users from cache
+		users, err = GetUserIDsFromCache(ctx, filter, key)
+		if err != nil {
+			SetError(err, "Error getting users from cache", funcName)
+			return nil, err
+		}
+
+		return users, nil
 	}
 
 	return users, nil

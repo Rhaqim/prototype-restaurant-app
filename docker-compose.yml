@@ -30,8 +30,8 @@ services:
       - ./data/cache:/data/chache
     networks:
       - thedutchapp
-    expose:
-      - 6379
+    # expose:
+    #   - 6379
 
   db:
     image: mongo:latest
@@ -42,8 +42,8 @@ services:
       - ./data/db:/data/db
     networks:
       - thedutchapp
-    expose:
-      - 27017
+    # expose:
+    #   - 27017
 
   # frontend:
   #   build:
