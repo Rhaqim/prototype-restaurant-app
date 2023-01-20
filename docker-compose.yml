@@ -21,13 +21,25 @@ services:
       - 8080
     command: ["./THEDUTCHAPP"]
 
+  redis:
+    image: redis:latest
+    container_name: thedutchappredis
+    ports:
+      - 6379:6379
+    volumes:
+      - ./data/cache:/data/chache
+    networks:
+      - thedutchapp
+    expose:
+      - 6379
+
   db:
     image: mongo:latest
     container_name: thedutchappdb
     ports:
       - 27017:27017
     volumes:
-      - ./data:/data/db
+      - ./data/db:/data/db
     networks:
       - thedutchapp
     expose:
