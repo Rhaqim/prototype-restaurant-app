@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       context: .
     image: thedutchapp:latest
-    container_name: thedutchappbackend
+    container_name: thedutchapp_backend
     env_file:
       - .local.env
     ports:
@@ -23,7 +23,7 @@ services:
 
   redis:
     image: redis:latest
-    container_name: thedutchappredis
+    container_name: thedutchapp_redis
     ports:
       - 6379:6379
     volumes:
@@ -35,7 +35,7 @@ services:
 
   db:
     image: mongo:latest
-    container_name: thedutchappdb
+    container_name: thedutchapp_db
     ports:
       - 27017:27017
     volumes:
@@ -50,7 +50,7 @@ services:
   #     dockerfile: Dockerfile
   #     context: .
   #   image: thedutchapp:latest
-  #   container_name: thedutchappfrontend
+  #   container_name: thedutchapp_frontend
   #   env_file:
   #     - .env
   #   ports:
