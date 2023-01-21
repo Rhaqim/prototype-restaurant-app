@@ -69,6 +69,13 @@ func GetUserIDsFromCache(ctx context.Context, filter bson.M, key config.CacheKey
 		nil,
 	)
 
+	// Update cache
+	err := SetUserIDsCache(ctx, filter, key)
+	if err != nil {
+		SetError(err, "Error setting users in cache", funcName)
+		return nil, err
+	}
+
 	users, err := redis.GetList()
 	if err != nil {
 		// If error, fetch from database
