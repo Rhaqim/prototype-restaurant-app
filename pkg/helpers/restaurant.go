@@ -38,9 +38,9 @@ type RestaurantCategory string
 
 const (
 	// Restaurant Categories
-	Bar    RestaurantCategory = "Bar"
-	Lounge RestaurantCategory = "Lounge"
-	Cafe   RestaurantCategory = "Cafe"
+	Bar    RestaurantCategory = "bar"
+	Lounge RestaurantCategory = "lounge"
+	Cafe   RestaurantCategory = "cafe"
 )
 
 func (rc RestaurantCategory) String() string {
