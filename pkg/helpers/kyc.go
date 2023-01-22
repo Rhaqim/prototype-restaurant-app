@@ -7,18 +7,20 @@ import (
 )
 
 type KYC struct {
-	Phone          string             `bson:"phone" json:"phone" binding:"required,e164"`
-	DOB            CustomDate         `bson:"dob" json:"dob" binding:"required" time_format:"2006-01-02"`
-	Address        string             `bson:"address" json:"address" binding:"required"`
-	City           string             `bson:"city" json:"city" binding:"required"`
-	State          string             `bson:"state" json:"state" binding:"required"`
-	Zip            string             `bson:"zip" json:"zip" binding:"required"`
-	CountryCode    string             `bson:"country_code" json:"country_code" binding:"required,iso3166_1_alpha2"`
-	IdentityType   IdentityType       `bson:"identity_type" json:"identity_type" binding:"required"`
-	IdentityNumber string             `bson:"identity_number" json:"identity_number" binding:"required,min=5,max=20"`
-	IdentityPhoto  KYCPhoto           `bson:"identity_photo" json:"identity_photo" binding:"required"`
-	KYCStatus      KYCStatus          `bson:"kyc_status" json:"kyc_status" default:"unverified"`
-	UpdatedAt      primitive.DateTime `bson:"updated_at" json:"updated_at" default:"Now()"`
+	Phone              string             `bson:"phone" json:"phone" binding:"required,e164"`
+	DOB                CustomDate         `bson:"dob" json:"dob" binding:"required" time_format:"2006-01-02"`
+	Address            string             `bson:"address" json:"address" binding:"required"`
+	City               string             `bson:"city" json:"city" binding:"required"`
+	State              string             `bson:"state" json:"state" binding:"required"`
+	Zip                string             `bson:"zip" json:"zip" binding:"required"`
+	CountryCode        string             `bson:"country_code" json:"country_code" binding:"required,iso3166_1_alpha2"`
+	IdentityType       IdentityType       `bson:"identity_type" json:"identity_type" binding:"required"`
+	IdentityNumber     string             `bson:"identity_number" json:"identity_number" binding:"required,min=5,max=20"`
+	IdentityExpiration time.Time          `bson:"identity_expiration" json:"identity_expiration" binding:"required" time_format:"2006-01-02"`
+	IdentityPhoto      KYCPhoto           `bson:"identity_photo" json:"identity_photo" binding:"required"`
+	SelfieImage        Avatar             `bson:"selfie_image" json:"selfie_image" binding:"required"`
+	KYCStatus          KYCStatus          `bson:"kyc_status" json:"kyc_status" default:"unverified"`
+	UpdatedAt          primitive.DateTime `bson:"updated_at" json:"updated_at" default:"Now()"`
 }
 
 type KYCPhoto struct {

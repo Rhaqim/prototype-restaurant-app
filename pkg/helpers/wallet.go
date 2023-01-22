@@ -14,10 +14,10 @@ var walletCollection = config.WalletCollection
 type Wallet struct {
 	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	UserID    primitive.ObjectID `json:"user_id" bson:"user_id"`
-	Balance   float64            `json:"balance" bson:"balance" default:"0"`
+	Balance   float64            `json:"balance,omitempty" bson:"balance" default:"0"`
 	TxnPin    string             `json:"txn_pin" bson:"txn_pin" binding:"required,min=4,max=4"`
-	CreatedAt primitive.DateTime `json:"created_at" bson:"created_at" default:"time.Now()"`
-	UpdatedAt primitive.DateTime `json:"updated_at" bson:"updated_at" default:"time.Now()"`
+	CreatedAt primitive.DateTime `json:"created_at,omitempty" bson:"created_at,omitempty" default:"time.Now()"`
+	UpdatedAt primitive.DateTime `json:"updated_at,omitempty" bson:"updated_at,omitempty" default:"time.Now()"`
 }
 
 type CreateWalletRequest struct {

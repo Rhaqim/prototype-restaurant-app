@@ -26,9 +26,13 @@ func createWallet(c *gin.Context, ctx context.Context) {
 
 	var funcName = ut.GetFunctionName()
 
+	var walletPin struct {
+		TxnPin string `json:"txn_pin" binding:"required"`
+	}
+
 	var request hp.Wallet
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.ShouldBindJSON(&walletPin); err != nil {
 		response := hp.SetError(err, "Error binding json", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
@@ -64,7 +68,7 @@ func createWallet(c *gin.Context, ctx context.Context) {
 	// modify request
 	request.ID = primitive.NewObjectID()
 	request.UserID = user.ID
-	request.TxnPin, err = auth.HashPassword(request.TxnPin)
+	request.TxnPin, err = auth.HashPassword(walletPin.TxnPin)
 	if err != nil {
 		response := hp.SetError(err, "Error hashing password", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)

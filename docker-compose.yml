@@ -19,7 +19,8 @@ services:
       - thedutchapp
     expose:
       - 8080
-    command: ["./THEDUTCHAPP"]
+    # command: ["./THEDUTCHAPP"]
+    command: ["go", "run", "cmd/server/main.go"]
 
   redis:
     image: redis:latest
