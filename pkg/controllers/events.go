@@ -88,7 +88,7 @@ func createEvent(c *gin.Context, ctx context.Context) {
 
 	request.ID = primitive.NewObjectID()
 	request.HostID = user.ID
-	request.Type = hp.EventType(hp.EventType(request.Type).String())
+	request.EventType = hp.EventType(hp.EventType(request.EventType).String())
 	request.EventStatus = hp.Upcoming
 	request.CreatedAt, request.UpdatedAt = hp.CreatedAtUpdatedAt()
 	// Add Host to Attendees

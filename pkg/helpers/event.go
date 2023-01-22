@@ -62,7 +62,7 @@ type Event struct {
 	Invited        []primitive.ObjectID `json:"invited" bson:"invited" default:"[]"`
 	Attendees      []primitive.ObjectID `json:"attendees" bson:"attendees" default:"[]"`
 	Declined       []primitive.ObjectID `json:"declined" bson:"declined" default:"[]"`
-	Type           EventType            `json:"type" bson:"type"`
+	EventType      EventType            `json:"event_type" bson:"event_type"`
 	EventStatus    EventStatus          `json:"event_status" bson:"event_status"`
 	SpecialRequest string               `json:"special_request,omitempty" bson:"special_request,omitempty"`
 	Budget         float64              `json:"budget" bson:"budget" binding:"required,number"`
