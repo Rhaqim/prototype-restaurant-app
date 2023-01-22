@@ -265,7 +265,7 @@ func getEvents(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	// Get event type from url
-	eventType := c.Query("type")
+	eventType := c.Query("event_type")
 
 	// Get event Venue from url
 	venue := c.Query("venue")
@@ -283,7 +283,7 @@ func getEvents(c *gin.Context, ctx context.Context) {
 
 	switch {
 	case eventType != "":
-		filter = bson.M{"type": eventType}
+		filter = bson.M{"event_type": eventType}
 	case venue != "":
 		filter = bson.M{"venue": venue}
 	case hostID != "":
@@ -314,6 +314,12 @@ func getEvents(c *gin.Context, ctx context.Context) {
 	if err != nil {
 		response := hp.SetError(err, "Error getting events", funcName)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	if len(events) == 0 {
+		response := hp.SetError(nil, "No events found", funcName)
+		c.AbortWithStatusJSON(http.StatusNotFound, response)
 		return
 	}
 

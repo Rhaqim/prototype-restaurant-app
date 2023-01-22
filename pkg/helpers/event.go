@@ -15,19 +15,18 @@ var eventCollection = config.EventCollection
 type EventType string
 
 const (
-	Open  EventType = "open"
-	Close EventType = "close"
+	Open        EventType = "open"
+	Closed      EventType = "closed"
+	Private     EventType = "private"
+	Birthday    EventType = "birthday"
+	Wedding     EventType = "wedding"
+	Anniversary EventType = "anniversary"
+	Graduation  EventType = "graduation"
+	Other       EventType = "other"
 )
 
 func (h EventType) String() string {
-	switch h {
-	case Open:
-		return "open"
-	case Close:
-		return "close"
-	default:
-		return "close"
-	}
+	return string(h)
 }
 
 type EventStatus string
@@ -40,16 +39,7 @@ const (
 )
 
 func (h EventStatus) String() string {
-	switch h {
-	case Upcoming:
-		return "upcoming"
-	case Ongoing:
-		return "ongoing"
-	case Finished:
-		return "finished"
-	default:
-		return "upcoming"
-	}
+	return string(h)
 }
 
 type Event struct {
