@@ -16,7 +16,7 @@ type KYC struct {
 	CountryCode        string             `bson:"country_code" json:"country_code" binding:"required,iso3166_1_alpha2"`
 	IdentityType       IdentityType       `bson:"identity_type" json:"identity_type" binding:"required"`
 	IdentityNumber     string             `bson:"identity_number" json:"identity_number" binding:"required,min=5,max=20"`
-	IdentityExpiration time.Time          `bson:"identity_expiration" json:"identity_expiration" binding:"required" time_format:"2006-01-02"`
+	IdentityExpiration CustomDate         `bson:"identity_expiration" json:"identity_expiration" binding:"required" time_format:"2006-01-02"`
 	IdentityPhoto      KYCPhoto           `bson:"identity_photo" json:"identity_photo" binding:"required"`
 	SelfieImage        Avatar             `bson:"selfie_image" json:"selfie_image" binding:"required"`
 	KYCStatus          KYCStatus          `bson:"kyc_status" json:"kyc_status" default:"unverified"`
