@@ -83,7 +83,6 @@ func SetSuccess(message string, data interface{}, funcName string) MongoJsonResp
 			Date:    time.Now(),
 		}
 	}
-	config.Logs("info", message, funcName)
 	return MongoJsonResponse{
 		Type:    Success,
 		Data:    data,
