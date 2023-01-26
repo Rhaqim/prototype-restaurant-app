@@ -21,16 +21,16 @@ type Wallet struct {
 }
 
 type CreateWalletRequest struct {
-	TxnPin string `json:"txn_pin" bson:"txn_pin" binding:"required,min=4,max=4"`
+	TxnPin string `form:"txn_pin" bson:"txn_pin" binding:"required,min=4,max=4"`
 }
 
 type ChangePinRequest struct {
-	OldPin string `json:"old_pin" bson:"old_pin" binding:"required,min=4,max=4"`
-	NewPin string `json:"new_pin" bson:"new_pin" binding:"required,min=4,max=4"`
+	OldPin string `form:"old_pin" bson:"old_pin" binding:"required,min=4,max=4"`
+	NewPin string `form:"new_pin" bson:"new_pin" binding:"required,min=4,max=4"`
 }
 
 type FundWalletRequest struct {
-	Amount float64 `json:"amount" bson:"amount"`
+	Amount float64 `form:"amount" bson:"amount"`
 }
 
 type FundWalletResponse struct {

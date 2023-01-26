@@ -27,12 +27,12 @@ func createWallet(c *gin.Context, ctx context.Context) {
 	var funcName = ut.GetFunctionName()
 
 	var walletPin struct {
-		TxnPin string `json:"txn_pin" binding:"required"`
+		TxnPin string `form:"txn_pin" binding:"required"`
 	}
 
 	var request hp.Wallet
 
-	if err := c.ShouldBindJSON(&walletPin); err != nil {
+	if err := c.Bind(&walletPin); err != nil {
 		response := hp.SetError(err, "Error binding json", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
@@ -107,7 +107,7 @@ func changePin(c *gin.Context, ctx context.Context) {
 
 	var request hp.ChangePinRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.Bind(&request); err != nil {
 		response := hp.SetError(err, "Error binding json", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
@@ -169,7 +169,7 @@ func fundWallet(c *gin.Context, ctx context.Context) {
 
 	request := hp.FundWalletRequest{}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.Bind(&request); err != nil {
 		response := hp.SetError(err, "Error binding json", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return

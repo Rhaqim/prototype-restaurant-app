@@ -54,9 +54,9 @@ type TransactionStatus struct {
 }
 
 type SendMoneyOtherUser struct {
-	Username string  `json:"username" binding:"required"`
-	Amount   float64 `json:"amount" binding:"required"`
-	TxnPin   string  `json:"txn_pin" binding:"required"`
+	Username string  `form:"username" binding:"required"`
+	Amount   float64 `form:"amount" binding:"required"`
+	TxnPin   string  `form:"txn_pin" binding:"required"`
 }
 
 type SenfMoneyOtherBank struct {
@@ -266,8 +266,8 @@ func startDebitTransaction(from, to primitive.ObjectID, amount float64) (Transac
 
 /* Event Transaction */
 type EventBillPayment struct {
-	EventID primitive.ObjectID `json:"event_id" bson:"event_id" binding:"required"`
-	TxnPin  string             `json:"txn_pin" bson:"txn_pin" binding:"required"`
+	EventID primitive.ObjectID `form:"event_id" bson:"event_id" binding:"required"`
+	TxnPin  string             `form:"txn_pin" bson:"txn_pin" binding:"required"`
 }
 
 // SendtoVenuePayforEvent sends money to venues

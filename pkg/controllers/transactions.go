@@ -219,7 +219,7 @@ func payBillforEvent(c *gin.Context, ctx context.Context) {
 
 	var request hp.EventBillPayment
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.Bind(&request); err != nil {
 		var response = hp.SetError(err, "Error binding JSON", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
@@ -313,7 +313,7 @@ func sendMoneytoHost(c *gin.Context, ctx context.Context) {
 
 	var request hp.EventBillPayment
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.Bind(&request); err != nil {
 		var response = hp.SetError(err, "Error binding JSON", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
@@ -385,7 +385,7 @@ func payOwnBill(c *gin.Context, ctx context.Context) {
 
 	var request hp.EventBillPayment
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.Bind(&request); err != nil {
 		var response = hp.SetError(err, "Error binding JSON", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
@@ -479,7 +479,7 @@ func sendToOtherUsers(c *gin.Context, ctx context.Context) {
 
 	var request hp.SendMoneyOtherUser
 
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := c.Bind(&request); err != nil {
 		var response = hp.SetError(err, "Error binding JSON", funcName)
 		c.JSON(http.StatusBadRequest, response)
 		return
