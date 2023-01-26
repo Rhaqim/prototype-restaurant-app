@@ -23,27 +23,27 @@ const (
 
 // USER STRUCT all users
 type UserStruct struct {
-	ID                     primitive.ObjectID   `bson:"_id,omitempty" json:"_id,omitempty"`
-	FirstName              string               `json:"first_name" bson:"first_name" binding:"required"`
-	LastName               string               `json:"last_name" bson:"last_name" binding:"required"`
-	Email                  string               `bson:"email" json:"email" binding:"required,email"`
-	Username               string               `bson:"username" json:"username" binding:"required"`
-	Password               string               `bson:"password" json:"password" binding:"required,min=8,max=32,alphanum"`
-	Avatar                 Avatar               `bson:"avatar" json:"avatar" default:"{}"`
-	Social                 SocialNetwork        `bson:"social" json:"social" default:"{}"`
-	Friends                []primitive.ObjectID `bson:"friends" json:"friends" default:"[]"`
-	Location               string               `bson:"location" json:"location"`
-	Wallet                 primitive.ObjectID   `bson:"wallet" json:"wallet" default:"null"`
-	Account                BankAccount          `bson:"account" json:"account" default:"{}"`
-	Transactions           []Transactions       `bson:"transactions" json:"transactions" default:"[]"`
-	RefreshToken           string               `bson:"refresh_token,omitempty" json:"refresh_token,omitempty"`
-	EmailVerified          bool                 `bson:"email_confirmed" json:"email_confirmed" default:"false"`
-	EmailVerificationToken string               `bson:"email_verification_token,omitempty" json:"email_verification_token,omitempty"`
-	PasswordResetToken     string               `bson:"password_reset_token,omitempty" json:"password_reset_token,omitempty"`
-	KYCStatus              KYCStatus            `bson:"kyc_status,omitempty" json:"kyc_status,omitempty" default:"unverified"`
-	Role                   Roles                `bson:"role" json:"role" default:"user"`
-	CreatedAt              primitive.DateTime   `bson:"created_at" json:"created_at" default:"Now()"`
-	UpdatedAt              primitive.DateTime   `bson:"updated_at" json:"updated_at" default:"Now()"`
+	ID                     primitive.ObjectID   `bson:"_id,omitempty" form:"_id,omitempty"`
+	FirstName              string               `form:"first_name" bson:"first_name" binding:"required"`
+	LastName               string               `form:"last_name" bson:"last_name" binding:"required"`
+	Email                  string               `bson:"email" form:"email" binding:"required,email"`
+	Username               string               `bson:"username" form:"username" binding:"required"`
+	Password               string               `bson:"password" form:"password" binding:"required,min=8,max=32,alphanum"`
+	Avatar                 Avatar               `bson:"avatar" form:"avatar" default:"{}"`
+	Social                 SocialNetwork        `bson:"social" form:"social" default:"{}"`
+	Friends                []primitive.ObjectID `bson:"friends" form:"friends" default:"[]"`
+	Location               string               `bson:"location" form:"location"`
+	Wallet                 primitive.ObjectID   `bson:"wallet" form:"wallet" default:"null"`
+	Account                BankAccount          `bson:"account" form:"account" default:"{}"`
+	Transactions           []Transactions       `bson:"transactions" form:"transactions" default:"[]"`
+	RefreshToken           string               `bson:"refresh_token,omitempty" form:"refresh_token,omitempty"`
+	EmailVerified          bool                 `bson:"email_confirmed" form:"email_confirmed" default:"false"`
+	EmailVerificationToken string               `bson:"email_verification_token,omitempty" form:"email_verification_token,omitempty"`
+	PasswordResetToken     string               `bson:"password_reset_token,omitempty" form:"password_reset_token,omitempty"`
+	KYCStatus              KYCStatus            `bson:"kyc_status,omitempty" form:"kyc_status,omitempty" default:"unverified"`
+	Role                   Roles                `bson:"role" form:"role" default:"user"`
+	CreatedAt              primitive.DateTime   `bson:"created_at" form:"created_at" default:"Now()"`
+	UpdatedAt              primitive.DateTime   `bson:"updated_at" form:"updated_at" default:"Now()"`
 }
 
 type Avatar struct {

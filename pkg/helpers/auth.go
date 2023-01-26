@@ -9,8 +9,8 @@ import (
 
 // USER STRUCT for Signing In
 type SignIn struct {
-	Username string `json:"username" validate:"required"`
-	Password string `json:"password" binding:"required"`
+	Username string `form:"username" binding:"required"`
+	Password string `form:"password" binding:"required"`
 }
 
 // USER STRUCT for Signing Out
@@ -20,7 +20,7 @@ type SignOut struct {
 
 // USER STRUCT for sending refresh token
 type RefreshToken struct {
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `form:"refresh_token"`
 }
 
 // USER STRUCT for sending email to reset password
@@ -30,13 +30,13 @@ type ForgotPassword struct {
 
 // USER STRUCT for resetting password
 type ResetPassword struct {
-	OldPassword string `json:"old_password"`
-	NewPassword string `json:"new_password"`
+	OldPassword string `form:"old_password"`
+	NewPassword string `form:"new_password"`
 }
 
 // USER STRUCT for updating password
 type UpdatePassword struct {
-	NewPassword string `json:"new_password"`
+	NewPassword string `form:"new_password"`
 }
 
 // USER VALIDATION EMAIL AND USERNAME

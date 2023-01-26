@@ -48,7 +48,7 @@ func signUp(c *gin.Context, ctx context.Context) {
 
 	var user = hp.UserStruct{}
 
-	if err := c.BindJSON(&user); err != nil {
+	if err := c.Bind(&user); err != nil {
 		response := hp.SetError(err, "Error Validating request", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
@@ -200,7 +200,8 @@ func signIn(c *gin.Context, ctx context.Context) {
 	var request = hp.SignIn{}
 	var user = hp.UserStruct{}
 
-	if err := c.BindJSON(&request); err != nil {
+	// bind request url-encoded-form
+	if err := c.Bind(&request); err != nil {
 		response := hp.SetError(err, "email and password are required ", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
@@ -423,7 +424,7 @@ func updatePassword(c *gin.Context, ctx context.Context) {
 
 	request := hp.UpdatePassword{}
 
-	if err := c.BindJSON(&request); err != nil {
+	if err := c.Bind(&request); err != nil {
 		response := hp.SetError(err, "Error binding request", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
@@ -459,7 +460,7 @@ func resetPassword(c *gin.Context, ctx context.Context) {
 
 	request := hp.ResetPassword{}
 
-	if err := c.BindJSON(&request); err != nil {
+	if err := c.Bind(&request); err != nil {
 		response := hp.SetError(err, "Error binding request", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
