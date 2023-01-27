@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"reflect"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -122,4 +123,20 @@ func GenerateReferenceNumber() string {
 
 	// conver ref to uppercase
 	return strings.ToUpper(ref)
+}
+
+// Slugify string
+func Slugify(s string) string {
+	// regex to remove all non-word characters
+	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
+	if err != nil {
+		return ""
+	}
+	// convert to lowercase
+	s = strings.ToLower(s)
+	// replace all non-word characters with a dash
+	s = reg.ReplaceAllString(s, "-")
+	// remove all dashes at the end of the string
+	s = strings.TrimSuffix(s, "-")
+	return s
 }

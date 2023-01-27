@@ -62,6 +62,7 @@ func createRestaurant(c *gin.Context, ctx context.Context) {
 	// Modify the request
 	request.ID = primitive.NewObjectID()
 	request.RestaurantUID = hp.RestaurantUID
+	request.Slug = ut.Slugify(request.Name)
 	request.OwnerID = user.ID
 	request.Category = hp.RestaurantCategory(hp.RestaurantCategory(request.Category).String())
 	request.CreatedAt, request.UpdatedAt = hp.CreatedAtUpdatedAt()

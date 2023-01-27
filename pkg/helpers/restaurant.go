@@ -19,6 +19,7 @@ var RestaurantUID = "RC-" + ut.GenerateUUID()
 type Restaurant struct {
 	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	RestaurantUID string             `json:"restaurant_uid,omitempty" bson:"restaurant_uid"`
+	Slug          string             `json:"slug,omitempty" bson:"slug"`
 	OwnerID       primitive.ObjectID `json:"owner_id,omitempty" bson:"owner_id,omitempty"`
 	Name          string             `json:"name,omitempty" bson:"name" binding:"required"`
 	Phone         string             `json:"phone,omitempty" bson:"phone" binding:"required"`
