@@ -117,6 +117,9 @@ func getRestaurant(c *gin.Context, ctx context.Context) {
 	// Get restaurant name from request query params
 	restaurantName := c.Query("name")
 
+	// Get restaurant slug from request query params
+	restaurantSlug := c.Query("slug")
+
 	var filter bson.M
 
 	switch {
@@ -131,6 +134,8 @@ func getRestaurant(c *gin.Context, ctx context.Context) {
 		filter = bson.M{"_id": id}
 	case restaurantName != "":
 		filter = bson.M{"name": restaurantName}
+	case restaurantSlug != "":
+		filter = bson.M{"slug": restaurantSlug}
 	default:
 		filter = bson.M{}
 	}
