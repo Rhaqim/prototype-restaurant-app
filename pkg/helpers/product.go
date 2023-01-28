@@ -18,7 +18,7 @@ var ProductUID = "PC-" + ut.GenerateUUID()
 type Product struct {
 	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id"`
 	ProductUID   string             `json:"product_uid,omitempty" bson:"product_uid"`
-	SuppliedID   primitive.ObjectID `json:"supplied_id,omitempty" bson:"supplied_id,omitempty"`
+	SupplierID   primitive.ObjectID `json:"supplier_id,omitempty" bson:"supplier_id,omitempty"`
 	RestaurantID primitive.ObjectID `json:"restaurant_id,omitempty" bson:"restaurant_id,omitempty"`
 	Name         string             `json:"name" bson:"name" binding:"required,min=3,max=50,lowercase"`
 	Category     Categories         `json:"category,omitempty" bson:"category" binding:"required,oneof=drink food others,lowercase"`
