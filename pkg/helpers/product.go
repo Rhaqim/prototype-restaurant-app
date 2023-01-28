@@ -33,22 +33,16 @@ type Products []Product
 type Categories string
 
 const (
-	Drink  Categories = "drink"
-	Food   Categories = "food"
-	Others Categories = "others"
+	Beverage  Categories = "beverage"
+	Appetizer Categories = "appetizer"
+	Main      Categories = "main"
+	Dessert   Categories = "dessert"
+	Snack     Categories = "snack"
+	Others    Categories = "others"
 )
 
 func (c Categories) String() string {
-	switch c {
-	case Drink:
-		return "drink"
-	case Food:
-		return "food"
-	case Others:
-		return "others"
-	default:
-		return "others"
-	}
+	return string(c)
 }
 
 func GetProduct(c context.Context, filter bson.M) (Product, error) {
