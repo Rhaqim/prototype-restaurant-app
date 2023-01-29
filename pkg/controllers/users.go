@@ -299,3 +299,35 @@ func UpdateUsersKYC(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 
 }
+
+/* Search Users by Username
+@params: username
+@returns: success, error
+*/
+
+func SearchUsers(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
+	defer cancel()
+
+	defer database.ConnectMongoDB().Disconnect(context.TODO())
+
+	funcName := ut.GetFunctionName()
+
+	username := c.Query("username")
+
+	if username == "" {
+		response := hp.SetError(nil, "Invalid Query", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user, err := hp.Search(ctx, usersCollection, username, "username")
+	if err != nil {
+		response := hp.SetError(err, "User not found", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("User found", user, funcName)
+	c.JSON(http.StatusOK, response)
+}
