@@ -212,3 +212,22 @@ func (mr *MongoJsonResponse) Error(funcName string) *MongoJsonResponse {
 		Date:    time.Now(),
 	}
 }
+
+// implement search feature in mongodb using golang, use contains function in mongodb
+func Search(ctx context.Context, collection *mongo.Collection, query, search string) ([]*interface{}, error) {
+	filter := bson.M{
+		search: bson.M{"$regex": primitive.Regex{Pattern: query, Options: "i"}},
+	}
+
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var obj []*interface{}
+	if err = cursor.All(ctx, &obj); err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}
