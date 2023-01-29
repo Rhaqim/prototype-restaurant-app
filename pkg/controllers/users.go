@@ -20,7 +20,11 @@ import (
 /*
 Get User by ID
 */
-var usersCollection = config.UserCollection
+var (
+	usersCollection = config.UserCollection
+	SearchUsers     = AbstractConnection(searchUsers)
+	SetUsersCache   = AbstractConnection(setUsersCache)
+)
 
 func CreatNewUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
@@ -305,11 +309,7 @@ func UpdateUsersKYC(c *gin.Context) {
 @returns: success, error
 */
 
-func SearchUsers(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
-
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+func searchUsers(c *gin.Context, ctx context.Context) {
 
 	funcName := ut.GetFunctionName()
 
@@ -329,5 +329,19 @@ func SearchUsers(c *gin.Context) {
 	}
 
 	response := hp.SetSuccess("User found", user, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func setUsersCache(c *gin.Context, ctx context.Context) {
+	funcName := ut.GetFunctionName()
+
+	err := hp.SetUsersCache(ctx)
+	if err != nil {
+		response := hp.SetError(err, "Error setting cache", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("Cache set", "success", funcName)
 	c.JSON(http.StatusOK, response)
 }

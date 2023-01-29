@@ -120,10 +120,14 @@ func GetUserIDsFromCache(ctx context.Context, filter bson.M, key config.CacheKey
 }
 
 /* Store all users in cache with username as key and other details as value, store under key: users */
-func SetUsersCache(ctx context.Context, filter bson.M, key config.CacheKey) error {
+func SetUsersCache(ctx context.Context) error {
 	funcName := ut.GetFunctionName()
 
 	SetInfo("Setting Users in cache", funcName)
+
+	filter := bson.M{}
+
+	key := "users"
 
 	// loop through users and set each user in cache with username as key and other details as value
 	users, err := GetUsers(ctx, filter)
@@ -151,7 +155,7 @@ func SetUsersCache(ctx context.Context, filter bson.M, key config.CacheKey) erro
 		}
 
 		redis2 := db.NewCache(
-			key.String(),
+			key,
 			user.Username,
 		)
 
