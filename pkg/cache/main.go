@@ -109,3 +109,43 @@ func (c *Cache) Delete() error {
 }
 
 const ErrCacheNotFound = redis.Nil
+
+func (c *Cache) Exists() (bool, error) {
+	// defer c.client.Close()
+	exists, err := c.client.Exists(context.Background(), c.Key).Result()
+	if err != nil {
+		return false, err
+	}
+
+	return exists == 1, nil
+}
+
+func (c *Cache) HMSet() error {
+	// defer c.client.Close()
+	err := c.client.HMSet(context.Background(), c.Key, c.Value).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Cache) HGetAll() (map[string]string, error) {
+	// defer c.client.Close()
+	val, err := c.client.HGetAll(context.Background(), c.Key).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	return val, nil
+}
+
+func (c *Cache) SAdd() error {
+	// defer c.client.Close()
+	err := c.client.SAdd(context.Background(), c.Key, c.Value).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

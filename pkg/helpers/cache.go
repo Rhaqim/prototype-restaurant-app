@@ -118,3 +118,48 @@ func GetUserIDsFromCache(ctx context.Context, filter bson.M, key config.CacheKey
 
 	return users, nil
 }
+
+/* Store all users in cache with username as key and other details as value, store under key: users */
+func SetUsersCache(ctx context.Context, filter bson.M, key config.CacheKey) error {
+	funcName := ut.GetFunctionName()
+
+	SetInfo("Setting Users in cache", funcName)
+
+	// loop through users and set each user in cache with username as key and other details as value
+	users, err := GetUsers(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	for _, user := range users {
+		redis := db.NewCache(
+			user.Username,
+			user,
+		)
+
+		// Clear cache before setting new data
+		SetDebug("Clearing cache", funcName)
+		err = redis.Delete()
+		if err != nil {
+			return err
+		}
+
+		SetDebug("Setting users in cache", funcName)
+		err = redis.HMSet()
+		if err != nil {
+			return err
+		}
+
+		redis2 := db.NewCache(
+			key.String(),
+			user.Username,
+		)
+
+		err = redis2.SAdd()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
