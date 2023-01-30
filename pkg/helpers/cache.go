@@ -152,3 +152,37 @@ func SetUsersCache(ctx context.Context) error {
 
 	return nil
 }
+
+// Fetches from Redis cache and returns all users
+// Accepts a context and cache key
+// Returns a slice of users and an error
+func GetUsersFromCache(ctx context.Context) ([]UserResponse, error) {
+	funcName := ut.GetFunctionName()
+
+	// Get users from redis cache
+	redis := db.NewCache(
+		"users",
+		nil,
+	)
+
+	users, err := redis.Get()
+	if err != nil {
+		// If error, fetch from database
+		SetError(err, "Error getting users from cache fetching from Database", funcName)
+
+		users, err := GetUsers(ctx, bson.M{})
+		if err != nil {
+			SetError(err, "Error getting users", funcName)
+			return nil, err
+		}
+
+		return users, nil
+	}
+
+	// convert users from json to slice of UserStruct
+	var usersList []UserResponse
+	ut.FromJSON(users, &usersList)
+
+	return usersList, nil
+
+}

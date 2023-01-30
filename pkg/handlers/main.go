@@ -56,6 +56,7 @@ func GinRouter() *gin.Engine {
 	user.GET("/get_profile", views.GetUser)
 	user.GET("/search_users", views.SearchUsers)
 	user.GET("/set_users_cache", views.SetUsersCache)
+	user.GET("/get_users_cache", views.GetUsersCache)
 	user.Use(TokenGuardMiddleware())
 	{
 		user.PUT("/update_profile", views.UpdateUser)

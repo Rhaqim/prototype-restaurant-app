@@ -130,6 +130,13 @@ func ToJsonString(i interface{}) string {
 	return string(json)
 }
 
+func FromJSON(data []byte, i interface{}) {
+	err := json.Unmarshal(data, &i)
+	if err != nil {
+		log.Println("Error Unmarshalling object", err)
+	}
+}
+
 // Generate 10 digit reference number with uuid
 func GenerateReferenceNumber() string {
 	ref := RandomString(10, GenerateUUID())

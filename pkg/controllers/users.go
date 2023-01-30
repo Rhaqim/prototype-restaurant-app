@@ -24,6 +24,7 @@ var (
 	usersCollection = config.UserCollection
 	SearchUsers     = AbstractConnection(searchUsers)
 	SetUsersCache   = AbstractConnection(setUsersCache)
+	GetUsersCache   = AbstractConnection(getUsersCache)
 )
 
 func CreatNewUser(c *gin.Context) {
@@ -343,5 +344,24 @@ func setUsersCache(c *gin.Context, ctx context.Context) {
 	}
 
 	response := hp.SetSuccess("Cache set", "success", funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+/* Get Users from Cache
+@params: none
+@returns: success, error
+*/
+
+func getUsersCache(c *gin.Context, ctx context.Context) {
+	funcName := ut.GetFunctionName()
+
+	users, err := hp.GetUsersFromCache(ctx)
+	if err != nil {
+		response := hp.SetError(err, "Error getting cache", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("Cache found", users, funcName)
 	c.JSON(http.StatusOK, response)
 }

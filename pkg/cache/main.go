@@ -65,14 +65,14 @@ func (c *Cache) Set() error {
 }
 
 // Get gets a value from the cache
-func (c *Cache) Get() (interface{}, error) {
+func (c *Cache) Get() ([]byte, error) {
 	defer c.client.Close()
 	val, err := c.client.Get(context.Background(), c.Key).Result()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return val, nil
+	return []byte(val), nil
 }
 
 // Get List gets a list from the cache
