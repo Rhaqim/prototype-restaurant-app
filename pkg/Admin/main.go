@@ -103,7 +103,7 @@ func SendNotificationtoUsers(c *gin.Context) {
 		userIDs = append(userIDs, userID)
 	}
 
-	hp.SetDebug("userIDs"+ut.ToJSON(userIDs), funcName)
+	hp.SetDebug("userIDs"+ut.ToJsonString(userIDs), funcName)
 
 	//convert message to []byte
 	msg := []byte(request.Message)

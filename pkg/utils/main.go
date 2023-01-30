@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"log"
 	"math/rand"
 	"os"
 	"reflect"
@@ -112,8 +113,20 @@ func RandomString(length int, key string) string {
 	return string(b)
 }
 
-func ToJSON(i interface{}) string {
-	json, _ := json.Marshal(i)
+func ToJSON(i interface{}) []byte {
+	json, err := json.Marshal(i)
+	if err != nil {
+		log.Println("Error Marshalling object", err)
+	}
+	log.Println(string(json))
+	return json
+}
+
+func ToJsonString(i interface{}) string {
+	json, err := json.Marshal(i)
+	if err != nil {
+		log.Println("Error Marshalling object", err)
+	}
 	return string(json)
 }
 

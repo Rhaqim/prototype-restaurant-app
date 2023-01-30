@@ -122,7 +122,7 @@ func (c *Cache) Exists() (bool, error) {
 
 func (c *Cache) HMSet() error {
 	// defer c.client.Close()
-	err := c.client.HMSet(context.Background(), c.Key, c.Value).Err()
+	err := c.client.HSet(context.Background(), c.Key, c.Value).Err()
 	if err != nil {
 		return err
 	}

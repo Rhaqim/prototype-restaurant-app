@@ -29,7 +29,7 @@ func SetUserIDsCache(ctx context.Context, filter bson.M, key config.CacheKey) er
 		userIDs = append(userIDs, user.ID.Hex())
 	}
 
-	SetDebug("Users being stored to cache: "+ut.ToJSON(userIDs), funcName)
+	SetDebug("Users being stored to cache: "+ut.ToJsonString(userIDs), funcName)
 
 	// Store userIDs in redis cache
 	redis := db.NewCache(
@@ -123,46 +123,31 @@ func GetUserIDsFromCache(ctx context.Context, filter bson.M, key config.CacheKey
 func SetUsersCache(ctx context.Context) error {
 	funcName := ut.GetFunctionName()
 
-	SetInfo("Setting Users in cache", funcName)
+	/* Add all users to cache */
 
-	filter := bson.M{}
-
-	key := "users"
-
-	// loop through users and set each user in cache with username as key and other details as value
-	users, err := GetUsers(ctx, filter)
+	// Get all users
+	users, err := GetUsers(ctx, bson.M{})
 	if err != nil {
 		return err
 	}
 
-	for _, user := range users {
-		redis := db.NewCache(
-			user.Username,
-			user,
-		)
+	// Store users in redis cache
+	redis := db.NewCache(
+		"users",
+		ut.ToJSON(users),
+	)
 
-		// Clear cache before setting new data
-		SetDebug("Clearing cache", funcName)
-		err = redis.Delete()
-		if err != nil {
-			return err
-		}
+	// Clear cache before setting new data
+	err = redis.Delete()
+	if err != nil {
+		SetError(err, "Error clearing cache", funcName)
+		return err
+	}
 
-		SetDebug("Setting users in cache", funcName)
-		err = redis.HMSet()
-		if err != nil {
-			return err
-		}
-
-		redis2 := db.NewCache(
-			key,
-			user.Username,
-		)
-
-		err = redis2.SAdd()
-		if err != nil {
-			return err
-		}
+	err = redis.Set()
+	if err != nil {
+		SetError(err, "Error setting users in cache", funcName)
+		return err
 	}
 
 	return nil
