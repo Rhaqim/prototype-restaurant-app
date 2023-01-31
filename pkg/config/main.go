@@ -183,6 +183,9 @@ type CacheKey string
 const (
 	UserRole     CacheKey = "user_role_user"
 	BusinessRole CacheKey = "user_role_business"
+	AdminRole    CacheKey = "user_role_admin"
+	Users        CacheKey = "users"
+	Restaurants  CacheKey = "restaurants"
 )
 
 func (ck CacheKey) String() string {

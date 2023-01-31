@@ -25,6 +25,8 @@ type Restaurant struct {
 	Phone         string             `json:"phone,omitempty" bson:"phone" binding:"required"`
 	Email         string             `json:"email,omitempty" bson:"email" binding:"required,email"`
 	Address       string             `json:"address,omitempty" bson:"address" binding:"required,lowercase"`
+	Longitude     float64            `json:"longitude,omitempty" bson:"longitude" binding:"required"` // longitude
+	Latitude      float64            `json:"latitude,omitempty" bson:"latitude" binding:"required"`   // latitude
 	Country       string             `json:"country,omitempty" bson:"country" binding:"required,iso3166_1_alpha2"`
 	Category      RestaurantCategory `json:"category,omitempty" bson:"category" binding:"required"`
 	OpenHours     [7]OpenHours       `json:"open_hours,omitempty" bson:"open_hours" binding:"required,dive"`
