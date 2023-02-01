@@ -38,11 +38,10 @@ func StructToJSON(i interface{}) io.Reader {
 }
 
 func GetEnv(key string) string {
-	if key == "PORT" {
-		if os.Getenv(key) == "" {
-			return ":8080"
-		}
+	if os.Getenv(key) == "" {
+		log.Fatalf("Environment variable %s is not set", key)
 	}
+
 	return os.Getenv(key)
 }
 

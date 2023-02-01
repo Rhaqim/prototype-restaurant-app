@@ -8,6 +8,7 @@ import (
 
 	"github.com/Rhaqim/thedutchapp/pkg/database"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -16,9 +17,18 @@ var (
 	TimeFormat = time.Now().Format("15:04:05 02-01-2006")
 )
 
-// Server Port
+// Load Environment Variables
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+}
+
+// Environment Variables
 var (
-	ServerPort = os.Getenv("PORT")
+	ServerPort       = os.Getenv("PORT")
+	GoogleMapsAPIKey = os.Getenv("GOOGLE_MAPS_API_KEY")
 )
 
 // token expiration time

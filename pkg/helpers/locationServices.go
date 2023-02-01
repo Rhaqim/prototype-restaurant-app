@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"math"
 
+	"github.com/Rhaqim/thedutchapp/pkg/config"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -83,9 +84,8 @@ func GetLatLon(address Address) (float64, float64, error) {
 	// convert address to string
 	addressString := address.HouseNumber + "+" + address.Street + "+" + address.City + "+" + address.Zipcode
 
-	var googleMapsAPIKey = ut.GetEnv("GOOGLE_MAPS_API_KEY")
 	var outputFormat = "json"
-	var parameters = "address=" + addressString + "&key=" + googleMapsAPIKey
+	var parameters = "address=" + addressString + "&key=" + config.GoogleMapsAPIKey
 	var googleMapsAPIURL = "https://maps.googleapis.com/maps/api/geocode/" + outputFormat + "?" + parameters
 
 	// make api call to google maps api
