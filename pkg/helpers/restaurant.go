@@ -24,7 +24,7 @@ type Restaurant struct {
 	Name          string             `json:"name,omitempty" bson:"name" binding:"required"`
 	Phone         string             `json:"phone,omitempty" bson:"phone" binding:"required"`
 	Email         string             `json:"email,omitempty" bson:"email" binding:"required,email"`
-	Address       string             `json:"address,omitempty" bson:"address" binding:"required,lowercase"`
+	Address       Address            `json:"address,omitempty" bson:"address" binding:"required"`
 	Longitude     float64            `json:"longitude,omitempty" bson:"longitude" binding:"required"` // longitude
 	Latitude      float64            `json:"latitude,omitempty" bson:"latitude" binding:"required"`   // latitude
 	Country       string             `json:"country,omitempty" bson:"country" binding:"required,iso3166_1_alpha2"`

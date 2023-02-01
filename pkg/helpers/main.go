@@ -43,6 +43,15 @@ const (
 	AlreadyCompleted  Codes = "already_completed"
 )
 
+type Address struct {
+	HouseNumber string `json:"house_number"`
+	Street      string `json:"street"`
+	City        string `json:"city"`
+	State       string `json:"state"`
+	Zipcode     string `json:"zipcode"`
+	Country     string `json:"country"`
+}
+
 // SET ERROR
 // Uses the struct MongoJsonResponse
 // Accepts an error, a message and the function name

@@ -75,23 +75,24 @@ func (ls *locationService) GetClosestRestaurant(lat, lon float64) (Restaurant, e
 }
 
 /* make api call to google maps api given an address and return the lat and lon */
-func GetLatLon(address string) (float64, float64, error) {
+func GetLatLon(address Address) (float64, float64, error) {
 	var funcName = ut.GetFunctionName()
 	var lat float64
 	var lon float64
 
-	SetInfo("Getting lat and lon for address: "+address, funcName)
+	// convert address to string
+	addressString := address.HouseNumber + "+" + address.Street + "+" + address.City + "+" + address.Zipcode
 
 	var googleMapsAPIKey = ut.GetEnv("GOOGLE_MAPS_API_KEY")
 	var outputFormat = "json"
-	var parameters = "address=" + address + "&key=" + googleMapsAPIKey
+	var parameters = "address=" + addressString + "&key=" + googleMapsAPIKey
 	var googleMapsAPIURL = "https://maps.googleapis.com/maps/api/geocode/" + outputFormat + "?" + parameters
 
 	// make api call to google maps api
 	status, body := ut.BaseAPICaller(googleMapsAPIURL, "GET", nil)
 
 	if status != 200 {
-		SetDebug("Error getting lat and lon for address: "+address, funcName)
+		SetDebug("Error getting lat and lon for address: "+addressString, funcName)
 		return lat, lon, nil
 	}
 
@@ -99,7 +100,7 @@ func GetLatLon(address string) (float64, float64, error) {
 	var data map[string]interface{}
 	err := json.Unmarshal([]byte(body), &data)
 	if err != nil {
-		SetDebug("Error parsing json response for address: "+address, funcName)
+		SetDebug("Error parsing json response for address: "+addressString, funcName)
 		return lat, lon, nil
 	}
 

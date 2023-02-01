@@ -66,6 +66,7 @@ func createRestaurant(c *gin.Context, ctx context.Context) {
 	request.OwnerID = user.ID
 	request.Category = hp.RestaurantCategory(hp.RestaurantCategory(request.Category).String())
 	request.CreatedAt, request.UpdatedAt = hp.CreatedAtUpdatedAt()
+	request.Latitude, request.Longitude, _ = hp.GetLatLon(request.Address)
 
 	// Check if Restaurant already exists
 	//Name is unique
