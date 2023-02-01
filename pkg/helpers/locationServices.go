@@ -73,17 +73,16 @@ func (ls *locationService) GetClosestRestaurant(lat, lon float64) (Restaurant, e
 	return closestRestaurant, nil
 }
 
-// Path: pkg\helpers\locationServices_test.go
-// package helpers
-//
-// import (
-// 	"testing"
-//
-// 	"github.com/stretchr/testify/assert"
-// )
-//
-// func TestGetDistance(t *testing.T) {
-// 	ls := NewLocationService()
-// 	distance := ls.GetDistance(52.2296756, 21.0122287, 52.406374, 16.9251681)
-// 	assert.Equal(t, 278.546, distance)
-// }
+/* make api call to google maps api given an address and return the lat and lon */
+func GetLatLon(address string) (float64, float64, error) {
+	var funcName = ut.GetFunctionName()
+	var lat float64
+	var lon float64
+
+	SetInfo("Getting lat and lon for address: "+address, funcName)
+
+	// make api call to google maps api
+	// return lat and lon
+
+	return lat, lon, nil
+}
