@@ -80,6 +80,7 @@ func GetLatLon(address Address) (float64, float64, error) {
 	var funcName = ut.GetFunctionName()
 	var lat float64
 	var lon float64
+	var placeID string
 
 	// convert address to string
 	addressString := address.HouseNumber + "+" + address.Street + "+" + address.City + "+" + address.Zipcode
@@ -107,6 +108,9 @@ func GetLatLon(address Address) (float64, float64, error) {
 	// get lat and lon
 	lat = data["results"].([]interface{})[0].(map[string]interface{})["geometry"].(map[string]interface{})["location"].(map[string]interface{})["lat"].(float64)
 	lon = data["results"].([]interface{})[0].(map[string]interface{})["geometry"].(map[string]interface{})["location"].(map[string]interface{})["lng"].(float64)
+	placeID = data["results"].([]interface{})[0].(map[string]interface{})["place_id"].(string)
+
+	SetInfo("Place ID: "+placeID, funcName)
 
 	return lat, lon, nil
 }
