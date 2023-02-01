@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"math/rand"
+	"net/http"
 	"os"
 	"reflect"
 	"regexp"
@@ -159,4 +160,23 @@ func Slugify(s string) string {
 	// remove all dashes at the end of the string
 	s = strings.TrimSuffix(s, "-")
 	return s
+}
+
+/* Base API caller */
+func BaseAPICaller(url string, method string, body io.Reader) (int, []byte) {
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		log.Println("Error creating request", err)
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		log.Println("Error making request", err)
+	}
+	defer res.Body.Close()
+	bodyBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Println("Error reading response body", err)
+	}
+	return res.StatusCode, bodyBytes
 }

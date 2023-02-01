@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"encoding/json"
 	"math"
 
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
@@ -81,8 +82,30 @@ func GetLatLon(address string) (float64, float64, error) {
 
 	SetInfo("Getting lat and lon for address: "+address, funcName)
 
+	var googleMapsAPIKey = ut.GetEnv("GOOGLE_MAPS_API_KEY")
+	var outputFormat = "json"
+	var parameters = "address=" + address + "&key=" + googleMapsAPIKey
+	var googleMapsAPIURL = "https://maps.googleapis.com/maps/api/geocode/" + outputFormat + "?" + parameters
+
 	// make api call to google maps api
-	// return lat and lon
+	status, body := ut.BaseAPICaller(googleMapsAPIURL, "GET", nil)
+
+	if status != 200 {
+		SetDebug("Error getting lat and lon for address: "+address, funcName)
+		return lat, lon, nil
+	}
+
+	// parse json response
+	var data map[string]interface{}
+	err := json.Unmarshal([]byte(body), &data)
+	if err != nil {
+		SetDebug("Error parsing json response for address: "+address, funcName)
+		return lat, lon, nil
+	}
+
+	// get lat and lon
+	lat = data["results"].([]interface{})[0].(map[string]interface{})["geometry"].(map[string]interface{})["location"].(map[string]interface{})["lat"].(float64)
+	lon = data["results"].([]interface{})[0].(map[string]interface{})["geometry"].(map[string]interface{})["location"].(map[string]interface{})["lng"].(float64)
 
 	return lat, lon, nil
 }
