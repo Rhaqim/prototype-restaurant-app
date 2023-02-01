@@ -49,7 +49,7 @@ type Address struct {
 	City        string `json:"city"`
 	State       string `json:"state"`
 	Zipcode     string `json:"zipcode"`
-	Country     string `json:"country"`
+	CountryCode string `json:"country_code" binding:"required,iso_3166_1_alpha_2"`
 }
 
 // SET ERROR
