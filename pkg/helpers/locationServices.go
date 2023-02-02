@@ -77,7 +77,7 @@ func (ls *locationService) GetClosestRestaurant(lat, lon float64) (Restaurant, e
 }
 
 /* make api call to google maps api given an address and return the lat and lon */
-func GetLatLon(address Address) (float64, float64, string, error) {
+func GetLatLong(address Address) (float64, float64, string, error) {
 	var funcName = ut.GetFunctionName()
 	var lat float64
 	var lon float64
