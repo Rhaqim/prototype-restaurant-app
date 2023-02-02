@@ -144,6 +144,7 @@ func GinRouter() *gin.Engine {
 		restaurant.POST("/create", views.CreateRestaurant)
 		restaurant.PUT("/update", views.UpdateRestaurant)
 		restaurant.DELETE("/delete", views.DeleteRestaurant)
+		restaurant.POST("/add_review", views.AddReview)
 	}
 
 	/* Product Routes */

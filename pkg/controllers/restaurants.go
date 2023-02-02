@@ -289,39 +289,3 @@ func deleteRestaurant(c *gin.Context, ctx context.Context) {
 	response := hp.SetSuccess("Restaurant deleted successfully", id.Hex(), funcName)
 	c.JSON(http.StatusOK, response)
 }
-
-func addReview(c *gin.Context, ctx context.Context) {
-	// get restaurant id from request params
-	// validate restaurant id
-	// get review data from request body
-	// validate review data
-	// check if restaurant exists
-	// add review
-
-	var funcName = ut.GetFunctionName()
-
-	user, err := hp.GetUserFromToken(c)
-	if err != nil {
-		response := hp.SetError(err, "Error getting user from token", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	var request hp.Review
-
-	if err := c.ShouldBindJSON(&request); err != nil {
-		response := hp.SetError(err, "Error binding json", funcName)
-		c.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	request.ID = primitive.NewObjectID()
-	request.Author = user.ID
-	request.CreatedAt, request.UpdatedAt = hp.CreatedAtUpdatedAt()
-
-	// insert review
-	request.CreateReview(ctx)
-
-	response := hp.SetSuccess("Review added successfully", request.ID.Hex(), funcName)
-	c.JSON(http.StatusOK, response)
-}

@@ -26,3 +26,39 @@ func (r *Review) CreateReview(ctx context.Context) error {
 	}
 	return nil
 }
+
+func (r *Review) GetReview(ctx context.Context) error {
+	err := reviewCollect.FindOne(ctx, r).Decode(r)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Review) GetReviews(ctx context.Context) ([]Review, error) {
+	var reviews []Review
+	cursor, err := reviewCollect.Find(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+	if err := cursor.All(ctx, &reviews); err != nil {
+		return nil, err
+	}
+	return reviews, nil
+}
+
+func (r *Review) UpdateReview(ctx context.Context) error {
+	_, err := reviewCollect.UpdateOne(ctx, r, r)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Review) DeleteReview(ctx context.Context) error {
+	_, err := reviewCollect.DeleteOne(ctx, r)
+	if err != nil {
+		return err
+	}
+	return nil
+}
