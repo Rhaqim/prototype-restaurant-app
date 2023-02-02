@@ -32,14 +32,26 @@ func LoadCountriesDB() error {
 		return err
 	}
 
+	var errChan = make(chan error, 1)
+
 	// Insert the countries into the database
-	for _, country := range countries {
-		_, err := config.CountryCollection.InsertOne(context.Background(), country)
+	go func() {
+		for _, country := range countries {
+			_, err := config.CountryCollection.InsertOne(context.Background(), country)
 
-		if err != nil {
-			return err
+			if err != nil {
+				errChan <- err
+				return
+			}
 		}
+	}()
 
+	// Check if there is an error
+	select {
+	case err := <-errChan:
+		return err
+	default:
 	}
+
 	return nil
 }
