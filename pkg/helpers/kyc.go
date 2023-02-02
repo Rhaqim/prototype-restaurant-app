@@ -10,6 +10,7 @@ type KYC struct {
 	Phone              string             `bson:"phone" json:"phone" binding:"required,e164"`
 	DOB                CustomDate         `bson:"dob" json:"dob" binding:"required" time_format:"2006-01-02"`
 	Address            Address            `bson:"address" json:"address" binding:"required"`
+	MapInfo            MapInfo            `bson:"map_info" json:"map_info" binding:"required"`
 	IdentityType       IdentityType       `bson:"identity_type" json:"identity_type" binding:"required"`
 	IdentityNumber     string             `bson:"identity_number" json:"identity_number" binding:"required,min=5,max=20"`
 	IdentityExpiration CustomDate         `bson:"identity_expiration" json:"identity_expiration" binding:"required" time_format:"2006-01-02"`

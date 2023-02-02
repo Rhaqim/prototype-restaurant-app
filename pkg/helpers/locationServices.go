@@ -3,6 +3,7 @@ package helpers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"math"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
@@ -65,7 +66,7 @@ func (ls *locationService) GetClosestRestaurant(lat, lon float64) (Restaurant, e
 	var closestRestaurant Restaurant
 
 	for _, restaurant := range restaurants {
-		distance = ls.GetDistance(lat, lon, restaurant.Latitude, restaurant.Longitude)
+		distance = ls.GetDistance(lat, lon, restaurant.MapInfo.Lat, restaurant.MapInfo.Long)
 		if distance < minDistance || minDistance == 0 {
 			minDistance = distance
 			closestRestaurant = restaurant
@@ -76,7 +77,7 @@ func (ls *locationService) GetClosestRestaurant(lat, lon float64) (Restaurant, e
 }
 
 /* make api call to google maps api given an address and return the lat and lon */
-func GetLatLon(address Address) (float64, float64, error) {
+func GetLatLon(address Address) (float64, float64, string, error) {
 	var funcName = ut.GetFunctionName()
 	var lat float64
 	var lon float64
@@ -94,7 +95,7 @@ func GetLatLon(address Address) (float64, float64, error) {
 
 	if status != 200 {
 		SetDebug("Error getting lat and lon for address: "+addressString, funcName)
-		return lat, lon, nil
+		return lat, lon, placeID, errors.New("Error getting lat and lon for address: " + addressString)
 	}
 
 	// parse json response
@@ -102,7 +103,7 @@ func GetLatLon(address Address) (float64, float64, error) {
 	err := json.Unmarshal([]byte(body), &data)
 	if err != nil {
 		SetDebug("Error parsing json response for address: "+addressString, funcName)
-		return lat, lon, nil
+		return lat, lon, placeID, err
 	}
 
 	// get lat and lon
@@ -110,7 +111,5 @@ func GetLatLon(address Address) (float64, float64, error) {
 	lon = data["results"].([]interface{})[0].(map[string]interface{})["geometry"].(map[string]interface{})["location"].(map[string]interface{})["lng"].(float64)
 	placeID = data["results"].([]interface{})[0].(map[string]interface{})["place_id"].(string)
 
-	SetInfo("Place ID: "+placeID, funcName)
-
-	return lat, lon, nil
+	return lat, lon, placeID, nil
 }

@@ -52,6 +52,12 @@ type Address struct {
 	CountryCode string `json:"country_code" binding:"required,iso_3166_1_alpha_2"`
 }
 
+type MapInfo struct {
+	Lat     float64 `json:"lat,omitempty"`
+	Long    float64 `json:"long,omitempty"`
+	PlaceID string  `json:"place_id,omitempty"`
+}
+
 // SET ERROR
 // Uses the struct MongoJsonResponse
 // Accepts an error, a message and the function name
