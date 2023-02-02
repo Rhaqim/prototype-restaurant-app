@@ -9,14 +9,14 @@ import (
 )
 
 type Country struct {
-	Alpha2              string
-	Alpha3              string
-	CountryCallingCodes []string
-	Currencies          []string
-	Ioc                 string
-	Languages           []string
-	Name                string
-	Status              string
+	Alpha2              string   `json:"alpha2"`
+	Alpha3              string   `json:"alpha3"`
+	CountryCallingCodes []string `json:"countryCallingCodes"`
+	Currencies          []string `json:"currencies"`
+	Ioc                 string   `json:"ioc"`
+	Languages           []string `json:"languages"`
+	Name                string   `json:"name"`
+	Status              string   `json:"status"`
 }
 
 func LoadCountriesDB() error {
