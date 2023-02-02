@@ -57,6 +57,7 @@ const (
 	ORDER        = "orders"
 	PRODUCT      = "products"
 	RESTAURAUNT  = "restaurants"
+	REVIEW       = "reviews"
 	SESSION      = "sessions"
 	STATE        = "state"
 	TRANSACTION  = "transactions"
@@ -82,6 +83,7 @@ var (
 	OrderCollection        = OpenCollection(ORDER)
 	ProductCollection      = OpenCollection(PRODUCT)
 	RestaurantCollection   = OpenCollection(RESTAURAUNT)
+	ReviewCollection       = OpenCollection(REVIEW)
 	SessionCollection      = OpenCollection(SESSION)
 	StateCollection        = OpenCollection(STATE)
 	TransactionCollection  = OpenCollection(TRANSACTION)
