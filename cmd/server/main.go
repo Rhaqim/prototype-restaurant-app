@@ -9,5 +9,9 @@ func main() {
 	run := handlers.GinRouter()
 	port := ut.GetEnv("PORT")
 
+	if port == "" {
+		port = "8080"
+	}
+
 	run.Run(port)
 }

@@ -17,8 +17,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+}
 
 func Now(format string) time.Time {
 	if format == "date" {
@@ -39,6 +46,7 @@ func StructToJSON(i interface{}) io.Reader {
 }
 
 func GetEnv(key string) string {
+
 	if os.Getenv(key) == "" {
 		log.Fatalf("Environment variable %s is not set", key)
 	}
