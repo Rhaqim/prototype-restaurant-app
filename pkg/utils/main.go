@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -178,4 +179,27 @@ func BaseAPICaller(url string, method string, body io.Reader) (int, []byte) {
 		log.Println("Error reading response body", err)
 	}
 	return res.StatusCode, bodyBytes
+}
+
+func GetReservationTimes(openTime string, closeTime string, currentTime string) []string {
+
+	var times []string
+
+	// get the open time
+	openTimeInt, _ := strconv.Atoi(strings.Replace(openTime, ":", "", -1))
+
+	// get the close time
+	closeTimeInt, _ := strconv.Atoi(strings.Replace(closeTime, ":", "", -1))
+
+	// get the current time
+	currentTimeInt, _ := strconv.Atoi(strings.Replace(currentTime, ":", "", -1))
+
+	// get the reservation times
+	for i := openTimeInt; i <= closeTimeInt; i += 100 {
+		if i >= currentTimeInt {
+			times = append(times, strconv.Itoa(i))
+		}
+	}
+
+	return times
 }

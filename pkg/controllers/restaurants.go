@@ -179,14 +179,29 @@ func getRestaurants(c *gin.Context, ctx context.Context) {
 	}
 
 	// Get restaurant from db
-	restaurant, err := hp.GetRestaurants(ctx, filter)
+	restaurants, err := hp.GetRestaurants(ctx, filter)
 	if err != nil {
 		response := hp.SetError(err, "Error getting restaurant", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
 
-	response := hp.SetSuccess("Restaurant found successfully", restaurant, funcName)
+	data := gin.H{
+		"restaurants": restaurants,
+	}
+
+	// Get Reservation times for restaurants and append to data
+	for _, restaurant := range restaurants {
+		reservationTimes, err := hp.ReservationTimes(restaurant)
+		if err != nil {
+			response := hp.SetError(err, "Error getting reservation times", funcName)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+		data[restaurant.ID.Hex()] = reservationTimes
+	}
+
+	response := hp.SetSuccess("Restaurant found successfully", data, funcName)
 	c.JSON(http.StatusOK, response)
 }
 

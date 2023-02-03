@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
@@ -215,4 +216,35 @@ func ValidateCreateRestaurantRequest(c context.Context, request Restaurant) (boo
 	}
 
 	return true, nil
+}
+
+// Reservation times for a Restaurant
+func ReservationTimes(restaurant Restaurant) ([]string, error) {
+
+	var funcName = ut.GetFunctionName()
+
+	SetInfo("Getting reservation times for restaurant: "+restaurant.Name, funcName)
+
+	var times []string
+
+	// get the current day
+	currentDay := time.Now().Weekday().String()
+
+	// get the current time
+	// currentTime := time.Now().Format("15:04")
+
+	// get the open hours for the current day
+	// var openHours OpenHours
+	for _, oh := range restaurant.OpenHours {
+		if oh.Day == currentDay {
+			times = oh.AvailableTimes()
+			// openHours = oh
+			break
+		}
+	}
+
+	// get the reservation times
+	// times = ut.GetReservationTimes(openHours.Open, openHours.Close, currentTime)
+
+	return times, nil
 }
