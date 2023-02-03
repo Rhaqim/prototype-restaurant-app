@@ -28,7 +28,7 @@ services:
     ports:
       - 6379:6379
     volumes:
-      - ./data/cache:/data/chache
+      - ./data/cache:/data/cache
     networks:
       - thedutchapp
     # expose:

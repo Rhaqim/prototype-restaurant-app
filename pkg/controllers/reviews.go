@@ -7,6 +7,7 @@ import (
 	hp "github.com/Rhaqim/thedutchapp/pkg/helpers"
 	ut "github.com/Rhaqim/thedutchapp/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -71,5 +72,49 @@ func deleteReview(c *gin.Context, ctx context.Context) {
 	request.DeleteReview(ctx)
 
 	response := hp.SetSuccess("Review deleted successfully", request.ID.Hex(), funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func getReviews(c *gin.Context, ctx context.Context) {
+	var funcName = ut.GetFunctionName()
+
+	var user_id = c.Query("user_id")
+	var restaurant_id = c.Query("restaurant_id")
+
+	var filter = bson.M{}
+
+	switch {
+	case user_id != "":
+		user_id, err := primitive.ObjectIDFromHex(user_id)
+		if err != nil {
+			response := hp.SetError(err, "Error getting user id from query", funcName)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+		filter["author"] = user_id
+	case restaurant_id != "":
+		// get reviews by restaurant id
+		restaurant_id, err := primitive.ObjectIDFromHex(restaurant_id)
+		if err != nil {
+			response := hp.SetError(err, "Error getting restaurant id from query", funcName)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+		filter["restaurant"] = restaurant_id
+	default:
+		// get all reviews
+		response := hp.SetError(nil, "No query params provided", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	reviews, err := hp.GetReviews(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error getting reviews", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := hp.SetSuccess("Reviews fetched successfully", reviews, funcName)
 	c.JSON(http.StatusOK, response)
 }

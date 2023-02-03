@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Rhaqim/thedutchapp/pkg/config"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -35,9 +36,9 @@ func (r *Review) GetReview(ctx context.Context) error {
 	return nil
 }
 
-func (r *Review) GetReviews(ctx context.Context) ([]Review, error) {
+func GetReviews(ctx context.Context, filter bson.M) ([]Review, error) {
 	var reviews []Review
-	cursor, err := reviewCollect.Find(ctx, r)
+	cursor, err := reviewCollect.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
