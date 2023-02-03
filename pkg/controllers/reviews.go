@@ -14,6 +14,7 @@ import (
 var (
 	AddReview    = AbstractConnection(addReview)
 	DeleteReview = AbstractConnection(deleteReview)
+	GetReviews   = AbstractConnection(getReviews)
 )
 
 func addReview(c *gin.Context, ctx context.Context) {
@@ -100,7 +101,7 @@ func getReviews(c *gin.Context, ctx context.Context) {
 			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 			return
 		}
-		filter["restaurant"] = restaurant_id
+		filter["restaurant_id"] = restaurant_id
 	default:
 		// get all reviews
 		response := hp.SetError(nil, "No query params provided", funcName)
