@@ -110,6 +110,8 @@ func GinRouter() *gin.Engine {
 	event.GET("/get_events", views.GetEvents)
 	event.Use(TokenGuardMiddleware())
 	{
+		event.GET("/get_user_events", views.GetUserEvents)
+		event.GET("/get_user_events_by_status", views.GetRestaurantEvents)
 		event.POST("/create", views.CreateEvent)
 		event.PUT("/update", views.UpdateEvent)
 		event.DELETE("/delete/:id", views.DeleteEvent)

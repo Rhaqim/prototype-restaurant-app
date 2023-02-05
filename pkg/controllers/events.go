@@ -18,12 +18,14 @@ import (
 var (
 	eventCollection = config.EventCollection
 
-	CreateEvent = AbstractConnection(createEvent)
-	GetEvent    = AbstractConnection(getEvent)
-	GetEvents   = AbstractConnection(getEvents)
-	UpdateEvent = AbstractConnection(updateEvent)
-	DeleteEvent = AbstractConnection(deleteEvent)
-	CancelEvent = AbstractConnection(cancelEvent)
+	CreateEvent         = AbstractConnection(createEvent)
+	GetEvent            = AbstractConnection(getEvent)
+	GetEvents           = AbstractConnection(getEvents)
+	GetUserEvents       = AbstractConnection(getUserEvents)
+	GetRestaurantEvents = AbstractConnection(getRestaurantEvents)
+	UpdateEvent         = AbstractConnection(updateEvent)
+	DeleteEvent         = AbstractConnection(deleteEvent)
+	CancelEvent         = AbstractConnection(cancelEvent)
 )
 
 // CreateEvent creates an event
@@ -256,6 +258,82 @@ func getEvent(c *gin.Context, ctx context.Context) {
 	}
 
 	response := hp.SetSuccess(" event found", event, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func getUserEvents(c *gin.Context, ctx context.Context) {
+	var funcName = ut.GetFunctionName()
+
+	// Get user from context
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "Error getting user from context", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Get user events, where user is host and/or attendee
+	filter := bson.M{
+		"$or": []bson.M{
+			{"host_id": user.ID},
+			{"attendees": bson.M{
+				"$in": []primitive.ObjectID{user.ID},
+			}},
+		},
+	}
+
+	events, err := hp.GetEvents(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error getting user events", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := hp.SetSuccess("User events found", events, funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func getRestaurantEvents(c *gin.Context, ctx context.Context) {
+	var funcName = ut.GetFunctionName()
+
+	// Get restaurants that belong to the user
+	user, err := hp.GetUserFromToken(c)
+	if err != nil {
+		response := hp.SetError(err, "Error getting user from context", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	id := c.Query("id")
+
+	// Get venue id from url
+	// get restaurant by id
+	venue, err := hp.GetRestaurants(ctx, bson.M{"owner_id": user.ID})
+	if err != nil {
+		response := hp.SetError(err, "Error getting venue", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	var venue_id string
+
+	for _, v := range venue {
+		if v.ID.Hex() == id {
+			venue_id = v.ID.Hex()
+			break
+		}
+	}
+
+	// Get venue events
+	filter := bson.M{"venue": venue_id}
+	events, err := hp.GetEvents(ctx, filter)
+	if err != nil {
+		response := hp.SetError(err, "Error getting venue events", funcName)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := hp.SetSuccess("Venue events found", events, funcName)
 	c.JSON(http.StatusOK, response)
 }
 
