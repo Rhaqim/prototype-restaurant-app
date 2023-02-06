@@ -54,7 +54,6 @@ func GinRouter() *gin.Engine {
 	/* User Routes */
 	user := router.Group("/user")
 	user.GET("/get_profile", views.GetUser)
-	user.GET("/search_users", views.SearchUsers)
 	user.GET("/set_users_cache", views.SetUsersCache)
 	user.GET("/get_users_cache", views.GetUsersCache)
 	user.Use(TokenGuardMiddleware())

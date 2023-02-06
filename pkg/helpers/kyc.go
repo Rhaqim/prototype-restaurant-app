@@ -54,16 +54,7 @@ const (
 )
 
 func (IT IdentityType) String() string {
-	switch IT {
-	case Passport:
-		return "passport"
-	case National:
-		return "national id card"
-	case License:
-		return "driver's license"
-	default:
-		return "passport"
-	}
+	return string(IT)
 }
 
 // Check if KYC is complete
@@ -76,4 +67,8 @@ func CheckKYCStatus(user UserResponse) bool {
 type BVN struct {
 	BVN         uint `bson:"bvn" json:"bvn" binding:"required,number"`
 	BVNVerified bool `bson:"bvnVerified" json:"bvnVerified" default:"false"`
+}
+
+type CACDocument struct {
+	CACNumber string `bson:"cac_number" json:"cac_number" binding:"required"`
 }
