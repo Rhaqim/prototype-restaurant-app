@@ -29,21 +29,13 @@ type KYCStatus string
 
 const (
 	Unverified KYCStatus = "unverified"
+	Pending    KYCStatus = "pending"
 	Verified   KYCStatus = "verified"
 	Rejected   KYCStatus = "rejected"
 )
 
 func (KS KYCStatus) String() string {
-	switch KS {
-	case Unverified:
-		return "unverified"
-	case Verified:
-		return "verified"
-	case Rejected:
-		return "rejected"
-	default:
-		return "unverified"
-	}
+	return string(KS)
 }
 
 // ValidateKYC DOB
