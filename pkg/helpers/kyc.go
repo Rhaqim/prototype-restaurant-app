@@ -72,3 +72,8 @@ type BVN struct {
 type CACDocument struct {
 	CACNumber string `bson:"cac_number" json:"cac_number" binding:"required"`
 }
+
+func SendKYCRequest(request KYC, user UserResponse) (string, error) {
+	// Send KYC request to KYC service
+	return "", nil
+}

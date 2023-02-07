@@ -59,6 +59,7 @@ func GinRouter() *gin.Engine {
 	user.Use(TokenGuardMiddleware())
 	{
 		user.PUT("/update_profile", views.UpdateUser)
+		user.PUT("/begin_kyc", views.BegingKycVerification)
 		user.PUT("/update_kyc", views.UpdateUsersKYC)
 		user.DELETE("/delete_profile", views.DeleteUser)
 

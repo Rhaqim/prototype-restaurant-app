@@ -21,9 +21,11 @@ import (
 Get User by ID
 */
 var (
-	usersCollection = config.UserCollection
-	SetUsersCache   = AbstractConnection(setUsersCache)
-	GetUsersCache   = AbstractConnection(getUsersCache)
+	usersCollection       = config.UserCollection
+	SetUsersCache         = AbstractConnection(setUsersCache)
+	GetUsersCache         = AbstractConnection(getUsersCache)
+	BegingKycVerification = AbstractConnection(begingKycVerification)
+	UpdateUsersKYC        = AbstractConnection(updateUsersKYC)
 )
 
 func CreatNewUser(c *gin.Context) {
@@ -249,12 +251,64 @@ func DeleteUser(c *gin.Context) {
 @returns: success, error
 */
 
-func UpdateUsersKYC(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), config.ContextTimeout)
-	defer cancel()
+func begingKycVerification(c *gin.Context, ctx context.Context) {
+	funcName := ut.GetFunctionName()
 
-	defer database.ConnectMongoDB().Disconnect(context.TODO())
+	request := hp.KYC{}
 
+	user, err := hp.GetUserFromToken(c) // get user from token
+	if err != nil {
+		respons := hp.SetError(err, "User not found", funcName)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, respons)
+		return
+	}
+
+	if err := c.BindJSON(&request); err != nil {
+		response := hp.SetError(err, "Error binding JSON", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	request.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+	request.KYCStatus = hp.Pending
+	request.IdentityType = hp.IdentityType(hp.IdentityType(request.IdentityType).String())
+	request.MapInfo.Lat, request.MapInfo.Long, request.MapInfo.PlaceID, _ = hp.GetLatLong(request.Address)
+
+	// check valid year of birth
+	okDOB := hp.ValidateKYCDOB(request.DOB)
+	if !okDOB {
+		response := hp.SetError(err, "Invalid year of birth", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Send request to KYC service
+	_, err = hp.SendKYCRequest(request, user)
+	if err != nil {
+		response := hp.SetError(err, "Error sending request to KYC service", funcName)
+		c.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// update user kyc
+	filter := bson.M{"_id": user.ID}
+	update := bson.M{
+		"$set": request,
+	}
+
+	_, err = usersCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Send request to KYC service
+
+	response := hp.SetSuccess("success", "User updated", funcName)
+	c.JSON(http.StatusOK, response)
+}
+
+func updateUsersKYC(c *gin.Context, ctx context.Context) {
 	funcName := ut.GetFunctionName()
 
 	request := hp.KYC{}
