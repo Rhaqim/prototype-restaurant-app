@@ -42,6 +42,9 @@ func GenerateJWT(email string, username string, userid primitive.ObjectID) (toke
 	}
 
 	refreshClaims := &JWTClaim{
+		Email:    email,
+		Username: username,
+		UserId:   userid,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: refreshExpirationTime.Unix(),
 		},

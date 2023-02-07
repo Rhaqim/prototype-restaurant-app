@@ -44,11 +44,13 @@ func GinRouter() *gin.Engine {
 		cookie.GET("/ws", nf.WsHandler)
 	}
 
-	refreshTokenProtected := auth.Group("/protected", RefreshTokenGuardMiddleware())
+	refresh := router.Group("/refresh")
+
+	refresh.Use(RefreshTokenGuardMiddleware())
 	{
-		refreshTokenProtected.POST("/refresh_token", views.RefreshToken)
-		refreshTokenProtected.POST("/reset_password", views.ResetPassword)
-		refreshTokenProtected.POST("/update_password", views.UpdatePassword)
+		refresh.POST("/refresh_token", views.RefreshToken)
+		refresh.POST("/reset_password", views.ResetPassword)
+		refresh.POST("/update_password", views.UpdatePassword)
 	}
 
 	/* User Routes */
