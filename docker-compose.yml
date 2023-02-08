@@ -3,12 +3,12 @@ version: '3'
 services:
   backend:
     build:
-      dockerfile: Dockerfile
+      dockerfile: docker/local/Dockerfile.local
       context: .
     image: thedutchapp:latest
     container_name: thedutchapp_backend
     env_file:
-      - .local.env
+      - docker/local/.local.env
     ports:
       - 8080:8080
     volumes:
