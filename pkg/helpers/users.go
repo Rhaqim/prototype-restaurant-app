@@ -35,7 +35,6 @@ type UserStruct struct {
 	Location               string               `bson:"location" form:"location"`
 	Wallet                 primitive.ObjectID   `bson:"wallet" form:"wallet" default:"null"`
 	Account                BankAccount          `bson:"account" form:"account" default:"{}"`
-	Transactions           []Transactions       `bson:"transactions" form:"transactions" default:"[]"`
 	RefreshToken           string               `bson:"refresh_token,omitempty" form:"refresh_token,omitempty"`
 	EmailVerified          bool                 `bson:"email_confirmed" form:"email_confirmed" default:"false"`
 	EmailVerificationToken string               `bson:"email_verification_token,omitempty" form:"email_verification_token,omitempty"`
@@ -68,7 +67,6 @@ type UserResponse struct {
 	Location               string               `bson:"location" json:"location"`
 	Wallet                 primitive.ObjectID   `bson:"wallet" json:"wallet"`
 	Account                BankAccount          `bson:"account" json:"account"`
-	Transactions           []Transactions       `bson:"transactions" json:"transactions"`
 	RefreshToken           string               `bson:"refresh_token" json:"refresh_token"`
 	EmailVerified          bool                 `bson:"email_confirmed" json:"email_confirmed"`
 	EmailVerificationToken string               `bson:"email_verification_token,omitempty" json:"email_verification_token,omitempty"`

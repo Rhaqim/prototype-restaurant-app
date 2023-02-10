@@ -79,7 +79,6 @@ func signUp(c *gin.Context, ctx context.Context) {
 	}
 
 	// Set default values
-	user.Transactions = []hp.Transactions{}
 	user.Role = hp.Roles(hp.Roles(user.Role).String())
 	user.EmailVerified = false
 	user.CreatedAt, user.UpdatedAt = hp.CreatedAtUpdatedAt()
@@ -269,7 +268,6 @@ func signIn(c *gin.Context, ctx context.Context) {
 			EmailVerified: user.EmailVerified,
 			Friends:       user.Friends,
 			Wallet:        user.Wallet,
-			Transactions:  user.Transactions,
 			Role:          user.Role,
 			CreatedAt:     user.CreatedAt,
 			UpdatedAt:     user.UpdatedAt,
