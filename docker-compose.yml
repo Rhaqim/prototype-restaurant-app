@@ -43,8 +43,8 @@ services:
       - ./data/db:/data/db
     networks:
       - thedutchapp
-    # expose:
-    #   - 27017
+    expose:
+      - 27017
 
   # frontend:
   #   build:
