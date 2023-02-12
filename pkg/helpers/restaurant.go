@@ -46,16 +46,7 @@ const (
 )
 
 func (rc RestaurantCategory) String() string {
-	switch rc {
-	case Bar:
-		return "bar"
-	case Lounge:
-		return "lounge"
-	case Cafe:
-		return "cafe"
-	default:
-		return "bar"
-	}
+	return string(rc)
 }
 
 func GetRestaurant(c context.Context, filter bson.M) (Restaurant, error) {

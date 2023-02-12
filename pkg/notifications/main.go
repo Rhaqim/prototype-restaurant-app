@@ -335,7 +335,7 @@ func GetNotificationsByUser(ctx context.Context, user hp.UserResponse) ([]Notifi
 	// Check if id present is userIDs field
 	filter := bson.M{
 		"user_ids": bson.M{
-			"$in": []primitive.ObjectID{userID},
+			"$in": []primitive.ObjectID{user.ID},
 		},
 	}
 
