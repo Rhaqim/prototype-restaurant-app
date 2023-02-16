@@ -28,3 +28,6 @@ countries.json
 
 # mongo data docker
 data
+
+# vscode
+.vscode
