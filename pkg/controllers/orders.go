@@ -99,7 +99,7 @@ func createOrder(c *gin.Context, ctx context.Context) {
 
 	// NOTIFICATIONS
 	// Get Venue Owner from venue id
-	filter = bson.M{"_id": event.Venue}
+	filter = bson.M{"_id": event.RestaurantID}
 	venue, err := hp.GetRestaurant(ctx, filter)
 	if err != nil {
 		response := hp.SetError(err, "Error getting venue", funcName)

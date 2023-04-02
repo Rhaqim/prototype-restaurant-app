@@ -108,7 +108,7 @@ func sendEventInvites(c *gin.Context, ctx context.Context) {
 	}
 
 	// NOTIFICATION
-	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": event.Venue})
+	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": event.RestaurantID})
 	if err != nil {
 		response := hp.SetError(err, "Error getting venue", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
@@ -287,7 +287,7 @@ func acceptInvite(c *gin.Context, ctx context.Context) {
 	go func() {
 		defer wg.Done()
 
-		venue, err := hp.GetRestaurant(ctx, bson.M{"_id": event.Venue})
+		venue, err := hp.GetRestaurant(ctx, bson.M{"_id": event.RestaurantID})
 		if err != nil {
 			errChan <- err
 			return

@@ -281,7 +281,7 @@ func SendtoVenuePayforEvent(ctx context.Context, event Event, user UserResponse)
 	var txn Transactions
 
 	// Get Venue Owner
-	restaurant, err := GetRestaurant(ctx, bson.M{"_id": event.Venue})
+	restaurant, err := GetRestaurant(ctx, bson.M{"_id": event.RestaurantID})
 	if err != nil {
 		SetDebug("error getting restaurant: "+err.Error(), funcName)
 		return txn, err
@@ -313,7 +313,7 @@ func SendToHost(ctx context.Context, event Event, user UserResponse) (Transactio
 	funcName := ut.GetFunctionName()
 
 	// Get Venue Owner
-	restaurant, err := GetRestaurant(ctx, bson.M{"_id": event.Venue})
+	restaurant, err := GetRestaurant(ctx, bson.M{"_id": event.RestaurantID})
 	if err != nil {
 		SetDebug("error getting restaurant: "+err.Error(), funcName)
 		return Transactions{}, err
@@ -373,7 +373,7 @@ func PayOwnBillforEvent(ctx context.Context, event Event, user UserResponse) (Tr
 	var txn Transactions
 
 	// Get Venue Owner
-	restaurant, err := GetRestaurant(ctx, bson.M{"_id": event.Venue})
+	restaurant, err := GetRestaurant(ctx, bson.M{"_id": event.RestaurantID})
 	if err != nil {
 		SetDebug("error getting restaurant: "+err.Error(), funcName)
 		return txn, err

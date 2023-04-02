@@ -46,7 +46,7 @@ type Event struct {
 	ID             primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
 	HostID         primitive.ObjectID   `json:"host_id" bson:"host_id"`
 	Title          string               `json:"title" binding:"required" bson:"title"`
-	Venue          primitive.ObjectID   `json:"venue" bson:"venue" binding:"required"`
+	RestaurantID   primitive.ObjectID   `json:"restaurant_id" bson:"restaurant_id" binding:"required"`
 	Date           CustomDate           `json:"date" bson:"date" binding:"required" time_format:"2006-01-02"`
 	Time           CustomTime           `json:"time" bson:"time" binding:"required" time_format:"15:04"`
 	Invited        []primitive.ObjectID `json:"invited" bson:"invited" default:"[]"`

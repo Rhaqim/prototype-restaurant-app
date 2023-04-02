@@ -283,7 +283,7 @@ func payBillforEvent(c *gin.Context, ctx context.Context) {
 		" of " + billAmount + " money has been sent to your wallet",
 	)
 
-	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": event.Venue})
+	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": event.RestaurantID})
 	if err != nil {
 		hp.SetError(err, "Error fetching venue", funcName)
 	}
@@ -445,7 +445,7 @@ func payOwnBill(c *gin.Context, ctx context.Context) {
 	// Send Notification to the Host
 	billAmount := strconv.FormatFloat(txn.Amount, 'f', 2, 64)
 
-	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": event.Venue})
+	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": event.RestaurantID})
 	if err != nil {
 		hp.SetError(err, "Error fetching venue", funcName)
 	}

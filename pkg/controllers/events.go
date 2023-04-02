@@ -104,7 +104,7 @@ func createEvent(c *gin.Context, ctx context.Context) {
 	}
 
 	// Get Venue
-	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": request.Venue})
+	venue, err := hp.GetRestaurant(ctx, bson.M{"_id": request.RestaurantID})
 	if err != nil {
 		response := hp.SetError(err, "Error getting venue", funcName)
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
@@ -518,7 +518,7 @@ func cancelEvent(c *gin.Context, ctx context.Context) {
 	}
 
 	// Get Venue
-	filter = bson.M{"_id": event.Venue}
+	filter = bson.M{"_id": event.RestaurantID}
 	venue, err := hp.GetRestaurant(ctx, filter)
 	if err != nil {
 		response := hp.SetError(err, "Error getting venue", funcName)
