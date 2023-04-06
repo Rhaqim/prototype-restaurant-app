@@ -23,9 +23,11 @@ type Restaurant struct {
 	Slug          string             `json:"slug,omitempty" bson:"slug"`
 	OwnerID       primitive.ObjectID `json:"owner_id,omitempty" bson:"owner_id,omitempty"`
 	Name          string             `json:"name,omitempty" bson:"name" binding:"required"`
+	Description   string             `json:"description,omitempty" bson:"description" binding:"required"`
 	Phone         string             `json:"phone,omitempty" bson:"phone" binding:"required"`
 	Email         string             `json:"email,omitempty" bson:"email" binding:"required,email"`
 	Address       Address            `json:"address,omitempty" bson:"address" binding:"required"`
+	Website       string             `json:"website,omitempty" bson:"website" binding:"required"`
 	MapInfo       MapInfo            `json:"map_info,omitempty" bson:"map_info" binding:"required"`
 	Category      RestaurantCategory `json:"category,omitempty" bson:"category" binding:"required"`
 	OpenHours     [7]OpenHours       `json:"open_hours,omitempty" bson:"open_hours" binding:"required,dive"`

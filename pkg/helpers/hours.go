@@ -12,6 +12,21 @@ type OpenHours struct {
 	Close string `json:"close" bson:"close"`
 }
 
+type OpenandClose struct {
+	Open  string `json:"open" bson:"open"`
+	Close string `json:"close" bson:"close"`
+}
+
+type OpenDays struct {
+	Monday    OpenandClose `json:"monday" bson:"monday"`
+	Tuesday   OpenandClose `json:"tuesday" bson:"tuesday"`
+	Wednesday OpenandClose `json:"wednesday" bson:"wednesday"`
+	Thursday  OpenandClose `json:"thursday" bson:"thursday"`
+	Friday    OpenandClose `json:"friday" bson:"friday"`
+	Saturday  OpenandClose `json:"saturday" bson:"saturday"`
+	Sunday    OpenandClose `json:"sunday" bson:"sunday"`
+}
+
 // Validate Open hours Days, Open and Close times
 func (h OpenHours) Validate() error {
 	if !h.DayIsValid() {
