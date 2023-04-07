@@ -45,11 +45,12 @@ const (
 
 type Address struct {
 	HouseNumber string `json:"house_number"`
-	Street      string `json:"street"`
+	Street      string `json:"street" binding:"required"`
 	City        string `json:"city"`
 	State       string `json:"state"`
-	Zipcode     string `json:"zipcode"`
-	CountryCode string `json:"country_code" binding:"required,iso_3166_1_alpha_2"`
+	Zipcode     string `json:"zip_code"`
+	// CountryCode string `json:"country_code" binding:"required,iso_3166_1_alpha_2"`
+	CountryCode string `json:"country_code" binding:"required"`
 }
 
 type MapInfo struct {
