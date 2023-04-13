@@ -31,8 +31,8 @@ services:
       - ./data/cache:/data/cache
     networks:
       - thedutchapp
-    # expose:
-    #   - 6379
+    expose:
+      - 6379
 
   db:
     image: mongo:latest
