@@ -1,6 +1,6 @@
 # The Dutch App Financial Services
 
-## This is the README for the Dutch App Financial Services
+## This is the README for a prototype Restaurant Application backend
 
 This is a simple application that allows users to do the following:
 
