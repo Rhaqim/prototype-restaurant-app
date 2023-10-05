@@ -1,4 +1,4 @@
-# The Dutch App Financial Services
+# The Restaurant App Financial Services
 
 ## This is the README for a prototype Restaurant Application backend
 
